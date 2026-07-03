@@ -76,5 +76,5 @@
     <preference name="ShowTitle" value="false" />
     <preference name="AutoHideSplashScreen" value="true" />
     <preference name="SplashScreenDelay" value="1000" />
-    "<preference name="AndroidPersistentFileLocation" value="Compatibility" />"
+    <preference name="AndroidPersistentFileLocation" value="Compatibility" />
 </widget>
