@@ -31,7 +31,7 @@
       "cordova-plugin-splashscreen": {},
       "cordova-plugin-whitelist": {},
       "cordova-plugin-file": {},
-      "cordova-plugin-androidx": {},
+    
       "cordova-plugin-androidx-adapter": {},
       "cordova-plugin-android-permissions": {}
     }
