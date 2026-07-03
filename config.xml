@@ -4,31 +4,44 @@
         xmlns:cdv="http://cordova.apache.org/ns/1.0"
         xmlns:android="http://schemas.android.com/apk/res/android">
     
+    <!-- ===== IDENTITAS APP ===== -->
     <name>Wemos Pro</name>
     <description>Wemos D1 Smartwatch Pro — Alarm, Sensor, Kontrol Pin, OLED, Snooze, Theme, Export/Import</description>
     <author email="uceng@gmail.com" href="https://uceng48.github.io/wemos">uceng48</author>
     
+    <!-- ===== HALAMAN UTAMA ===== -->
     <content src="index.html" />
     
+    <!-- ===== AKSES JARINGAN ===== -->
     <access origin="*" />
     <allow-intent href="http://*/*" />
     <allow-intent href="https://*/*" />
     <allow-navigation href="*" />
     
+    <!-- ===== AKTIFKAN ANDROIDX (WAJIB) ===== -->
     <preference name="AndroidXEnabled" value="true" />
     
+    <!-- ===== PLATFORM ANDROID ===== -->
     <platform name="android">
+        
+        <!-- SDK: target 34 (Android 14), min 24 (Android 7) -->
         <preference name="android-minSdkVersion" value="24" />
         <preference name="android-targetSdkVersion" value="34" />
+        
+        <!-- Foreground service tipe untuk background mode (wajib API 34+) -->
         <preference name="AndroidForegroundServiceType" value="dataSync" />
         
+        <!-- Izinkan traffic HTTP (cleartext) -->
         <edit-config file="app/src/main/AndroidManifest.xml" mode="merge" target="/manifest/application">
             <application android:usesCleartextTraffic="true" />
         </edit-config>
         <preference name="AndroidInsecureFileModeEnabled" value="true" />
         
+        <!-- ===== IZIN ANDROID (lengkap untuk API 34) ===== -->
         <config-file parent="/manifest" target="AndroidManifest.xml">
+            <!-- Izin untuk Android 13+ (notifikasi) -->
             <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+            <!-- Izin umum -->
             <uses-permission android:name="android.permission.VIBRATE" />
             <uses-permission android:name="android.permission.WAKE_LOCK" />
             <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
@@ -36,10 +49,12 @@
             <uses-permission android:name="android.permission.INTERNET" />
             <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
             <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+            <!-- Izin untuk alarm eksak (API 31+) -->
             <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
             <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
         </config-file>
         
+        <!-- ===== DEKLARASI FOREGROUND SERVICE ===== -->
         <config-file parent="/manifest/application" target="AndroidManifest.xml">
             <service 
                 android:name="com.katason.backgroundmode.BackgroundService" 
@@ -51,6 +66,7 @@
         <allow-intent href="market:*" />
     </platform>
     
+    <!-- ===== PREFERENSI GLOBAL ===== -->
     <preference name="Orientation" value="portrait" />
     <preference name="Fullscreen" value="false" />
     <preference name="DisallowOverscroll" value="true" />
