@@ -22,14 +22,14 @@
     ],
     "plugins": {
       "cordova-plugin-background-mode": {},
-      "cordova plugin add https://github.com/TheNotorius0/cordova-plugin-local-notification.git": {},
+      
       "cordova-plugin-insomnia": {},
       "cordova-plugin-vibration": {},
       "cordova-plugin-device": {},
       "cordova-plugin-network-information": {},
       "cordova-plugin-statusbar": {},
       "cordova-plugin-splashscreen": {},
-      "cordova-plugin-whitelist": {},
+      "
       "cordova-plugin-file": {},
     
       "cordova-plugin-androidx-adapter": {},
