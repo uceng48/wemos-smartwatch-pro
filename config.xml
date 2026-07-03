@@ -70,7 +70,7 @@
     <preference name="Orientation" value="portrait" />
     <preference name="Fullscreen" value="false" />
     <preference name="DisallowOverscroll" value="true" />
-    <preference name="BackgroundColor" value="0xFF0a1628" />
+    <preference name="BackgroundColor" value="0a1628" />
     <preference name="KeepRunning" value="true" />
     <preference name="AndroidLaunchMode" value="singleTop" />
     <preference name="ShowTitle" value="false" />
