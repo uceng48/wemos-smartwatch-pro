@@ -22,7 +22,7 @@
     ],
     "plugins": {
       "cordova-plugin-background-mode": {},
-      "cordova-plugin-local-notifications": {},
+      "cordova plugin add https://github.com/TheNotorius0/cordova-plugin-local-notification.git": {},
       "cordova-plugin-insomnia": {},
       "cordova-plugin-vibration": {},
       "cordova-plugin-device": {},
