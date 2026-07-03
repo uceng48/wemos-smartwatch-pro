@@ -31,9 +31,13 @@ jobs:
           distribution: 'temurin'
           java-version: '17' # Sangat cocok untuk android@13 dan target SDK 34
 
-      # Kita paksa memasang versi 13.0.0 agar sesuai dengan API 34 Anda
+      # Perbaikan Utama:
+      # 1. Hapus platform android yang terdeteksi di cache/package.json agar tidak bentrok.
+      # 2. Tambahkan kembali platform android@13.0.0 secara bersih tanpa '--no-save'.
       - name: Add Android platform
-        run: cordova platform add android@13.0.0 --no-save
+        run: |
+          cordova platform remove android || true
+          cordova platform add android@13.0.0
 
       - name: Prepare project (Copy www folder)
         run: cordova prepare android
