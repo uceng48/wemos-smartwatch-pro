@@ -1,7 +1,7 @@
 name: Build Cordova Debug APK
 
 on:
-  workflow_dispatch:  # Hanya manual agar mudah di-test
+  workflow_dispatch:
 
 jobs:
   build:
@@ -28,46 +28,53 @@ jobs:
       - name: 5. Setup Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: 6. Install npm dependencies
+      - name: 6. Display working directory
+        run: |
+          echo "Current directory:"
+          pwd
+          echo ""
+          echo "Files in current directory:"
+          ls -la
+          echo ""
+          echo "config.xml location:"
+          find . -name "config.xml" -type f
+
+      - name: 7. Install npm dependencies
         run: npm install
 
-      - name: 7. Add Android platform
-        run: |
-          echo "Removing any existing android platform..."
-          cordova platform remove android || true
-          echo "Adding Android platform..."
-          cordova platform add android@13.0.0 --verbose
+      - name: 8. Add Android platform
+        run: cordova platform add android@13.0.0 --verbose
 
-      - name: 8. Install Cordova plugins
+      - name: 9. Install Cordova plugins
         run: |
-          cordova plugin add cordova-plugin-background-mode
-          cordova plugin add cordova-plugin-local-notifications
-          cordova plugin add cordova-plugin-insomnia
-          cordova plugin add cordova-plugin-vibration
-          cordova plugin add cordova-plugin-device
-          cordova plugin add cordova-plugin-network-information
-          cordova plugin add cordova-plugin-statusbar
-          cordova plugin add cordova-plugin-splashscreen
-          cordova plugin add cordova-plugin-whitelist
-          cordova plugin add cordova-plugin-file
-          cordova plugin add cordova-plugin-androidx
-          cordova plugin add cordova-plugin-androidx-adapter
-          cordova plugin add cordova-plugin-android-permissions
+          cordova plugin add cordova-plugin-background-mode --verbose
+          cordova plugin add cordova-plugin-local-notifications --verbose
+          cordova plugin add cordova-plugin-insomnia --verbose
+          cordova plugin add cordova-plugin-vibration --verbose
+          cordova plugin add cordova-plugin-device --verbose
+          cordova plugin add cordova-plugin-network-information --verbose
+          cordova plugin add cordova-plugin-statusbar --verbose
+          cordova plugin add cordova-plugin-splashscreen --verbose
+          cordova plugin add cordova-plugin-whitelist --verbose
+          cordova plugin add cordova-plugin-file --verbose
+          cordova plugin add cordova-plugin-androidx --verbose
+          cordova plugin add cordova-plugin-androidx-adapter --verbose
+          cordova plugin add cordova-plugin-android-permissions --verbose
 
-      - name: 9. Verify project structure
+      - name: 10. Verify Cordova setup
         run: |
-          echo "=== Project root ==="
-          ls -la
-          echo "=== Platforms ==="
+          echo "=== Cordova platforms ==="
           cordova platform list
+          echo ""
+          echo "=== Cordova plugins ==="
+          cordova plugin list
 
-      - name: 10. Build APK Debug
+      - name: 11. Build APK Debug
         run: cordova build android --debug --verbose
 
-      - name: 11. Upload APK
+      - name: 12. Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: cordova-debug-apk
           path: |
             platforms/android/app/build/outputs/apk/debug/*.apk
-            platforms/android/build/outputs/apk/debug/*.apk
