@@ -36,8 +36,18 @@
         </edit-config>
         <preference name="AndroidInsecureFileModeEnabled" value="true" />
         
-        <!-- ===== JAVA 17 & DEPENDENCIES (configured in build-extras.gradle) ===== -->
-        <preference name="GradleVersion" value="8.0" />
+        <!-- ===== KOMPILASI JAVA 17 ===== -->
+        <edit-config file="app/build.gradle" mode="merge" target="/project">
+            <compileOptions>
+                <sourceCompatibility>17</sourceCompatibility>
+                <targetCompatibility>17</targetCompatibility>
+            </compileOptions>
+            <!-- Dependency AndroidX versi terbaru untuk kompatibilitas API 34 -->
+            <dependencies>
+                <implementation>androidx.core:core:1.13.0</implementation>
+                <implementation>androidx.appcompat:appcompat:1.7.0</implementation>
+            </dependencies>
+        </edit-config>
         
         <!-- ===== IZIN ANDROID (lengkap untuk API 34) ===== -->
         <config-file parent="/manifest" target="AndroidManifest.xml">
