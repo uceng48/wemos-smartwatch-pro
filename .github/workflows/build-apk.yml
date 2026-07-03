@@ -2,7 +2,7 @@ name: Build Cordova Debug APK
 
 on:
   push:
-    branches: [ "main" ]   # Ganti ke "master" jika perlu
+    branches: [ "main" ]
   workflow_dispatch:
 
 jobs:
@@ -10,15 +10,15 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: 1. Ambil kode dari repo
+      - name: 1. Checkout kode
         uses: actions/checkout@v4
 
-      - name: 2. Setup Node.js (pakai v18 agar stabil)
+      - name: 2. Setup Node.js 18
         uses: actions/setup-node@v4
         with:
           node-version: 18
 
-      - name: 3. Install Cordova CLI
+      - name: 3. Install Cordova
         run: npm install -g cordova
 
       - name: 4. Setup JDK 17
@@ -30,16 +30,18 @@ jobs:
       - name: 5. Setup Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: 6. Hapus platform Android (jika ada) lalu tambah ulang
+      - name: 6. Tampilkan struktur folder (debug)
+        run: ls -laR
+
+      - name: 7. Tambahkan platform Android (dengan versi spesifik)
         run: |
-          cordova platform remove android --nosave || true  # abaikan error jika belum ada
-          cordova platform add android --nosave
-          cordova platform list  # tampilkan platform untuk verifikasi
+          cordova platform add android@13.0.0 --verbose
+        # Jika gagal, workflow akan berhenti dan tampilkan error
 
-      - name: 7. Build APK Debug
-        run: cordova build android --debug
+      - name: 8. Build APK Debug
+        run: cordova build android --debug --verbose
 
-      - name: 8. Upload APK
+      - name: 9. Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: cordova-debug-apk
