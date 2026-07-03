@@ -32,10 +32,15 @@ jobs:
 
       - name: 6. Tampilkan struktur folder (debug)
         run: ls -laR
+        - name: Install Gradle
+  run: |
+    wget https://services.gradle.org/distributions/gradle-8.10-bin.zip
+    unzip gradle-8.10-bin.zip
+    export PATH=$PATH:$PWD/gradle-8.10/bin
 
       - name: 7. Tambahkan platform Android (dengan versi spesifik)
         run: |
-          cordova platform add android@latest
+          cordova platform add android@13
         # Jika gagal, workflow akan berhenti dan tampilkan error
 
       - name: 8. Build APK Debug
