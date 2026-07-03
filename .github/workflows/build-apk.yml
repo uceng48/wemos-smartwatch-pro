@@ -1,52 +1,57 @@
-name: Build APK (Native Android)
+name: Build Android Debug APK
 
 on:
   push:
-    branches: [ "main" ]
-  workflow_dispatch:  # Tombol manual
+    branches:
+      - main # Ganti dengan nama branch utama Anda jika berbeda (misal: master)
+  workflow_dispatch: # Tombol untuk menjalankan build secara manual dari GitHub
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout kode
+      - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup JDK 17
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18' # Versi Node.js yang stabil untuk Cordova
+
+      - name: Install Cordova CLI
+        run: npm install -g cordova@latest
+
+      - name: Install dependencies
+        run: npm install
+
+      # Setup Java JDK 17 (karena API 34 membutuhkan JDK 17)
+      - name: Setup Java JDK 17
         uses: actions/setup-java@v4
         with:
-          java-version: '17'
           distribution: 'temurin'
+          java-version: '17'
 
+      # Setup Android SDK 34
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
+        with:
+          api-level: 34
+          build-tools: 34.0.0
 
-      # --- PERBAIKAN: buat folder app dulu ---
-      - name: Decode Keystore
-        env:
-          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
-        run: |
-          mkdir -p app
-          echo "$KEYSTORE_BASE64" | base64 -d > app/keystore.jks
+      - name: Add Android platform
+        run: cordova platform add android --no-save
 
-      # --- Buat key.properties di folder app ---
-      - name: Buat key.properties
-        run: |
-          echo "storeFile=${{ github.workspace }}/app/keystore.jks" > app/key.properties
-          echo "storePassword=${{ secrets.KEYSTORE_PASSWORD }}" >> app/key.properties
-          echo "keyAlias=${{ secrets.KEY_ALIAS }}" >> app/key.properties
-          echo "keyPassword=${{ secrets.KEY_PASSWORD }}" >> app/key.properties
+      - name: Prepare project (Copy www folder)
+        run: cordova prepare android
 
-      # --- Beri izin gradlew (opsional, tapi aman) ---
-      - name: Beri izin gradlew
-        run: chmod +x gradlew
+      # Perintah build khusus untuk versi debug
+      - name: Build Android Debug APK
+        run: cordova build android --debug
 
-      - name: Build Release APK
-        run: ./gradlew assembleRelease
-
-      - name: Upload APK sebagai Artifact
+      # Menyimpan hasil APK ke halaman github agar bisa diunduh
+      - name: Upload Debug APK
         uses: actions/upload-artifact@v4
         with:
-          name: app-release
-          path: app/build/outputs/apk/release/*.apk
+          name: app-debug-apk
+          path: platforms/android/app/build/outputs/apk/debug/app-debug.apk
