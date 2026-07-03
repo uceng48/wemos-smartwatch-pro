@@ -1,1 +1,2529 @@
 
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#0d0b1a">
+    <script src="cordova.js"></script>
+    <title>Wemos D1 · Smartwatch Pro</title>
+    <style>
+        /* ============================================================
+           RESET & ROOT — Neo-Glass Design
+           ============================================================ */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-primary: #0d0b1a;
+            --bg-secondary: rgba(20, 18, 40, 0.85);
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --glass-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+            --text-primary: #f0edff;
+            --text-secondary: #b8b0d6;
+            --text-dim: #6a6090;
+
+            --gradient-1: linear-gradient(135deg, #7c3aed, #4f46e5);
+            --gradient-2: linear-gradient(135deg, #ec4899, #8b5cf6);
+            --gradient-3: linear-gradient(135deg, #06b6d4, #3b82f6);
+            --gradient-4: linear-gradient(135deg, #f59e0b, #ef4444);
+            --gradient-5: linear-gradient(135deg, #10b981, #34d399);
+
+            --accent-purple: #8b5cf6;
+            --accent-pink: #ec4899;
+            --accent-cyan: #06b6d4;
+            --accent-blue: #4f46e5;
+            --accent-green: #34d399;
+            --accent-red: #f87171;
+            --accent-orange: #fbbf24;
+
+            --radius-lg: 24px;
+            --radius-md: 16px;
+            --radius-sm: 10px;
+            --radius-full: 9999px;
+
+            --font: 'Inter', -apple-system, system-ui, 'Segoe UI', sans-serif;
+            --transition: 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            --blur: blur(24px);
+        }
+
+        html, body {
+            height: 100%;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-family: var(--font);
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+            overflow: hidden;
+        }
+
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--accent-purple); border-radius: 4px; }
+
+        /* ===== APP SHELL ===== */
+        #app {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            max-width: 480px;
+            margin: 0 auto;
+            background: var(--bg-primary);
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 0 120px rgba(124, 58, 237, 0.06);
+        }
+        @media (min-width: 481px) {
+            #app {
+                border-left: 1px solid var(--glass-border);
+                border-right: 1px solid var(--glass-border);
+                border-radius: 28px;
+                margin-top: 12px;
+                height: calc(100vh - 24px);
+                box-shadow: 0 40px 80px rgba(0, 0, 0, 0.7);
+            }
+        }
+
+        /* ===== HEADER ===== */
+        .app-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 20px 10px;
+            background: rgba(13, 11, 26, 0.7);
+            backdrop-filter: var(--blur);
+            -webkit-backdrop-filter: var(--blur);
+            border-bottom: 1px solid var(--glass-border);
+            flex-shrink: 0;
+            z-index: 10;
+            position: relative;
+        }
+        .app-header::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 20%;
+            right: 20%;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(139, 92, 246, 0.3), transparent);
+        }
+
+        .app-header .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .app-header .brand .logo {
+            width: 38px;
+            height: 38px;
+            background: var(--gradient-2);
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            font-weight: 800;
+            color: #fff;
+            box-shadow: 0 8px 24px rgba(124, 58, 237, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+        .app-header .brand .logo::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(255,255,255,0.2), transparent);
+            pointer-events: none;
+        }
+        .app-header .brand h1 {
+            font-size: 1rem;
+            font-weight: 700;
+            letter-spacing: -0.3px;
+            background: var(--gradient-2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .app-header .brand h1 span {
+            font-weight: 300;
+            opacity: 0.5;
+            -webkit-text-fill-color: var(--text-secondary);
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .header-actions .icon-btn {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            color: var(--text-secondary);
+            font-size: 1rem;
+            cursor: pointer;
+            padding: 6px 10px;
+            border-radius: var(--radius-full);
+            transition: var(--transition);
+            touch-action: manipulation;
+            backdrop-filter: var(--blur);
+            -webkit-backdrop-filter: var(--blur);
+        }
+        .header-actions .icon-btn:hover {
+            background: rgba(139, 92, 246, 0.15);
+            border-color: var(--accent-purple);
+            color: var(--text-primary);
+            transform: scale(1.04);
+        }
+        .header-actions .icon-btn:active { transform: scale(0.92); }
+        .header-actions .icon-btn.active {
+            background: rgba(139, 92, 246, 0.25);
+            border-color: var(--accent-purple);
+            color: var(--accent-purple);
+        }
+
+        .status-badge {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.55rem;
+            font-weight: 600;
+            padding: 4px 12px 4px 8px;
+            border-radius: var(--radius-full);
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            color: var(--text-secondary);
+            backdrop-filter: var(--blur);
+            -webkit-backdrop-filter: var(--blur);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .status-badge .dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            display: inline-block;
+            transition: var(--transition);
+        }
+        .status-badge .dot.on {
+            background: var(--accent-green);
+            box-shadow: 0 0 20px rgba(52,211,153,0.4);
+            animation: pulse-dot 1.8s infinite;
+        }
+        .status-badge .dot.off {
+            background: var(--accent-red);
+            box-shadow: 0 0 20px rgba(248,113,113,0.2);
+        }
+        .status-badge .dot.warn {
+            background: var(--accent-orange);
+            animation: pulse-dot 0.7s infinite;
+        }
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.3; transform: scale(0.7); }
+        }
+
+        /* ===== MAIN CONTENT ===== */
+        .main-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 14px 16px 80px;
+            scroll-behavior: smooth;
+        }
+
+        /* ===== SETTINGS OVERLAY ===== */
+        .settings-overlay {
+            display: none;
+            animation: fadeUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .settings-overlay.show {
+            display: block;
+        }
+
+        /* ===== TABS ===== */
+        .tab-nav {
+            display: flex;
+            background: rgba(13, 11, 26, 0.85);
+            backdrop-filter: var(--blur);
+            -webkit-backdrop-filter: var(--blur);
+            border-top: 1px solid var(--glass-border);
+            flex-shrink: 0;
+            z-index: 10;
+            position: sticky;
+            bottom: 0;
+            padding: 6px 12px 8px;
+            gap: 4px;
+        }
+        .tab-nav .tab {
+            flex: 1;
+            text-align: center;
+            padding: 8px 0 6px;
+            font-size: 0.5rem;
+            font-weight: 600;
+            color: var(--text-dim);
+            cursor: pointer;
+            transition: var(--transition);
+            border: none;
+            background: transparent;
+            border-radius: var(--radius-full);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1px;
+            touch-action: manipulation;
+            position: relative;
+        }
+        .tab-nav .tab .icon { font-size: 1.2rem; line-height: 1; transition: var(--transition); }
+        .tab-nav .tab .label { font-size: 0.5rem; opacity: 0.7; letter-spacing: 0.3px; }
+        .tab-nav .tab.active {
+            color: #fff;
+            background: rgba(139, 92, 246, 0.2);
+            box-shadow: inset 0 0 0 1px rgba(139, 92, 246, 0.2);
+        }
+        .tab-nav .tab.active .icon { transform: scale(1.05); }
+        .tab-nav .tab:active { transform: scale(0.92); }
+        .tab-nav .tab .badge-tab {
+            position: absolute;
+            top: 4px;
+            right: 18%;
+            width: 8px;
+            height: 8px;
+            background: var(--accent-red);
+            border-radius: 50%;
+            border: 2px solid var(--bg-primary);
+        }
+
+        /* ===== PANELS ===== */
+        .panel {
+            display: none;
+            animation: fadeUp 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .panel.active { display: block; }
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(20px) scale(0.98); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        /* ===== CARDS ===== */
+        .card {
+            background: var(--glass-bg);
+            backdrop-filter: var(--blur);
+            -webkit-backdrop-filter: var(--blur);
+            border-radius: var(--radius-lg);
+            padding: 18px 20px;
+            margin-bottom: 14px;
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--glass-shadow);
+            transition: var(--transition);
+        }
+        .card:hover {
+            border-color: rgba(139, 92, 246, 0.15);
+            box-shadow: var(--glass-shadow), 0 0 40px rgba(139, 92, 246, 0.03);
+        }
+
+        .card .card-title {
+            font-size: 0.6rem;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--text-secondary);
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 600;
+        }
+        .card .card-title .badge-pill {
+            font-size: 0.45rem;
+            padding: 2px 12px;
+            border-radius: var(--radius-full);
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            color: var(--text-secondary);
+            letter-spacing: 0.3px;
+            font-weight: 500;
+        }
+        .card .card-title .badge-pill.active { background: var(--accent-green); color: #000; border-color: var(--accent-green); }
+        .card .card-title .badge-pill.danger { background: var(--accent-red); color: #000; border-color: var(--accent-red); }
+        .card .card-title .badge-pill.warn { background: var(--accent-orange); color: #000; border-color: var(--accent-orange); }
+        .card .card-title .badge-pill.info { background: var(--accent-cyan); color: #000; border-color: var(--accent-cyan); }
+
+        /* ===== STATS GRID ===== */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 1fr;
+            gap: 10px;
+        }
+        .stat-item {
+            background: rgba(255,255,255,0.03);
+            border-radius: var(--radius-md);
+            padding: 12px 8px;
+            text-align: center;
+            border: 1px solid var(--glass-border);
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+        .stat-item::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(139,92,246,0.05), transparent);
+            pointer-events: none;
+        }
+        .stat-item .stat-icon { font-size: 1.1rem; display: block; margin-bottom: 2px; }
+        .stat-item .stat-value {
+            font-size: 1.4rem;
+            font-weight: 800;
+            line-height: 1.2;
+            background: var(--gradient-2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .stat-item .stat-label {
+            font-size: 0.5rem;
+            color: var(--text-secondary);
+            margin-top: 2px;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            font-weight: 500;
+        }
+        .stat-item .stat-value.danger {
+            background: var(--gradient-4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .stat-item .stat-value.green {
+            background: var(--gradient-5);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .stat-item .stat-value.purple {
+            background: var(--gradient-2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .stat-item .stat-value.cyan {
+            background: var(--gradient-3);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        @media (max-width: 420px) {
+            .stats-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+            .stat-item .stat-value { font-size: 1.15rem; }
+        }
+
+        /* ===== OLED ===== */
+        .oled-wrapper {
+            position: relative;
+            width: 100%;
+            padding-bottom: 48%;
+            background: #08070f;
+            border-radius: var(--radius-md);
+            border: 2px solid var(--glass-border);
+            overflow: hidden;
+            box-shadow: inset 0 0 80px rgba(0,0,0,0.9), 0 0 40px rgba(139,92,246,0.05);
+        }
+        .oled-wrapper canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            image-rendering: pixelated;
+            transition: opacity 0.5s ease;
+        }
+        .oled-wrapper canvas.off { opacity: 0.04; }
+        .oled-overlay {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            box-shadow: inset 0 0 60px rgba(0,0,0,0.6);
+            background:
+                linear-gradient(rgba(255,255,255,0.012) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.012) 1px, transparent 1px);
+            background-size: 4px 4px;
+            border-radius: var(--radius-md);
+        }
+
+        .oled-status-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 10px;
+            font-size: 0.55rem;
+            color: var(--text-secondary);
+        }
+        .oled-status-row .oled-indicators {
+            display: flex;
+            gap: 14px;
+            align-items: center;
+        }
+        .oled-status-row .oled-indicators span {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.5rem;
+            font-weight: 500;
+        }
+        .oled-status-row .oled-indicators .led {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            display: inline-block;
+            transition: var(--transition);
+        }
+        .oled-status-row .oled-indicators .led.on {
+            background: var(--accent-green);
+            box-shadow: 0 0 14px rgba(52,211,153,0.5);
+        }
+        .oled-status-row .oled-indicators .led.off {
+            background: var(--text-dim);
+            opacity: 0.3;
+        }
+        .oled-status-row .oled-indicators .led.alarm {
+            background: var(--accent-red);
+            box-shadow: 0 0 20px rgba(248,113,113,0.6);
+            animation: pulse-dot 0.6s infinite;
+        }
+
+        /* ===== BUTTONS ===== */
+        .btn-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 1fr;
+            gap: 10px;
+            margin-top: 12px;
+        }
+        .btn {
+            padding: 14px 4px;
+            border: none;
+            border-radius: var(--radius-md);
+            font-size: 0.65rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            cursor: pointer;
+            transition: transform 0.08s, box-shadow 0.3s, filter 0.2s;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: none;
+            color: #fff;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+        }
+        .btn:active, .btn.pressed {
+            transform: scale(0.92);
+            filter: brightness(0.9);
+        }
+        .btn-menu { background: var(--gradient-4); }
+        .btn-up { background: var(--gradient-3); }
+        .btn-down { background: var(--gradient-5); }
+        .btn-sel { background: var(--gradient-1); }
+        .btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+            transform: none !important;
+            filter: grayscale(0.6);
+        }
+        .btn .ripple {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.15);
+            transform: scale(0);
+            animation: rippleAnim 0.6s ease-out;
+            pointer-events: none;
+        }
+        @keyframes rippleAnim {
+            to { transform: scale(4); opacity: 0; }
+        }
+
+        /* ===== PIN GRID ===== */
+        .pin-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+            margin-top: 4px;
+        }
+        .pin-item {
+            background: rgba(255,255,255,0.03);
+            border-radius: var(--radius-md);
+            padding: 12px 8px;
+            text-align: center;
+            border: 1px solid var(--glass-border);
+            transition: var(--transition);
+        }
+        .pin-item .pin-label {
+            font-size: 0.5rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            font-weight: 500;
+        }
+        .pin-item .pin-value {
+            font-size: 0.75rem;
+            font-weight: 700;
+            margin-top: 3px;
+            transition: var(--transition);
+        }
+        .pin-item .pin-value.on { color: var(--accent-green); }
+        .pin-item .pin-value.off { color: var(--text-dim); }
+        .pin-item .pin-value.alarm {
+            color: var(--accent-red);
+            animation: pulse-text 0.6s infinite;
+        }
+        .pin-item .pin-value.trigger {
+            color: var(--accent-orange);
+            animation: pulse-text 0.4s infinite;
+        }
+        .pin-item .pin-value.pwm { color: var(--accent-purple); }
+        .pin-item.highlight {
+            border-color: rgba(139,92,246,0.2);
+            box-shadow: 0 0 30px rgba(139,92,246,0.03);
+        }
+        .pin-item .pin-bar {
+            width: 100%;
+            height: 3px;
+            background: rgba(255,255,255,0.06);
+            border-radius: 4px;
+            margin-top: 6px;
+            overflow: hidden;
+        }
+        .pin-item .pin-bar .fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.4s ease;
+            width: 0%;
+        }
+        .pin-item .pin-bar .fill.on { background: var(--gradient-5); }
+        .pin-item .pin-bar .fill.off { background: var(--text-dim); opacity: 0.3; }
+        .pin-item .pin-bar .fill.alarm { background: var(--gradient-4); }
+        .pin-item .pin-bar .fill.trigger {
+            background: var(--gradient-4);
+            animation: pulse-bar 0.6s infinite;
+        }
+        .pin-item .pin-bar .fill.pwm { background: var(--gradient-2); }
+        @keyframes pulse-text {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.2; }
+        }
+        @keyframes pulse-bar {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.2; }
+        }
+
+        /* ===== CHART ===== */
+        .chart-container {
+            width: 100%;
+            height: 70px;
+            margin-top: 6px;
+        }
+        .chart-container canvas {
+            width: 100% !important;
+            height: 100% !important;
+            border-radius: var(--radius-sm);
+            background: rgba(255,255,255,0.02);
+        }
+
+        /* ===== LOG ===== */
+        .log-container {
+            background: rgba(0,0,0,0.4);
+            border-radius: var(--radius-md);
+            padding: 12px 14px;
+            height: 190px;
+            overflow-y: auto;
+            font-family: 'JetBrains Mono', 'Courier New', monospace;
+            font-size: 0.5rem;
+            line-height: 1.8;
+            border: 1px solid var(--glass-border);
+            color: var(--text-secondary);
+        }
+        .log-container .log-entry {
+            padding: 2px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.02);
+            display: flex;
+            gap: 8px;
+        }
+        .log-container .log-entry .time {
+            color: var(--text-dim);
+            font-size: 0.45rem;
+            flex-shrink: 0;
+            opacity: 0.6;
+        }
+        .log-container .log-entry .msg { color: var(--text-secondary); word-break: break-all; }
+        .log-container .log-entry .msg.err { color: var(--accent-red); }
+        .log-container .log-entry .msg.ok { color: var(--accent-green); }
+        .log-container .log-entry .msg.tx { color: var(--accent-orange); }
+        .log-container .log-entry .msg.alarm {
+            color: var(--accent-red);
+            font-weight: 700;
+            animation: pulse-text 0.6s infinite;
+        }
+        .log-container .log-entry .msg.dim { color: var(--text-dim); opacity: 0.5; }
+        .log-container .log-entry .msg.info { color: var(--accent-cyan); }
+
+        /* ===== SETTINGS ===== */
+        .setting-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+        }
+        .setting-row:last-child { border-bottom: none; }
+        .setting-row label {
+            font-size: 0.65rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+        .setting-row input[type="text"],
+        .setting-row input[type="number"],
+        .setting-row select {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid var(--glass-border);
+            color: var(--text-primary);
+            padding: 6px 14px;
+            border-radius: var(--radius-sm);
+            width: 140px;
+            font-size: 0.65rem;
+            transition: var(--transition);
+            font-family: var(--font);
+        }
+        .setting-row input:focus,
+        .setting-row select:focus {
+            border-color: var(--accent-purple);
+            outline: none;
+            box-shadow: 0 0 30px rgba(139,92,246,0.05);
+            background: rgba(139,92,246,0.05);
+        }
+        .setting-row select {
+            width: 140px;
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236a6090' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            padding-right: 32px;
+        }
+        .setting-row select option { background: #0d0b1a; color: var(--text-primary); }
+
+        .setting-row .toggle-wrap {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .toggle-switch {
+            width: 44px;
+            height: 24px;
+            background: rgba(255,255,255,0.06);
+            border-radius: 12px;
+            position: relative;
+            cursor: pointer;
+            transition: var(--transition);
+            border: 1px solid var(--glass-border);
+            flex-shrink: 0;
+        }
+        .toggle-switch .thumb {
+            width: 18px;
+            height: 18px;
+            background: var(--text-dim);
+            border-radius: 50%;
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            transition: var(--transition);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        }
+        .toggle-switch.active {
+            background: rgba(139,92,246,0.3);
+            border-color: var(--accent-purple);
+        }
+        .toggle-switch.active .thumb {
+            left: 22px;
+            background: var(--gradient-2);
+            box-shadow: 0 2px 16px rgba(139,92,246,0.4);
+        }
+        .toggle-label {
+            font-size: 0.6rem;
+            color: var(--text-secondary);
+            font-weight: 600;
+            min-width: 30px;
+            text-align: right;
+        }
+
+        /* ===== ALARM TOAST ===== */
+        .alarm-toast {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: var(--gradient-4);
+            color: #fff;
+            text-align: center;
+            padding: 16px 20px;
+            font-weight: 700;
+            font-size: 0.85rem;
+            z-index: 9999;
+            transform: translateY(-100%);
+            transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 14px;
+            flex-wrap: wrap;
+            box-shadow: 0 8px 40px rgba(239,68,68,0.3);
+        }
+        .alarm-toast.show { transform: translateY(0); }
+        .alarm-toast .btn-dismiss {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: #fff;
+            padding: 4px 20px;
+            border-radius: var(--radius-full);
+            font-size: 0.6rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: var(--transition);
+            backdrop-filter: blur(4px);
+        }
+        .alarm-toast .btn-dismiss:hover { background: rgba(255,255,255,0.3); }
+        .alarm-toast .btn-dismiss:active { transform: scale(0.92); }
+        .alarm-toast .snooze-btn {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: #fff;
+            padding: 4px 16px;
+            border-radius: var(--radius-full);
+            font-size: 0.6rem;
+            cursor: pointer;
+            transition: var(--transition);
+            backdrop-filter: blur(4px);
+        }
+        .alarm-toast .snooze-btn:hover { background: rgba(255,255,255,0.2); }
+        .alarm-toast .snooze-btn:active { transform: scale(0.92); }
+
+        .alarm-flash {
+            position: fixed;
+            inset: 0;
+            background: rgba(239,68,68,0);
+            pointer-events: none;
+            z-index: 9998;
+            transition: background 0.06s;
+        }
+        .alarm-flash.active {
+            animation: flashRed 0.5s infinite alternate;
+        }
+        @keyframes flashRed {
+            0% { background: rgba(239,68,68,0); }
+            100% { background: rgba(239,68,68,0.12); }
+        }
+
+        /* ===== UTILITY ===== */
+        .flex-between { display: flex; justify-content: space-between; align-items: center; }
+        .flex-center { display: flex; align-items: center; gap: 8px; }
+        .mt-1 { margin-top: 8px; }
+        .mb-1 { margin-bottom: 8px; }
+        .gap-1 { gap: 8px; }
+        .text-center { text-align: center; }
+        .text-muted { color: var(--text-secondary); font-size: 0.6rem; }
+
+        .btn-ghost {
+            background: transparent;
+            border: 1px solid var(--glass-border);
+            color: var(--text-secondary);
+            padding: 6px 16px;
+            border-radius: var(--radius-full);
+            font-size: 0.55rem;
+            cursor: pointer;
+            transition: var(--transition);
+            font-weight: 600;
+            backdrop-filter: var(--blur);
+            -webkit-backdrop-filter: var(--blur);
+        }
+        .btn-ghost:hover {
+            border-color: var(--accent-purple);
+            color: var(--text-primary);
+            background: rgba(139,92,246,0.08);
+        }
+        .btn-ghost:active { transform: scale(0.94); }
+        .btn-ghost.danger:hover { border-color: var(--accent-red); color: var(--accent-red); }
+
+        .badge-pill {
+            font-size: 0.45rem;
+            padding: 2px 12px;
+            border-radius: var(--radius-full);
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            color: var(--text-secondary);
+            letter-spacing: 0.3px;
+            font-weight: 500;
+        }
+        .badge-pill.success { background: var(--accent-green); color: #000; border-color: var(--accent-green); }
+        .badge-pill.danger { background: var(--accent-red); color: #000; border-color: var(--accent-red); }
+        .badge-pill.warn { background: var(--accent-orange); color: #000; border-color: var(--accent-orange); }
+        .badge-pill.info { background: var(--accent-cyan); color: #000; border-color: var(--accent-cyan); }
+        .badge-pill.purple { background: var(--accent-purple); color: #fff; border-color: var(--accent-purple); }
+
+        .action-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+        .action-grid .btn {
+            padding: 10px 4px;
+            font-size: 0.55rem;
+            border-radius: var(--radius-sm);
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 400px) {
+            .btn-grid { gap: 6px; }
+            .btn { font-size: 0.5rem; padding: 10px 2px; }
+            .app-header .brand h1 { font-size: 0.8rem; }
+            .tab-nav .tab { font-size: 0.45rem; padding: 6px 0 4px; }
+            .tab-nav .tab .icon { font-size: 1rem; }
+            .pin-grid { grid-template-columns: 1fr 1fr; }
+            .card { padding: 14px 16px; }
+            .stats-grid { grid-template-columns: 1fr 1fr; }
+            .setting-row input[type="text"],
+            .setting-row input[type="number"],
+            .setting-row select { width: 110px; font-size: 0.55rem; padding: 4px 10px; }
+            .action-grid { grid-template-columns: 1fr 1fr; }
+        }
+
+        @media (min-width: 481px) {
+            #app {
+                border-left: 1px solid var(--glass-border);
+                border-right: 1px solid var(--glass-border);
+                border-radius: 28px;
+                margin-top: 12px;
+                height: calc(100vh - 24px);
+            }
+        }
+
+        .log-container::-webkit-scrollbar { width: 3px; }
+        .log-container::-webkit-scrollbar-track { background: transparent; }
+        .log-container::-webkit-scrollbar-thumb { background: var(--accent-purple); border-radius: 4px; }
+
+        /* ===== WIFI CONFIG ===== */
+        .wifi-status-text {
+            font-size: 0.6rem;
+            font-weight: 500;
+            transition: var(--transition);
+        }
+        .wifi-status-text.connected { color: var(--accent-green); }
+        .wifi-status-text.connecting { color: var(--accent-orange); }
+        .wifi-status-text.disconnected { color: var(--accent-red); }
+        .wifi-status-text.idle { color: var(--text-dim); }
+
+        .btn-save-wifi {
+            background: var(--gradient-3);
+            width: 100%;
+            margin-top: 10px;
+            padding: 12px;
+            border-radius: var(--radius-sm);
+            border: none;
+            color: #fff;
+            font-weight: 700;
+            font-size: 0.7rem;
+            cursor: pointer;
+            transition: var(--transition);
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+        .btn-save-wifi:hover { opacity: 0.85; transform: scale(1.01); }
+        .btn-save-wifi:active { transform: scale(0.94); }
+    </style>
+</head>
+<body>
+
+    <!-- ALARM OVERLAY -->
+    <div class="alarm-flash" id="alarmFlash"></div>
+    <div class="alarm-toast" id="alarmToast">
+        <span>🚨 ALARM WEMOS AKTIF!</span>
+        <button class="snooze-btn" id="btnSnoozeAlarm">⏰ SNOOZE</button>
+        <button class="btn-dismiss" id="btnDismissAlarm">✕ RESET</button>
+    </div>
+
+    <!-- APP -->
+    <div id="app">
+
+        <!-- HEADER -->
+        <header class="app-header">
+            <div class="brand">
+                <div class="logo">⌚</div>
+                <h1>Wemos <span>Pro</span></h1>
+            </div>
+            <div class="header-actions">
+                <button class="icon-btn" id="themeToggle" title="Toggle Theme">🌓</button>
+                <button class="icon-btn" id="settingsToggle" title="Settings">⚙️</button>
+                <div class="status-badge" id="statusBadge">
+                    <span class="dot off" id="statusDot"></span>
+                    <span id="statusText">OFFLINE</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- MAIN CONTENT -->
+        <div class="main-content" id="mainContent">
+
+            <!-- SETTINGS OVERLAY — HIDDEN BY DEFAULT -->
+            <div class="settings-overlay" id="settingsOverlay">
+                <div class="card">
+                    <div class="card-title">⚙️ Pengaturan</div>
+
+                    <div class="setting-row">
+                        <label>IP Wemos</label>
+                        <input type="text" id="inpTargetIP" value="http://192.168.4.1">
+                    </div>
+                    <div class="setting-row">
+                        <label>Poll Interval (ms)</label>
+                        <input type="number" id="inpPollInt" value="500" min="100" max="5000">
+                    </div>
+                    <div class="setting-row">
+                        <label>Screen Timeout (ms)</label>
+                        <input type="number" id="inpScrTout" value="5000" min="1000" max="30000">
+                    </div>
+                    <div class="setting-row">
+                        <label>Snooze Duration (s)</label>
+                        <input type="number" id="inpSnoozeDur" value="60" min="10" max="600">
+                    </div>
+                    <div class="setting-row">
+                        <label>Power Saving</label>
+                        <div class="toggle-wrap">
+                            <span class="toggle-label" id="powerSaveLabel">OFF</span>
+                            <div class="toggle-switch" id="powerSaveToggle"><div class="thumb"></div></div>
+                        </div>
+                    </div>
+                    <div class="setting-row">
+                        <label>Sensor Enabled</label>
+                        <div class="toggle-wrap">
+                            <span class="toggle-label" id="sensorToggleLabel">ON</span>
+                            <div class="toggle-switch active" id="sensorToggle"><div class="thumb"></div></div>
+                        </div>
+                    </div>
+                    <div class="setting-row">
+                        <label>Suara Alarm</label>
+                        <div class="toggle-wrap">
+                            <span class="toggle-label" id="soundToggleLabel">ON</span>
+                            <div class="toggle-switch active" id="soundToggle"><div class="thumb"></div></div>
+                        </div>
+                    </div>
+                    <div class="setting-row">
+                        <label>Getar Alarm</label>
+                        <div class="toggle-wrap">
+                            <span class="toggle-label" id="vibrateToggleLabel">ON</span>
+                            <div class="toggle-switch active" id="vibrateToggle"><div class="thumb"></div></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- WiFi Config -->
+                <div class="card">
+                    <div class="card-title">📶 Konfigurasi WiFi</div>
+
+                    <div class="setting-row">
+                        <label>Mode WiFi</label>
+                        <select id="wifiMode">
+                            <option value="0">AP Only</option>
+                            <option value="1">STA Only</option>
+                            <option value="2">AP + STA</option>
+                        </select>
+                    </div>
+
+                    <div class="setting-row">
+                        <label>SSID (STA)</label>
+                        <input type="text" id="wifiSSID" placeholder="Nama WiFi">
+                    </div>
+
+                    <div class="setting-row">
+                        <label>Password (STA)</label>
+                        <input type="password" id="wifiPassword" placeholder="Password">
+                    </div>
+
+                    <div class="setting-row">
+                        <label>Status STA</label>
+                        <span class="wifi-status-text idle" id="staStatus">⏳ Mengecek...</span>
+                    </div>
+
+                    <button class="btn-save-wifi" id="saveWifiBtn">💾 Simpan & Restart</button>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">📋 Data & Ekspor</div>
+                    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                        <button class="btn-ghost" id="exportLogBtn">📥 Export Log</button>
+                        <button class="btn-ghost" id="clearLogBtn">🗑️ Clear Log</button>
+                        <button class="btn-ghost" id="resetStatsBtn">🔄 Reset Stats</button>
+                        <button class="btn-ghost" id="exportSettingsBtn">⚙️ Export</button>
+                        <button class="btn-ghost" id="importSettingsBtn">📂 Import</button>
+                    </div>
+                    <input type="file" id="importSettingsInput" accept=".json" style="display:none;">
+                </div>
+
+                <div class="card">
+                    <div class="card-title">ℹ️ Tentang</div>
+                    <p class="text-muted" style="font-size:0.6rem;line-height:1.8;opacity:0.7;">
+                        Wemos D1 Smartwatch Pro v4.2<br>
+                        Pin output: D0(16), D6(12), D8(15) • Input: D4(trigger), D5(sensor)<br>
+                        Fitur: Snooze, Theme, Export/Import, PWM visual<br>
+                        Dibangun dengan ❤️ untuk IoT
+                    </p>
+                </div>
+            </div>
+
+            <!-- PANEL DASHBOARD -->
+            <div class="panel active" id="panelDashboard">
+                <!-- OLED -->
+                <div class="card">
+                    <div class="card-title">
+                        🖥️ Layar OLED
+                        <span class="badge-pill" id="oledStatus">ON</span>
+                        <span class="badge-pill info" id="oledMode">TIME</span>
+                    </div>
+                    <div class="oled-wrapper">
+                        <canvas id="oled" width="128" height="64"></canvas>
+                        <div class="oled-overlay"></div>
+                    </div>
+                    <div class="oled-status-row">
+                        <span class="text-muted">⌚ Wemos D1</span>
+                        <div class="oled-indicators">
+                            <span><span class="led on" id="oledLedD0"></span>D0</span>
+                            <span><span class="led on" id="oledLedD6"></span>D6</span>
+                            <span><span class="led on" id="oledLedD8"></span>D8</span>
+                            <span><span class="led off" id="oledLedAlarm"></span>ALM</span>
+                        </div>
+                    </div>
+                    <div class="btn-grid">
+                        <button class="btn btn-menu" data-btn="MENU" id="btnMenu">MENU</button>
+                        <button class="btn btn-up" data-btn="UP" id="btnUp">UP</button>
+                        <button class="btn btn-down" data-btn="DOWN" id="btnDown">DOWN</button>
+                        <button class="btn btn-sel" data-btn="SELECT" id="btnSelect">SEL</button>
+                    </div>
+                </div>
+
+                <!-- Dashboard Stats -->
+                <div class="card">
+                    <div class="card-title">📊 Dashboard</div>
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <span class="stat-icon">⚡</span>
+                            <div class="stat-value" id="statTriggers">0</div>
+                            <div class="stat-label">Trigger</div>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-icon">🔔</span>
+                            <div class="stat-value danger" id="statAlarms">0</div>
+                            <div class="stat-label">Alarm</div>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-icon">📡</span>
+                            <div class="stat-value green" id="statClients">0</div>
+                            <div class="stat-label">Client</div>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-icon">⏱️</span>
+                            <div class="stat-value purple" id="statUptime">0s</div>
+                            <div class="stat-label">Uptime</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sensor Chart -->
+                <div class="card">
+                    <div class="card-title">📈 Aktivitas Sensor <span class="badge-pill" id="chartCount">0 events</span></div>
+                    <div class="chart-container">
+                        <canvas id="sensorChart" width="200" height="64"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PANEL KONTROL -->
+            <div class="panel" id="panelKontrol">
+                <div class="card">
+                    <div class="card-title">🎛️ Status Pin</div>
+                    <div class="pin-grid">
+                        <div class="pin-item" id="pinD0">
+                            <div class="pin-label">D0 (GPIO16)</div>
+                            <div class="pin-value off" id="pinD0Val">OFF</div>
+                            <div class="pin-bar"><div class="fill off" id="pinD0Bar" style="width:0%"></div></div>
+                        </div>
+                        <div class="pin-item" id="pinD6">
+                            <div class="pin-label">D6 (GPIO12)</div>
+                            <div class="pin-value off" id="pinD6Val">OFF</div>
+                            <div class="pin-bar"><div class="fill off" id="pinD6Bar" style="width:0%"></div></div>
+                        </div>
+                        <div class="pin-item" id="pinD8">
+                            <div class="pin-label">D8 (GPIO15)</div>
+                            <div class="pin-value off" id="pinD8Val">OFF</div>
+                            <div class="pin-bar"><div class="fill off" id="pinD8Bar" style="width:0%"></div></div>
+                        </div>
+                        <div class="pin-item highlight" id="pinD4">
+                            <div class="pin-label">D4 (Trigger)</div>
+                            <div class="pin-value off" id="pinD4Val">NORMAL</div>
+                            <div class="pin-bar"><div class="fill off" id="pinD4Bar" style="width:0%"></div></div>
+                        </div>
+                        <div class="pin-item highlight" id="pinD5">
+                            <div class="pin-label">D5 (Sensor)</div>
+                            <div class="pin-value off" id="pinD5Val">HIGH</div>
+                            <div class="pin-bar"><div class="fill off" id="pinD5Bar" style="width:0%"></div></div>
+                        </div>
+                        <div class="pin-item" id="pinSensor">
+                            <div class="pin-label">Sensor Enabled</div>
+                            <div class="pin-value on" id="pinSensorVal">ON</div>
+                            <div class="pin-bar"><div class="fill on" id="pinSensorBar" style="width:100%"></div></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">⚡ Aksi Cepat</div>
+                    <div class="action-grid">
+                        <button class="btn btn-up" id="quickToggleD8" style="border-radius:var(--radius-sm);padding:10px 4px;font-size:0.55rem;">Toggle D8</button>
+                        <button class="btn btn-down" id="quickToggleD0" style="border-radius:var(--radius-sm);padding:10px 4px;font-size:0.55rem;">Toggle D0</button>
+                        <button class="btn btn-sel" id="quickPulseD6" style="border-radius:var(--radius-sm);padding:10px 4px;font-size:0.55rem;">Pulse D6</button>
+                        <button class="btn btn-menu" id="quickResetAlarm" style="border-radius:var(--radius-sm);padding:10px 4px;font-size:0.55rem;">Reset Alarm</button>
+                        <button class="btn" style="background:var(--gradient-2);border-radius:var(--radius-sm);padding:10px 4px;font-size:0.55rem;" id="quickPulseAll">Pulse All</button>
+                        <button class="btn" style="background:var(--gradient-4);border-radius:var(--radius-sm);padding:10px 4px;font-size:0.55rem;" id="quickToggleAlarm">Test Alarm</button>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">🔔 Alarm Status</div>
+                    <div class="flex-between"><span class="text-muted">Status:</span><span id="alarmStatusBadge" class="badge-pill success">INACTIVE</span></div>
+                    <div class="flex-between mt-1"><span class="text-muted">Sensor D5:</span><span id="sensorD5Status" style="font-weight:700;color:var(--accent-green);">HIGH</span></div>
+                    <div class="flex-between mt-1"><span class="text-muted">Trigger D4:</span><span id="sensorD4Status" style="font-weight:700;color:var(--text-dim);">NORMAL</span></div>
+                    <div class="flex-between mt-1"><span class="text-muted">Snooze tersisa:</span><span id="snoozeCountdown" style="font-weight:700;color:var(--text-secondary);">—</span></div>
+                </div>
+            </div>
+
+            <!-- PANEL LOG -->
+            <div class="panel" id="panelLog">
+                <div class="card">
+                    <div class="card-title">
+                        📜 Riwayat Event
+                        <span class="badge-pill" id="logCount">0</span>
+                    </div>
+                    <div class="log-container" id="logBox"></div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- TAB NAV -->
+        <nav class="tab-nav" id="tabNav">
+            <button class="tab active" data-tab="panelDashboard">
+                <span class="icon">📊</span>
+                <span class="label">Dashboard</span>
+            </button>
+            <button class="tab" data-tab="panelKontrol">
+                <span class="icon">🎛️</span>
+                <span class="label">Kontrol</span>
+            </button>
+            <button class="tab" data-tab="panelLog">
+                <span class="icon">📜</span>
+                <span class="label">Log</span>
+                <span class="badge-tab" id="logBadge" style="display:none;"></span>
+            </button>
+        </nav>
+
+    </div>
+
+    <script>
+        /* ================================================================
+           WEMOS D1 SMARTWATCH PRO — v4.2 (Neo-Glass UI)
+           Layout: OLED+Buttons top, Dashboard below, Settings via Gear icon
+           ================================================================ */
+
+        // ===== DOM REFS =====
+        const canvas = document.getElementById('oled');
+        const ctx = canvas.getContext('2d');
+        const logBox = document.getElementById('logBox');
+        const alarmToast = document.getElementById('alarmToast');
+        const alarmFlash = document.getElementById('alarmFlash');
+        const sensorChartCanvas = document.getElementById('sensorChart');
+        const sensorChartCtx = sensorChartCanvas.getContext('2d');
+        const settingsOverlay = document.getElementById('settingsOverlay');
+
+        // ===== STATE =====
+        let cordovaReady = false;
+        let cordovaBgMode = false;
+
+        let targetIP = localStorage.getItem('sw_ip') || 'http://192.168.4.1';
+        let POLL_MS = parseInt(localStorage.getItem('sw_poll')) || 500;
+        let TOUT_MS = parseInt(localStorage.getItem('sw_tout')) || 5000;
+        let powerSaving = localStorage.getItem('sw_powerSave') === 'true';
+        let sensorEnabled = localStorage.getItem('sw_sensorEnabled') !== 'false';
+        let soundEnabled = localStorage.getItem('sw_soundEnabled') !== 'false';
+        let vibrateEnabled = localStorage.getItem('sw_vibrateEnabled') !== 'false';
+        let snoozeDuration = parseInt(localStorage.getItem('sw_snoozeDur')) || 60;
+        let theme = localStorage.getItem('sw_theme') || 'dark';
+
+        let baseTime = parseInt(localStorage.getItem('sw_time')) || Math.floor(Date.now() / 1000);
+        let baseMillis = Date.now();
+
+        let id0State = false, id6State = false, id8State = false;
+        let d5SensorState = false;
+        let d4AlarmActive = false;
+        let alarmActive = false;
+        let clientCount = 0;
+        let sensorTriggerCount = parseInt(localStorage.getItem('sw_triggerCount')) || 0;
+        let lastSensorEvent = parseInt(localStorage.getItem('sw_lastEvent')) || 0;
+
+        let htmlAlarmActive = false;
+        let htmlAlarmAcked = true;
+        let lastHtmlAlarmState = false;
+        let alarmBlink = true;
+        let lastAlarmBlink = 0;
+        const ALARM_BLINK_MS = 300;
+        let alarmNotifGranted = false;
+        let snoozeActive = false;
+        let snoozeEndTime = 0;
+        let snoozeIntervalId = null;
+
+        let chartData = [];
+        const CHART_MAX = 60;
+        let startTime = Date.now();
+        let logCount = 0;
+        let logEntries = [];
+        let lastPoll = 0;
+        let pollIntervalId = null;
+        let isPolling = true;
+        let audioCtx = null;
+        let alarmInterval = null;
+        let vibrateInterval = null;
+        let isScreenOn = true;
+        let lastBtnMs = Date.now();
+
+        const M_TIME = 0, M_MAIN = 1, M_CMD = 2, M_HOUR = 3, M_MIN = 4, M_RESET = 5;
+        let mode = M_TIME;
+        let menuIdx = 0;
+        let editH = 0, editM = 0, editT = 0;
+        let colonOn = true, lastColonMs = 0;
+        const COLON_MS = 500;
+
+        let commandBlinkCount = 0, lastCommandBlink = 0;
+        const CMD_BLINK_INT = 200, CMD_BLINK_TOT = 4;
+
+        const BTN_MENU = 5, BTN_UP = 9, BTN_DOWN = 3, BTN_SEL = 4;
+        const btnState = {};
+        [BTN_MENU, BTN_UP, BTN_DOWN, BTN_SEL].forEach(id => {
+            btnState[id] = { down: false, t0: 0, longDone: false, proc: false };
+        });
+        const LONG_MS = 800;
+
+        let lastWifiStatus = false;
+        let firstPoll = true;
+
+        // ===== THEME =====
+        function applyTheme(t) {
+            theme = t;
+            document.documentElement.setAttribute('data-theme', t);
+            localStorage.setItem('sw_theme', t);
+            document.getElementById('themeToggle').textContent = t === 'dark' ? '🌓' : '☀️';
+        }
+        function toggleTheme() { applyTheme(theme === 'dark' ? 'light' : 'dark'); }
+
+        // ===== SETTINGS TOGGLE =====
+        function toggleSettings() {
+            const isVisible = settingsOverlay.classList.toggle('show');
+            const btn = document.getElementById('settingsToggle');
+            if (isVisible) {
+                btn.classList.add('active');
+                log('Settings opened', 'dim');
+                // Auto-switch to dashboard if settings opened while on other tab
+                if (!document.getElementById('panelDashboard').classList.contains('active')) {
+                    switchTab('panelDashboard');
+                }
+            } else {
+                btn.classList.remove('active');
+                log('Settings closed', 'dim');
+            }
+        }
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+            const tabBtn = document.querySelector(`.tab[data-tab="${tabId}"]`);
+            if (tabBtn) tabBtn.classList.add('active');
+            document.getElementById(tabId).classList.add('active');
+            if (tabId === 'panelLog') {
+                document.getElementById('logBadge').style.display = 'none';
+            }
+        }
+
+        // ===== SNOOZE =====
+        function startSnooze() {
+            if (!htmlAlarmActive || htmlAlarmAcked) return;
+            const dur = snoozeDuration;
+            snoozeActive = true;
+            snoozeEndTime = Date.now() + dur * 1000;
+            htmlAlarmAcked = true;
+            onAlarmCleared();
+            log('⏰ Alarm snoozed for ' + dur + 's', 'info');
+            updateSnoozeUI();
+            if (snoozeIntervalId) clearInterval(snoozeIntervalId);
+            snoozeIntervalId = setInterval(() => {
+                const remain = Math.ceil((snoozeEndTime - Date.now()) / 1000);
+                if (remain <= 0) {
+                    clearInterval(snoozeIntervalId);
+                    snoozeIntervalId = null;
+                    snoozeActive = false;
+                    if (htmlAlarmActive) {
+                        htmlAlarmAcked = false;
+                        onAlarmTriggered();
+                        log('⏰ Snooze ended, alarm re-triggered!', 'alarm');
+                    }
+                    updateSnoozeUI();
+                } else {
+                    document.getElementById('snoozeCountdown').textContent = remain + 's';
+                }
+            }, 500);
+        }
+        function updateSnoozeUI() {
+            const el = document.getElementById('snoozeCountdown');
+            if (snoozeActive) {
+                const remain = Math.ceil((snoozeEndTime - Date.now()) / 1000);
+                el.textContent = (remain > 0) ? remain + 's' : '—';
+                el.style.color = 'var(--accent-orange)';
+            } else {
+                el.textContent = '—';
+                el.style.color = 'var(--text-secondary)';
+            }
+        }
+
+        // ===== SAVE / LOAD STATE =====
+        const STATE_KEY = 'sw_appstate_v4';
+        function saveAppState() {
+            const state = { mode, menuIdx, baseTime, sensorEnabled, soundEnabled, vibrateEnabled, htmlAlarmActive,
+                htmlAlarmAcked, targetIP, POLL_MS, TOUT_MS, snoozeDuration, sensorTriggerCount, lastSensorEvent,
+                powerSaving, chartData, theme };
+            try {
+                localStorage.setItem(STATE_KEY, JSON.stringify(state));
+                localStorage.setItem('sw_triggerCount', sensorTriggerCount);
+                localStorage.setItem('sw_lastEvent', lastSensorEvent);
+                localStorage.setItem('sw_powerSave', powerSaving);
+                localStorage.setItem('sw_sensorEnabled', sensorEnabled);
+                localStorage.setItem('sw_soundEnabled', soundEnabled);
+                localStorage.setItem('sw_vibrateEnabled', vibrateEnabled);
+                localStorage.setItem('sw_snoozeDur', snoozeDuration);
+                localStorage.setItem('sw_theme', theme);
+            } catch (e) { /* ignore */ }
+        }
+        function loadAppState() {
+            try {
+                const raw = localStorage.getItem(STATE_KEY);
+                if (raw) {
+                    const s = JSON.parse(raw);
+                    if (typeof s.mode === 'number') mode = s.mode;
+                    if (typeof s.menuIdx === 'number') menuIdx = s.menuIdx;
+                    if (typeof s.baseTime === 'number') { baseTime = s.baseTime; baseMillis = Date.now(); }
+                    if (typeof s.sensorEnabled === 'boolean') sensorEnabled = s.sensorEnabled;
+                    if (typeof s.soundEnabled === 'boolean') soundEnabled = s.soundEnabled;
+                    if (typeof s.vibrateEnabled === 'boolean') vibrateEnabled = s.vibrateEnabled;
+                    if (typeof s.htmlAlarmActive === 'boolean') htmlAlarmActive = s.htmlAlarmActive;
+                    if (typeof s.htmlAlarmAcked === 'boolean') htmlAlarmAcked = s.htmlAlarmAcked;
+                    if (typeof s.sensorTriggerCount === 'number') sensorTriggerCount = s.sensorTriggerCount;
+                    if (typeof s.lastSensorEvent === 'number') lastSensorEvent = s.lastSensorEvent;
+                    if (typeof s.powerSaving === 'boolean') powerSaving = s.powerSaving;
+                    if (typeof s.snoozeDuration === 'number') snoozeDuration = s.snoozeDuration;
+                    if (s.targetIP) targetIP = s.targetIP;
+                    if (s.POLL_MS) POLL_MS = s.POLL_MS;
+                    if (s.TOUT_MS) TOUT_MS = s.TOUT_MS;
+                    if (Array.isArray(s.chartData)) chartData = s.chartData;
+                    if (s.theme) theme = s.theme;
+                }
+            } catch (e) { /* ignore */ }
+            applyTheme(theme);
+            updateSensorToggle();
+            updatePowerSaveUI();
+            updateSoundToggle();
+            updateVibrateToggle();
+            document.getElementById('inpSnoozeDur').value = snoozeDuration;
+            document.getElementById('oledMode').textContent = ['TIME','MAIN','CMD','HOUR','MIN','RESET'][mode] || 'TIME';
+        }
+
+        // ===== TIME =====
+        function nowSec() { return baseTime + Math.floor((Date.now() - baseMillis) / 1000); }
+        function saveTime() { localStorage.setItem('sw_time', baseTime); }
+
+        // ===== LOGGING =====
+        function log(txt, cls) {
+            cls = cls || '';
+            const time = new Date().toLocaleTimeString();
+            const entry = { time, txt, cls };
+            logEntries.push(entry);
+            if (logEntries.length > 300) logEntries.shift();
+
+            const d = document.createElement('div');
+            d.className = 'log-entry';
+            d.innerHTML = `<span class="time">[${time}]</span><span class="msg ${cls}">${txt}</span>`;
+            logBox.appendChild(d);
+            logBox.scrollTop = logBox.scrollHeight;
+            while (logBox.children.length > 200) logBox.removeChild(logBox.firstChild);
+
+            logCount++;
+            document.getElementById('logCount').textContent = logCount;
+            const badge = document.getElementById('logBadge');
+            if (cls === 'alarm' || cls === 'err') {
+                badge.style.display = 'block';
+            }
+        }
+
+        // ===== NOTIFICATION =====
+        function sendNativeNotification(title, body) {
+            if (cordovaReady && cordova.plugins && cordova.plugins.notification && cordova.plugins.notification.local) {
+                cordova.plugins.notification.local.schedule({
+                    id: 1,
+                    title: title,
+                    text: body,
+                    foreground: true,
+                    wakeup: true,
+                    sound: 'default',
+                    vibrate: true,
+                    badge: 1,
+                    data: { alarm: true, timestamp: Date.now() }
+                });
+                return;
+            }
+            if (alarmNotifGranted && 'Notification' in window) {
+                try { new Notification(title, { body, tag: 'wemos-alarm', requireInteraction: true }); } catch (e) {}
+            }
+        }
+        function requestNotif() {
+            if (cordovaReady && cordova.plugins && cordova.plugins.notification && cordova.plugins.notification.local) {
+                cordova.plugins.notification.local.requestPermission(g => { alarmNotifGranted = g; });
+                return;
+            }
+            if (!('Notification' in window)) { alarmNotifGranted = true; return; }
+            Notification.requestPermission().then(p => { alarmNotifGranted = (p === 'granted'); });
+        }
+
+        // ===== AUDIO =====
+        function ensureAudio() {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+        }
+        function startContinuousAlarm() {
+            if (!soundEnabled) return;
+            ensureAudio();
+            stopContinuousAlarm();
+            function playSirenCycle() {
+                if (!audioCtx || !soundEnabled) return;
+                const now = audioCtx.currentTime;
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(800, now);
+                osc.frequency.linearRampToValueAtTime(1500, now + 0.3);
+                osc.frequency.linearRampToValueAtTime(800, now + 0.6);
+                gain.gain.setValueAtTime(0.35, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(now);
+                osc.stop(now + 0.6);
+            }
+            playSirenCycle();
+            alarmInterval = setInterval(playSirenCycle, 700);
+        }
+        function stopContinuousAlarm() {
+            if (alarmInterval) { clearInterval(alarmInterval); alarmInterval = null; }
+        }
+
+        function startContinuousVibrate() {
+            if (!vibrateEnabled) return;
+            stopContinuousVibrate();
+            const pattern = [800, 200, 800, 200, 800, 200];
+            if (cordovaReady && navigator.vibrate) {
+                navigator.vibrate(pattern);
+                vibrateInterval = setInterval(() => {
+                    if (htmlAlarmActive && !htmlAlarmAcked && vibrateEnabled) navigator.vibrate(pattern);
+                }, 2600);
+            } else if ('vibrate' in navigator) {
+                navigator.vibrate(pattern);
+                vibrateInterval = setInterval(() => {
+                    if (htmlAlarmActive && !htmlAlarmAcked && vibrateEnabled) navigator.vibrate(pattern);
+                }, 2600);
+            }
+        }
+        function stopContinuousVibrate() {
+            if (vibrateInterval) { clearInterval(vibrateInterval); vibrateInterval = null; }
+            if ('vibrate' in navigator) navigator.vibrate(0);
+        }
+
+        // ===== WAKE LOCK =====
+        function wakeUpScreen() {
+            if (!cordovaReady) return;
+            if (window.plugins && window.plugins.insomnia) window.plugins.insomnia.keepAwake();
+            if (cordova.plugins && cordova.plugins.backgroundMode) {
+                cordova.plugins.backgroundMode.wakeUp();
+                cordova.plugins.backgroundMode.unlock();
+            }
+        }
+        function releaseWakeLock() {
+            if (!cordovaReady) return;
+            if (window.plugins && window.plugins.insomnia) window.plugins.insomnia.allowSleepAgain();
+        }
+
+        // ===== ALARM =====
+        function onAlarmTriggered() {
+            log('🚨 ALARM TRIGGERED! (Suara+Getar+Notif+Wake)', 'alarm');
+            screenOn();
+            lastBtnMs = Date.now();
+            wakeUpScreen();
+            if (soundEnabled) startContinuousAlarm();
+            if (vibrateEnabled) startContinuousVibrate();
+            alarmToast.classList.add('show');
+            alarmFlash.classList.add('active');
+            sendNativeNotification('Wemos Alarm!', 'Sensor atau D4 trigger!');
+            saveAppState();
+            updateAlarmUI();
+            updateSnoozeUI();
+        }
+        function onAlarmCleared() {
+            log('Alarm cleared', 'ok');
+            stopContinuousAlarm();
+            stopContinuousVibrate();
+            releaseWakeLock();
+            alarmToast.classList.remove('show');
+            alarmFlash.classList.remove('active');
+            if (cordovaReady && cordova.plugins && cordova.plugins.notification && cordova.plugins.notification.local) {
+                cordova.plugins.notification.local.cancel(1);
+            }
+            saveAppState();
+            updateAlarmUI();
+            updateSnoozeUI();
+        }
+        function resetHtmlAlarm() {
+            if (htmlAlarmActive) {
+                htmlAlarmActive = false;
+                htmlAlarmAcked = true;
+                snoozeActive = false;
+                if (snoozeIntervalId) { clearInterval(snoozeIntervalId); snoozeIntervalId = null; }
+                log('Alarm RESET oleh user', 'ok');
+                sendCommand('/resetAlarm');
+                if (d4AlarmActive) sendCommand('/toggle?id=4');
+                onAlarmCleared();
+                updateSnoozeUI();
+            }
+        }
+        function updateAlarmUI() {
+            const el = document.getElementById('alarmStatusBadge');
+            const anyAlarm = htmlAlarmActive && !htmlAlarmAcked && !snoozeActive;
+            if (anyAlarm) {
+                el.textContent = '🚨 ACTIVE!';
+                el.className = 'badge-pill danger';
+            } else if (snoozeActive) {
+                el.textContent = '⏰ SNOOZE';
+                el.className = 'badge-pill warn';
+            } else if (alarmActive || d4AlarmActive) {
+                el.textContent = '⚠️ WEMOS ALARM';
+                el.className = 'badge-pill warn';
+            } else {
+                el.textContent = '✅ INACTIVE';
+                el.className = 'badge-pill success';
+            }
+        }
+
+        // ===== HTTP =====
+        async function httpGet(endpoint, fireAndForget) {
+            fireAndForget = fireAndForget || false;
+            const url = targetIP + endpoint;
+            const timeout = fireAndForget ? 2000 : 4000;
+            try {
+                const ctrl = new AbortController();
+                const to = setTimeout(() => ctrl.abort(), timeout);
+                const r = await fetch(url, { method: 'GET', signal: ctrl.signal, mode: 'cors', cache: 'no-store' });
+                clearTimeout(to);
+                if (r.ok) {
+                    const text = await r.text();
+                    try { return { ok: true, status: r.status, payload: JSON.parse(text) }; } catch (e) { return { ok: true, status: r.status, payload: null }; }
+                }
+                return { ok: false, status: r.status, error: 'HTTP ' + r.status };
+            } catch (e) {
+                try {
+                    const ctrl2 = new AbortController();
+                    const to2 = setTimeout(() => ctrl2.abort(), timeout);
+                    await fetch(url, { method: 'GET', signal: ctrl2.signal, mode: 'no-cors', cache: 'no-store' });
+                    clearTimeout(to2);
+                    return { ok: true, status: 0, payload: null, opaque: true };
+                } catch (e2) {
+                    return { ok: false, error: (e2.message || 'Network Error') };
+                }
+            }
+        }
+
+        async function sendCommand(endpoint) {
+            log('TX → ' + endpoint, 'tx');
+            const res = await httpGet(endpoint, true);
+            if (res.ok) {
+                commandBlinkCount = CMD_BLINK_TOT;
+                lastCommandBlink = Date.now();
+                log('OK ← ' + endpoint, 'ok');
+            } else {
+                log('ERR ← ' + endpoint + ': ' + (res.error || 'unknown'), 'err');
+            }
+        }
+
+        // ===== POLLING =====
+        async function pollStatus() {
+            if (!isPolling) return;
+            const res = await httpGet('/status');
+            if (!res.ok) {
+                const health = await httpGet('/');
+                if (health.ok) { updateWifi(true); return; }
+                updateWifi(false);
+                return;
+            }
+            updateWifi(true);
+
+            if (res.payload) {
+                id0State = !!res.payload['0'];
+                id6State = !!res.payload['6'];
+                id8State = !!res.payload['8'];
+                d5SensorState = !!res.payload['5'];
+                d4AlarmActive = !!res.payload['4'];
+                alarmActive = !!(res.payload['alarm'] === 1 || res.payload['alarm'] === '1' || res.payload['alarm'] === true);
+                sensorEnabled = !!(res.payload['sensorEnabled'] === 1 || res.payload['sensorEnabled'] === '1' || res.payload['sensorEnabled'] === true);
+                clientCount = parseInt(res.payload['clients']) || 0;
+                let sensorEvent = parseInt(res.payload['sensorEvent']) || 0;
+
+                updatePinUI('D0', id0State);
+                updatePinUI('D6', id6State);
+                updatePinUI('D8', id8State);
+                updatePinUI('D4', d4AlarmActive, 'alarm');
+                updatePinUI('D5', d5SensorState, 'trigger');
+                document.getElementById('pinSensorVal').textContent = sensorEnabled ? 'ON' : 'OFF';
+                document.getElementById('pinSensorVal').className = 'pin-value ' + (sensorEnabled ? 'on' : 'off');
+                document.getElementById('pinSensorBar').className = 'fill ' + (sensorEnabled ? 'on' : 'off');
+                document.getElementById('pinSensorBar').style.width = sensorEnabled ? '100%' : '0%';
+
+                document.getElementById('oledLedD0').className = 'led ' + (id0State ? 'on' : 'off');
+                document.getElementById('oledLedD6').className = 'led ' + (id6State ? 'on' : 'off');
+                document.getElementById('oledLedD8').className = 'led ' + (id8State ? 'on' : 'off');
+                const anyAlarm = htmlAlarmActive && !htmlAlarmAcked && !snoozeActive;
+                document.getElementById('oledLedAlarm').className = 'led ' + (anyAlarm ? 'alarm' : 'off');
+
+                document.getElementById('sensorD5Status').textContent = d5SensorState ? '🔴 TRIGGERED' : '🟢 HIGH';
+                document.getElementById('sensorD5Status').style.color = d5SensorState ? 'var(--accent-red)' : 'var(--accent-green)';
+                document.getElementById('sensorD4Status').textContent = d4AlarmActive ? '🔴 TRIGGERED' : '✅ NORMAL';
+                document.getElementById('sensorD4Status').style.color = d4AlarmActive ? 'var(--accent-red)' : 'var(--text-secondary)';
+
+                if (firstPoll) {
+                    lastSensorEvent = sensorEvent;
+                    firstPoll = false;
+                } else if (sensorEvent > lastSensorEvent) {
+                    lastSensorEvent = sensorEvent;
+                    sensorTriggerCount = sensorEvent;
+                    if (!snoozeActive) {
+                        htmlAlarmActive = true;
+                        htmlAlarmAcked = false;
+                    }
+                    addChartPoint(1);
+                    saveAppState();
+                    log('⚡ SENSOR TRIGGERED! Event #' + sensorEvent + ' (Clients: ' + clientCount + ')', 'alarm');
+                } else {
+                    addChartPoint(0);
+                }
+
+                if (d4AlarmActive && !htmlAlarmActive && htmlAlarmAcked && !snoozeActive) {
+                    htmlAlarmActive = true;
+                    htmlAlarmAcked = false;
+                    addChartPoint(1);
+                    saveAppState();
+                    log('D4 TRIGGERED!', 'alarm');
+                }
+
+                document.getElementById('statTriggers').textContent = sensorTriggerCount;
+                document.getElementById('statClients').textContent = clientCount;
+                const anyAlarmState = htmlAlarmActive && !htmlAlarmAcked && !snoozeActive;
+                document.getElementById('statAlarms').textContent = anyAlarmState ? '1' : '0';
+                document.getElementById('statAlarms').className = 'stat-value ' + (anyAlarmState ? 'danger' : '');
+
+                updateAlarmUI();
+                updateSnoozeUI();
+
+                const shouldAlarm = htmlAlarmActive && !htmlAlarmAcked && !snoozeActive;
+                if (shouldAlarm && !lastHtmlAlarmState) { onAlarmTriggered(); }
+                if (!shouldAlarm && lastHtmlAlarmState) { onAlarmCleared(); }
+                lastHtmlAlarmState = shouldAlarm;
+
+                if (Math.random() < 0.08) {
+                    log('Status OK | D0:' + (id0State?'ON':'OFF') + ' D6:' + (id6State?'ON':'OFF') + ' D8:' + (id8State?'ON':'OFF') + ' CLI:' + clientCount + ' EVT#' + sensorEvent, 'dim');
+                }
+            } else if (res.opaque) {
+                updateWifi(true);
+            }
+        }
+
+        function updatePinUI(pin, value, type) {
+            const map = { 'D0':'pinD0Val', 'D6':'pinD6Val', 'D8':'pinD8Val', 'D4':'pinD4Val', 'D5':'pinD5Val' };
+            const barMap = { 'D0':'pinD0Bar', 'D6':'pinD6Bar', 'D8':'pinD8Bar', 'D4':'pinD4Bar', 'D5':'pinD5Bar' };
+            const el = document.getElementById(map[pin]);
+            const bar = document.getElementById(barMap[pin]);
+            if (!el) return;
+            if (type === 'alarm') {
+                el.textContent = value ? '🚨 TRIGGER' : 'NORMAL';
+                el.className = 'pin-value ' + (value ? 'alarm' : 'off');
+                if (bar) { bar.className = 'fill ' + (value ? 'alarm' : 'off'); bar.style.width = value ? '100%' : '0%'; }
+            } else if (type === 'trigger') {
+                el.textContent = value ? '🔴 TRIG' : 'HIGH';
+                el.className = 'pin-value ' + (value ? 'trigger' : 'off');
+                if (bar) { bar.className = 'fill ' + (value ? 'trigger' : 'off'); bar.style.width = value ? '100%' : '0%'; }
+            } else {
+                el.textContent = value ? 'ON' : 'OFF';
+                el.className = 'pin-value ' + (value ? 'on' : 'off');
+                if (bar) { bar.className = 'fill ' + (value ? 'on' : 'off'); bar.style.width = value ? '100%' : '0%'; }
+            }
+        }
+
+        function updateWifi(connected) {
+            if (connected !== lastWifiStatus) {
+                lastWifiStatus = connected;
+                log(connected ? 'WiFi Connected' : 'WiFi Disconnected', connected ? 'ok' : 'err');
+                screenOn();
+                lastBtnMs = Date.now();
+            }
+            const dot = document.getElementById('statusDot');
+            const txt = document.getElementById('statusText');
+            if (connected) {
+                dot.className = 'dot on';
+                txt.textContent = 'ONLINE';
+            } else {
+                dot.className = 'dot off';
+                txt.textContent = 'OFFLINE';
+            }
+        }
+
+        // ===== CHART =====
+        function addChartPoint(val) {
+            chartData.push(val);
+            if (chartData.length > CHART_MAX) chartData.shift();
+            drawChart();
+            document.getElementById('chartCount').textContent = chartData.filter(v => v > 0).length + ' events';
+            saveAppState();
+        }
+        function drawChart() {
+            const w = sensorChartCanvas.width, h = sensorChartCanvas.height, c = sensorChartCtx;
+            c.clearRect(0, 0, w, h);
+            c.fillStyle = 'rgba(255,255,255,0.02)';
+            c.fillRect(0, 0, w, h);
+
+            if (chartData.length < 2) {
+                c.fillStyle = 'var(--text-dim)';
+                c.font = '9px sans-serif';
+                c.textAlign = 'center';
+                c.fillText('Menunggu data sensor...', w/2, h/2+3);
+                return;
+            }
+            const pad = 3;
+            const graphW = w - pad*2, graphH = h - pad*2;
+            const step = graphW / (CHART_MAX - 1);
+            const maxVal = Math.max(1, ...chartData);
+
+            c.strokeStyle = '#8b5cf6';
+            c.lineWidth = 2;
+            c.shadowColor = 'rgba(139,92,246,0.3)';
+            c.shadowBlur = 8;
+            c.beginPath();
+            for (let i=0; i<chartData.length; i++) {
+                const x = pad + i*step;
+                const y = pad + graphH - (chartData[i]/maxVal)*graphH;
+                if (i===0) c.moveTo(x,y);
+                else c.lineTo(x,y);
+            }
+            c.stroke();
+            c.shadowBlur = 0;
+
+            const lastX = pad + (chartData.length-1)*step;
+            c.lineTo(lastX, pad+graphH);
+            c.lineTo(pad, pad+graphH);
+            c.closePath();
+            c.fillStyle = 'rgba(139,92,246,0.06)';
+            c.fill();
+
+            for (let i=0; i<chartData.length; i++) {
+                if (chartData[i] > 0) {
+                    const x = pad + i*step;
+                    const y = pad + graphH - (chartData[i]/maxVal)*graphH;
+                    c.fillStyle = '#ec4899';
+                    c.shadowColor = 'rgba(236,72,153,0.5)';
+                    c.shadowBlur = 12;
+                    c.beginPath();
+                    c.arc(x, y, 4, 0, Math.PI*2);
+                    c.fill();
+                    c.shadowBlur = 0;
+                }
+            }
+        }
+
+        // ===== SCREEN =====
+        function screenOn() {
+            if (!isScreenOn) { canvas.classList.remove('off'); isScreenOn = true; document.getElementById('oledStatus').textContent = 'ON'; }
+        }
+        function screenOff() {
+            if (isScreenOn) { canvas.classList.add('off'); isScreenOn = false; document.getElementById('oledStatus').textContent = 'OFF'; }
+        }
+
+        // ===== RENDER OLED =====
+        function drawBell(x,y,sz) {
+            ctx.strokeStyle='#fff'; ctx.lineWidth=1;
+            ctx.beginPath(); ctx.arc(x, y-sz*0.2, sz*0.5, Math.PI, 0);
+            ctx.lineTo(x+sz*0.5, y+sz*0.4);
+            ctx.lineTo(x-sz*0.5, y+sz*0.4);
+            ctx.closePath(); ctx.stroke();
+            ctx.beginPath(); ctx.arc(x, y+sz*0.45, sz*0.15, 0, Math.PI*2); ctx.stroke();
+        }
+        function dTxt(x,y,s,sz,align) {
+            sz=sz||8; align=align||'left';
+            ctx.font=sz+'px "Courier New", monospace';
+            ctx.fillStyle='#fff'; ctx.textBaseline='top';
+            if (align==='center') { ctx.textAlign='center'; ctx.fillText(s,x,y); ctx.textAlign='left'; }
+            else if (align==='right') { ctx.textAlign='right'; ctx.fillText(s,x,y); ctx.textAlign='left'; }
+            else ctx.fillText(s,x,y);
+        }
+        function dLine(x1,y1,x2,y2) { ctx.strokeStyle='#fff'; ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke(); }
+        function dDisc(cx,cy,r) { ctx.fillStyle='#fff'; ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.fill(); }
+        function dCirc(cx,cy,r) { ctx.strokeStyle='#fff'; ctx.lineWidth=1; ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.stroke(); }
+
+        function render() {
+            if (!isScreenOn) return;
+            const now = Date.now();
+            const t = new Date(nowSec()*1000);
+            const H = t.getHours(), M = t.getMinutes();
+            const shouldAlarm = htmlAlarmActive && !htmlAlarmAcked && !snoozeActive;
+
+            if (now - lastColonMs >= COLON_MS) { lastColonMs = now; colonOn = !colonOn; }
+
+            ctx.fillStyle='#000';
+            ctx.fillRect(0,0,128,64);
+
+            dTxt(0,0,lastWifiStatus?'WEMOS':'NO AP',7);
+            if (commandBlinkCount > 0) {
+                if (now - lastCommandBlink >= CMD_BLINK_INT) { lastCommandBlink = now; commandBlinkCount--; }
+                if (commandBlinkCount % 2 === 0) dTxt(35,0,'TX',7);
+            }
+            if (shouldAlarm) drawBell(48,6,6);
+            if (snoozeActive) { dTxt(48,0,'⏰',8); }
+            dTxt(50,0,'D0',6);
+            id0State ? dDisc(62,3,2) : dCirc(62,3,2);
+            dTxt(70,0,'D6',6);
+            id6State ? dDisc(82,3,2) : dCirc(82,3,2);
+            dTxt(90,0,'D8',6);
+            id8State ? dDisc(102,3,2) : dCirc(102,3,2);
+            if (d4AlarmActive) { ctx.fillStyle='#f00'; ctx.fillRect(110,1,4,4); }
+            dLine(0,10,128,10);
+
+            switch (mode) {
+                case M_TIME:
+                    if (shouldAlarm) {
+                        if (alarmBlink) {
+                            ctx.fillStyle='rgba(255,0,0,0.3)';
+                            ctx.fillRect(0,0,128,64);
+                            dTxt(64,12,'🚨 ALARM!',14,'center');
+                            dTxt(64,30,'SENSOR #'+sensorTriggerCount,9,'center');
+                            dTxt(64,44,'PRESS SEL!',8,'center');
+                        } else {
+                            dTxt(15,20,H.toString().padStart(2,'0'),24);
+                            if (colonOn) dTxt(54,16,':',24);
+                            dTxt(69,20,M.toString().padStart(2,'0'),24);
+                        }
+                    } else if (snoozeActive) {
+                        const remain = Math.ceil((snoozeEndTime - now)/1000);
+                        dTxt(64,14,'⏰ SNOOZE',12,'center');
+                        dTxt(64,30,remain+'s',16,'center');
+                        dTxt(64,48,'SEL to wake',7,'center');
+                    } else {
+                        dTxt(15,20,H.toString().padStart(2,'0'),24);
+                        if (colonOn) dTxt(54,16,':',24);
+                        dTxt(69,20,M.toString().padStart(2,'0'),24);
+                        dTxt(100,34,t.getSeconds().toString().padStart(2,'0'),8);
+                    }
+                    dTxt(64,54,(sensorEnabled?'SENSOR ON':'SENSOR OFF')+' #'+sensorTriggerCount,6,'center');
+                    break;
+                case M_MAIN:
+                    dTxt(64,10,'MAIN MENU',7,'center');
+                    dTxt(5,26,(menuIdx===0?'▶ ':'  ')+'Set Time',7);
+                    dTxt(5,38,(menuIdx===1?'▶ ':'  ')+'Send Cmd',7);
+                    dTxt(5,50,(menuIdx===2?'▶ ':'  ')+'Reset Alarm',7);
+                    break;
+                case M_CMD:
+                    dTxt(5,14,'UP:  Toggle D8',7);
+                    dTxt(5,26,'DOWN:Toggle D0',7);
+                    dTxt(5,38,'SEL: Pulse D6',7);
+                    dTxt(5,50,'MENU: Back',7);
+                    break;
+                case M_HOUR:
+                    if (Math.floor(now/500)%2===0) dTxt(15,21,editH.toString().padStart(2,'0'),28);
+                    dTxt(58,17,':',28);
+                    dTxt(73,21,editM.toString().padStart(2,'0'),28);
+                    dTxt(64,52,'SET HOUR',7,'center');
+                    break;
+                case M_MIN:
+                    dTxt(15,21,editH.toString().padStart(2,'0'),28);
+                    dTxt(58,17,':',28);
+                    if (Math.floor(now/500)%2===0) dTxt(73,21,editM.toString().padStart(2,'0'),28);
+                    dTxt(64,52,'SET MINUTE',7,'center');
+                    break;
+                case M_RESET:
+                    dTxt(64,16,'RESET ALARM?',10,'center');
+                    dTxt(64,34,'SEL=Yes  MENU=No',7,'center');
+                    break;
+            }
+
+            if (shouldAlarm) {
+                if (now - lastAlarmBlink >= ALARM_BLINK_MS) { lastAlarmBlink = now; alarmBlink = !alarmBlink; }
+                if (alarmBlink) {
+                    ctx.strokeStyle='#f00';
+                    ctx.lineWidth=3;
+                    ctx.strokeRect(1,1,126,62);
+                    if (mode !== M_TIME) {
+                        ctx.fillStyle='rgba(0,0,0,0.85)';
+                        ctx.fillRect(10,18,108,30);
+                        dTxt(64,20,'🚨 ALARM!',12,'center');
+                        dTxt(64,36,'PRESS SEL!',8,'center');
+                    }
+                }
+            }
+
+            const modeNames = ['TIME','MAIN','CMD','HOUR','MIN','RESET'];
+            document.getElementById('oledMode').textContent = modeNames[mode] || 'TIME';
+        }
+
+        // ===== INPUT HANDLING =====
+        function btnDown(id) {
+            const s = btnState[id];
+            if (!s.down) {
+                s.down = true;
+                s.t0 = Date.now();
+                s.longDone = false;
+                s.proc = false;
+                screenOn();
+                lastBtnMs = Date.now();
+                ensureAudio();
+                const elId = id===BTN_MENU?'btnMenu':id===BTN_UP?'btnUp':id===BTN_DOWN?'btnDown':'btnSelect';
+                const el = document.getElementById(elId);
+                if (el) el.classList.add('pressed');
+            }
+        }
+        function btnUp(id) {
+            const s = btnState[id];
+            if (s.down) {
+                s.down = false;
+                const elId = id===BTN_MENU?'btnMenu':id===BTN_UP?'btnUp':id===BTN_DOWN?'btnDown':'btnSelect';
+                const el = document.getElementById(elId);
+                if (el) el.classList.remove('pressed');
+                if (!s.proc && !s.longDone) handleShort(id);
+                s.proc = true;
+            }
+        }
+        function handleShort(btn) {
+            const shouldAlarm = htmlAlarmActive && !htmlAlarmAcked && !snoozeActive;
+            if (shouldAlarm && btn !== BTN_MENU) { resetHtmlAlarm(); return; }
+            if (snoozeActive && btn === BTN_SEL) {
+                htmlAlarmAcked = false;
+                snoozeActive = false;
+                if (snoozeIntervalId) { clearInterval(snoozeIntervalId); snoozeIntervalId = null; }
+                onAlarmTriggered();
+                updateSnoozeUI();
+                return;
+            }
+
+            switch (mode) {
+                case M_TIME:
+                    if (btn === BTN_MENU) { mode = M_MAIN; menuIdx=0; saveAppState(); }
+                    else if (btn === BTN_SEL) sendCommand('/pulse?id=6');
+                    break;
+                case M_MAIN:
+                    if (btn === BTN_UP) { menuIdx = (menuIdx+2)%3; saveAppState(); }
+                    else if (btn === BTN_DOWN) { menuIdx = (menuIdx+1)%3; saveAppState(); }
+                    else if (btn === BTN_SEL) {
+                        if (menuIdx===0) { const n = new Date(nowSec()*1000); editH=n.getHours(); editM=n.getMinutes(); editT=nowSec(); mode=M_HOUR; saveAppState(); }
+                        else if (menuIdx===1) { mode=M_CMD; saveAppState(); }
+                        else if (menuIdx===2) { mode=M_RESET; saveAppState(); }
+                    } else if (btn === BTN_MENU) { mode=M_TIME; saveAppState(); }
+                    break;
+                case M_CMD:
+                    if (btn === BTN_UP) sendCommand('/toggle?id=8');
+                    else if (btn === BTN_DOWN) sendCommand('/toggle?id=0');
+                    else if (btn === BTN_SEL) sendCommand('/pulse?id=6');
+                    else if (btn === BTN_MENU) { mode=M_MAIN; saveAppState(); }
+                    break;
+                case M_HOUR:
+                    if (btn === BTN_UP) { editH = (editH+1)%24; saveAppState(); }
+                    else if (btn === BTN_DOWN) { editH = (editH+23)%24; saveAppState(); }
+                    else if (btn === BTN_SEL) { mode=M_MIN; saveAppState(); }
+                    else if (btn === BTN_MENU) { mode=M_MAIN; saveAppState(); }
+                    break;
+                case M_MIN:
+                    if (btn === BTN_UP) { editM = (editM+1)%60; saveAppState(); }
+                    else if (btn === BTN_DOWN) { editM = (editM+59)%60; saveAppState(); }
+                    else if (btn === BTN_SEL) {
+                        const d = new Date(editT*1000);
+                        d.setHours(editH); d.setMinutes(editM); d.setSeconds(0);
+                        baseTime = Math.floor(d.getTime()/1000);
+                        baseMillis = Date.now();
+                        saveTime();
+                        mode=M_TIME;
+                        saveAppState();
+                    } else if (btn === BTN_MENU) { mode=M_HOUR; saveAppState(); }
+                    break;
+                case M_RESET:
+                    if (btn === BTN_SEL) { resetHtmlAlarm(); mode=M_TIME; saveAppState(); }
+                    else if (btn === BTN_MENU) { mode=M_MAIN; saveAppState(); }
+                    break;
+            }
+        }
+        function handleLong(btn) {
+            if (mode === M_TIME) {
+                if (btn === BTN_UP) sendCommand('/toggle?id=8');
+                else if (btn === BTN_DOWN) sendCommand('/toggle?id=0');
+                else if (btn === BTN_SEL) sendCommand('/pulse?id=6');
+            }
+        }
+
+        // ===== BIND BUTTONS =====
+        function bindBtn(el, id) {
+            if (!el) return;
+            const start = function(e) { e.preventDefault(); btnDown(id); };
+            const end = function(e) { e.preventDefault(); btnUp(id); };
+            el.addEventListener('mousedown', start);
+            el.addEventListener('mouseup', end);
+            el.addEventListener('mouseleave', end);
+            el.addEventListener('touchstart', start, { passive: false });
+            el.addEventListener('touchend', end, { passive: false });
+            el.addEventListener('touchcancel', end, { passive: false });
+        }
+        bindBtn(document.getElementById('btnMenu'), BTN_MENU);
+        bindBtn(document.getElementById('btnUp'), BTN_UP);
+        bindBtn(document.getElementById('btnDown'), BTN_DOWN);
+        bindBtn(document.getElementById('btnSelect'), BTN_SEL);
+
+        // ===== QUICK ACTIONS =====
+        document.getElementById('quickToggleD8').addEventListener('click', () => sendCommand('/toggle?id=8'));
+        document.getElementById('quickToggleD0').addEventListener('click', () => sendCommand('/toggle?id=0'));
+        document.getElementById('quickPulseD6').addEventListener('click', () => sendCommand('/pulse?id=6'));
+        document.getElementById('quickResetAlarm').addEventListener('click', resetHtmlAlarm);
+        document.getElementById('btnDismissAlarm').addEventListener('click', resetHtmlAlarm);
+        document.getElementById('btnSnoozeAlarm').addEventListener('click', startSnooze);
+        document.getElementById('quickPulseAll').addEventListener('click', () => {
+            sendCommand('/pulse?id=0');
+            setTimeout(() => sendCommand('/pulse?id=6'), 200);
+            setTimeout(() => sendCommand('/pulse?id=8'), 400);
+            log('Pulse all pins', 'tx');
+        });
+        document.getElementById('quickToggleAlarm').addEventListener('click', () => {
+            htmlAlarmActive = true;
+            htmlAlarmAcked = false;
+            saveAppState();
+            onAlarmTriggered();
+            log('🔔 Test alarm triggered', 'alarm');
+        });
+
+        // ===== SETTINGS =====
+        document.getElementById('settingsToggle').addEventListener('click', toggleSettings);
+
+        document.getElementById('inpTargetIP').addEventListener('change', function(e) { targetIP = e.target.value; saveAppState(); });
+        document.getElementById('inpPollInt').addEventListener('change', function(e) { POLL_MS = parseInt(e.target.value) || 500; saveAppState(); });
+        document.getElementById('inpScrTout').addEventListener('change', function(e) { TOUT_MS = parseInt(e.target.value) || 5000; saveAppState(); });
+        document.getElementById('inpSnoozeDur').addEventListener('change', function(e) { snoozeDuration = parseInt(e.target.value) || 60; saveAppState(); });
+
+        document.getElementById('powerSaveToggle').addEventListener('click', function() {
+            powerSaving = !powerSaving;
+            updatePowerSaveUI();
+            saveAppState();
+            if (powerSaving) {
+                POLL_MS = Math.max(POLL_MS, 2000);
+                document.getElementById('inpPollInt').value = POLL_MS;
+                log('Power saving ENABLED', 'dim');
+            } else {
+                POLL_MS = parseInt(document.getElementById('inpPollInt').value) || 500;
+                log('Power saving DISABLED', 'dim');
+            }
+        });
+        function updatePowerSaveUI() {
+            const el = document.getElementById('powerSaveToggle');
+            const label = document.getElementById('powerSaveLabel');
+            if (powerSaving) { el.classList.add('active'); label.textContent='ON'; }
+            else { el.classList.remove('active'); label.textContent='OFF'; }
+        }
+
+        document.getElementById('sensorToggle').addEventListener('click', function() {
+            sensorEnabled = !sensorEnabled;
+            updateSensorToggle();
+            saveAppState();
+            sendCommand('/sensor?enable=' + (sensorEnabled ? '1' : '0'));
+            log('Sensor ' + (sensorEnabled ? 'ENABLED' : 'DISABLED'), 'ok');
+        });
+        function updateSensorToggle() {
+            const el = document.getElementById('sensorToggle');
+            const label = document.getElementById('sensorToggleLabel');
+            if (sensorEnabled) { el.classList.add('active'); label.textContent='ON'; }
+            else { el.classList.remove('active'); label.textContent='OFF'; }
+            document.getElementById('pinSensorVal').textContent = sensorEnabled ? 'ON' : 'OFF';
+            document.getElementById('pinSensorVal').className = 'pin-value ' + (sensorEnabled ? 'on' : 'off');
+            document.getElementById('pinSensorBar').className = 'fill ' + (sensorEnabled ? 'on' : 'off');
+            document.getElementById('pinSensorBar').style.width = sensorEnabled ? '100%' : '0%';
+        }
+
+        document.getElementById('soundToggle').addEventListener('click', function() {
+            soundEnabled = !soundEnabled;
+            updateSoundToggle();
+            saveAppState();
+            if (!soundEnabled) stopContinuousAlarm();
+            log('Sound ' + (soundEnabled ? 'ENABLED' : 'DISABLED'), 'ok');
+        });
+        function updateSoundToggle() {
+            const el = document.getElementById('soundToggle');
+            const label = document.getElementById('soundToggleLabel');
+            if (soundEnabled) { el.classList.add('active'); label.textContent='ON'; }
+            else { el.classList.remove('active'); label.textContent='OFF'; }
+        }
+
+        document.getElementById('vibrateToggle').addEventListener('click', function() {
+            vibrateEnabled = !vibrateEnabled;
+            updateVibrateToggle();
+            saveAppState();
+            if (!vibrateEnabled) stopContinuousVibrate();
+            log('Vibrate ' + (vibrateEnabled ? 'ENABLED' : 'DISABLED'), 'ok');
+        });
+        function updateVibrateToggle() {
+            const el = document.getElementById('vibrateToggle');
+            const label = document.getElementById('vibrateToggleLabel');
+            if (vibrateEnabled) { el.classList.add('active'); label.textContent='ON'; }
+            else { el.classList.remove('active'); label.textContent='OFF'; }
+        }
+
+        document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+
+        // ===== EXPORT / CLEAR / IMPORT =====
+        document.getElementById('exportLogBtn').addEventListener('click', function() {
+            let text = '=== WEMOS LOG ===\n';
+            logEntries.forEach(e => { text += '[' + e.time + '] ' + e.txt + '\n'; });
+            const blob = new Blob([text], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'wemos_log_' + new Date().toISOString().slice(0,10) + '.txt';
+            a.click();
+            URL.revokeObjectURL(url);
+            log('Log exported', 'ok');
+        });
+        document.getElementById('clearLogBtn').addEventListener('click', function() {
+            logBox.innerHTML = '';
+            logEntries = [];
+            logCount = 0;
+            document.getElementById('logCount').textContent = '0';
+            document.getElementById('logBadge').style.display = 'none';
+            log('Log cleared', 'dim');
+        });
+        document.getElementById('resetStatsBtn').addEventListener('click', function() {
+            sensorTriggerCount = 0;
+            lastSensorEvent = 0;
+            chartData = [];
+            document.getElementById('statTriggers').textContent = '0';
+            saveAppState();
+            drawChart();
+            document.getElementById('chartCount').textContent = '0 events';
+            log('Stats reset', 'ok');
+        });
+        document.getElementById('exportSettingsBtn').addEventListener('click', function() {
+            const settings = {
+                targetIP, POLL_MS, TOUT_MS, snoozeDuration, powerSaving,
+                sensorEnabled, soundEnabled, vibrateEnabled, theme, version: 'v4.2'
+            };
+            const blob = new Blob([JSON.stringify(settings, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'wemos_settings.json';
+            a.click();
+            URL.revokeObjectURL(url);
+            log('Settings exported', 'ok');
+        });
+        document.getElementById('importSettingsBtn').addEventListener('click', function() {
+            document.getElementById('importSettingsInput').click();
+        });
+        document.getElementById('importSettingsInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(ev) {
+                try {
+                    const settings = JSON.parse(ev.target.result);
+                    if (settings.targetIP) { targetIP = settings.targetIP; document.getElementById('inpTargetIP').value = targetIP; }
+                    if (settings.POLL_MS) { POLL_MS = settings.POLL_MS; document.getElementById('inpPollInt').value = POLL_MS; }
+                    if (settings.TOUT_MS) { TOUT_MS = settings.TOUT_MS; document.getElementById('inpScrTout').value = TOUT_MS; }
+                    if (settings.snoozeDuration) { snoozeDuration = settings.snoozeDuration; document.getElementById('inpSnoozeDur').value = snoozeDuration; }
+                    if (typeof settings.powerSaving === 'boolean') { powerSaving = settings.powerSaving; updatePowerSaveUI(); }
+                    if (typeof settings.sensorEnabled === 'boolean') { sensorEnabled = settings.sensorEnabled; updateSensorToggle(); }
+                    if (typeof settings.soundEnabled === 'boolean') { soundEnabled = settings.soundEnabled; updateSoundToggle(); }
+                    if (typeof settings.vibrateEnabled === 'boolean') { vibrateEnabled = settings.vibrateEnabled; updateVibrateToggle(); }
+                    if (settings.theme) { applyTheme(settings.theme); }
+                    saveAppState();
+                    log('Settings imported successfully', 'ok');
+                } catch (err) {
+                    log('Import failed: ' + err.message, 'err');
+                }
+            };
+            reader.readAsText(file);
+            e.target.value = '';
+        });
+
+        // ===== TABS =====
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                // Close settings when switching tabs
+                if (settingsOverlay.classList.contains('show')) {
+                    toggleSettings();
+                }
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+                document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+                document.getElementById(this.dataset.tab).classList.add('active');
+                if (this.dataset.tab === 'panelLog') {
+                    document.getElementById('logBadge').style.display = 'none';
+                }
+            });
+        });
+
+        // ===== UPTIME =====
+        function updateUptime() {
+            const diff = Math.floor((Date.now() - startTime) / 1000);
+            let s = diff % 60, m = Math.floor(diff/60) % 60, h = Math.floor(diff/3600);
+            document.getElementById('statUptime').textContent =
+                (h > 0 ? h + 'h ' : '') + (m > 0 ? m + 'm ' : '') + s + 's';
+        }
+
+        // ===== MAIN LOOP =====
+        let loopId = null;
+        function mainLoop() {
+            const now = Date.now();
+
+            for (const id of [BTN_MENU, BTN_UP, BTN_DOWN, BTN_SEL]) {
+                const s = btnState[id];
+                if (s.down && !s.longDone && (now - s.t0) >= LONG_MS) {
+                    s.longDone = true;
+                    s.proc = true;
+                    handleLong(parseInt(id));
+                }
+            }
+
+            if (now - lastPoll >= POLL_MS) {
+                lastPoll = now;
+                pollStatus();
+                updateUptime();
+                updateSnoozeUI();
+            }
+
+            if (isScreenOn && (now - lastBtnMs > TOUT_MS)) {
+                screenOff();
+                mode = M_TIME;
+                saveAppState();
+            }
+
+            render();
+            loopId = requestAnimationFrame(mainLoop);
+        }
+
+        // ===== CORDOVA =====
+        document.addEventListener('deviceready', function() {
+            cordovaReady = true;
+            log('Cordova ready - Native features available', 'ok');
+
+            // ============================================================
+            // PERMINTAAN IZIN ALARM EKSAK (Android 13+ / API 33+)
+            // ============================================================
+            if (cordova.platformId === 'android') {
+                // Coba dapatkan versi API dari cordova.platformVersion
+                var androidVersion = parseInt(cordova.platformVersion) || 0;
+                // Jika tidak diketahui, asumsikan API >= 33 untuk amannya
+                if (androidVersion >= 33 || androidVersion === 0) {
+                    // Gunakan plugin permissions jika tersedia
+                    if (cordova.plugins && cordova.plugins.permissions) {
+                        cordova.plugins.permissions.hasPermission(
+                            'android.permission.SCHEDULE_EXACT_ALARM',
+                            function(status) {
+                                if (!status.hasPermission) {
+                                    cordova.plugins.permissions.requestPermission(
+                                        'android.permission.SCHEDULE_EXACT_ALARM',
+                                        function(success) {
+                                            if (success) {
+                                                log('✅ Izin alarm eksak diberikan', 'ok');
+                                            } else {
+                                                log('⚠️ Izin alarm eksak ditolak - notifikasi mungkin tidak presisi', 'warn');
+                                            }
+                                        },
+                                        function(err) {
+                                            log('❌ Gagal meminta izin alarm: ' + err, 'err');
+                                        }
+                                    );
+                                } else {
+                                    log('✅ Izin alarm eksak sudah ada', 'ok');
+                                }
+                            },
+                            function(err) {
+                                log('❌ Gagal cek izin alarm: ' + err, 'err');
+                            }
+                        );
+                    } else {
+                        // Jika plugin permissions tidak terpasang, beri tahu user manual
+                        log('⚠️ Plugin cordova-plugin-android-permissions tidak terdeteksi', 'warn');
+                        if (!window._alarmPermissionAlertShown) {
+                            window._alarmPermissionAlertShown = true;
+                            setTimeout(function() {
+                                if (navigator.notification && navigator.notification.alert) {
+                                    navigator.notification.alert(
+                                        'Untuk akurasi alarm, aktifkan izin "Alarm & pengingat" di Pengaturan → Aplikasi → Wemos Pro → Izin.',
+                                        function() {},
+                                        'Izin Alarm Eksak',
+                                        'OK'
+                                    );
+                                } else {
+                                    alert('Aktifkan izin "Alarm & pengingat" di pengaturan aplikasi untuk notifikasi tepat waktu.');
+                                }
+                            }, 1500);
+                        }
+                    }
+                }
+            }
+
+            // ----- BACKGROUND MODE -----
+            if (cordova.plugins && cordova.plugins.backgroundMode) {
+                cordovaBgMode = true;
+                cordova.plugins.backgroundMode.enable();
+                cordova.plugins.backgroundMode.overrideBackButton();
+                cordova.plugins.backgroundMode.setDefaults({
+                    title: 'Wemos Alarm Aktif',
+                    text: 'Monitoring sensor Wemos...',
+                    icon: 'icon',
+                    color: 'F39C12',
+                    resume: true,
+                    hidden: false,
+                    bigText: true,
+                    silent: false
+                });
+                cordova.plugins.backgroundMode.on('activate', function() {
+                    cordova.plugins.backgroundMode.disableWebViewOptimizations();
+                });
+                log('Background mode enabled', 'ok');
+            }
+
+            requestNotif();
+        }, false);
+
+        document.addEventListener('pause', function() { saveAppState(); }, false);
+        document.addEventListener('resume', function() {
+            loadAppState();
+            screenOn();
+            lastBtnMs = Date.now();
+            if (htmlAlarmActive && !htmlAlarmAcked && !snoozeActive) { wakeUpScreen(); onAlarmTriggered(); }
+        }, false);
+
+        // ===== WIFI CONFIG =====
+        async function loadWifiStatus() {
+            const statusEl = document.getElementById('staStatus');
+            try {
+                const res = await fetch(targetIP + '/status');
+                if (!res.ok) throw new Error('Network error');
+                const data = await res.json();
+                const mode = data.wifiMode || 0;
+                const ssid = data.staSSID || '';
+                const ip = data.staIP || '';
+                const connected = data.staConnected || false;
+
+                document.getElementById('wifiMode').value = mode;
+                document.getElementById('wifiSSID').value = ssid;
+
+                if (connected && ip.length > 0) {
+                    statusEl.textContent = '✅ Terhubung ke "' + ssid + '" (IP: ' + ip + ')';
+                    statusEl.className = 'wifi-status-text connected';
+                } else if (mode === 1 || mode === 2) {
+                    statusEl.textContent = '⏳ Mencoba konek ke "' + ssid + '"...';
+                    statusEl.className = 'wifi-status-text connecting';
+                } else {
+                    statusEl.textContent = '⚪ Mode AP Only (STA tidak aktif)';
+                    statusEl.className = 'wifi-status-text idle';
+                }
+            } catch (e) {
+                statusEl.textContent = '❌ Gagal ambil status';
+                statusEl.className = 'wifi-status-text disconnected';
+            }
+        }
+
+        async function saveWifiConfig() {
+            const mode = parseInt(document.getElementById('wifiMode').value);
+            const ssid = document.getElementById('wifiSSID').value.trim();
+            const password = document.getElementById('wifiPassword').value.trim();
+
+            if ((mode === 1 || mode === 2) && ssid.length === 0) {
+                alert('SSID harus diisi untuk mode STA atau AP+STA!');
+                return;
+            }
+
+            const payload = { mode, ssid, password };
+            try {
+                const res = await fetch(targetIP + '/config', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                if (res.ok) {
+                    alert('✅ Konfigurasi tersimpan. Wemos akan restart...');
+                    log('WiFi config saved, restarting...', 'ok');
+                    setTimeout(() => loadWifiStatus(), 5000);
+                } else {
+                    alert('❌ Gagal menyimpan konfigurasi');
+                }
+            } catch (e) {
+                alert('❌ Error: ' + e.message);
+            }
+        }
+
+        document.getElementById('saveWifiBtn').addEventListener('click', saveWifiConfig);
+
+        // ===== BOOT =====
+        log('=== Wemos D1 Smartwatch Pro v4.2 (Neo-Glass) ===', 'ok');
+        log('Layout: OLED+Buttons | Dashboard | Settings via Gear', 'dim');
+        log('Pin: D0(16), D6(12), D8(15) | Sensor: D5, Trigger: D4', 'dim');
+
+        loadAppState();
+        updatePowerSaveUI();
+        updateSensorToggle();
+        updateSoundToggle();
+        updateVibrateToggle();
+        updateAlarmUI();
+        updateSnoozeUI();
+        drawChart();
+
+        document.getElementById('inpTargetIP').value = targetIP;
+        document.getElementById('inpPollInt').value = POLL_MS;
+        document.getElementById('inpScrTout').value = TOUT_MS;
+        document.getElementById('inpSnoozeDur').value = snoozeDuration;
+
+        screenOn();
+        lastBtnMs = Date.now();
+        lastPoll = Date.now();
+
+        loadWifiStatus();
+
+        mainLoop();
+
+        if ('Notification' in window && Notification.permission === 'granted') alarmNotifGranted = true;
+
+        log('Aplikasi siap! 🚀', 'ok');
+    </script>
+</body>
+</html>
