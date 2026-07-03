@@ -28,41 +28,27 @@ jobs:
       - name: 5. Setup Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: 6. Inisialisasi Project Cordova (jika belum ada)
-        run: |
-          # Cek apakah config.xml sudah ada
-          if [ ! -f "config.xml" ]; then
-            echo "config.xml tidak ditemukan. Membuat project Cordova baru..."
-            cordova create temp_project com.example.app MyApp
-            # Salin isi www (jika ada) ke project baru
-            if [ -d "www" ]; then
-              cp -r www/* temp_project/www/
-            fi
-            # Pindahkan semua file dari temp_project ke root (kecuali .git)
-            shopt -s dotglob
-            mv temp_project/* ./
-            rm -rf temp_project
-          else
-            echo "config.xml ditemukan. Project sudah ada."
-          fi
+      - name: 6. Install npm dependencies
+        run: npm install
 
-      - name: 7. Tampilkan struktur folder (debug)
+      - name: 7. Tambah platform Android
         run: |
-          echo "=== Isi root ==="
+          echo "Removing any existing android platform..."
+          cordova platform remove android || true
+          echo "Adding Android platform..."
+          cordova platform add android@13.0.0 --verbose
+
+      - name: 8. Cek platform terpasang
+        run: |
+          echo "=== Installed platforms ==="
+          cordova platform list
+          echo "=== Project structure ==="
           ls -la
-          echo "=== Isi www ==="
-          ls -la www || echo "Folder www tidak ada"
 
-      - name: 8. Tambah platform Android
-        run: cordova platform add android@13.0.0 --verbose
-
-      - name: 9. Cek platform terpasang
-        run: cordova platform list
-
-      - name: 10. Build APK Debug
+      - name: 9. Build APK Debug
         run: cordova build android --debug --verbose
 
-      - name: 11. Upload APK
+      - name: 10. Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: cordova-debug-apk
