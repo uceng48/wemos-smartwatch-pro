@@ -1,0 +1,13 @@
+// Java 17 Compilation Configuration
+android {
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+    
+    // AndroidX dependencies for API 34 compatibility
+    dependencies {
+        implementation 'androidx.core:core:1.13.0'
+        implementation 'androidx.appcompat:appcompat:1.7.0'
+    }
+}
