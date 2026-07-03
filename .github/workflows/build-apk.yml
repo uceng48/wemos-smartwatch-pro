@@ -36,7 +36,7 @@ jobs:
 
       - name: 7. Tambahkan platform Android (dengan versi spesifik)
         run: |
-          cordova platform add <android>
+          cordova platform add android@13.0.0
         # Jika gagal, workflow akan berhenti dan tampilkan error
 
       - name: 8. Build APK Debug
