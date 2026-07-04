@@ -65,10 +65,10 @@
         <uses-feature android:name="android.hardware.touchscreen" android:required="true" />
 
         <!-- Config -->
-        <preference name="AndroidWindowSplashScreenBackground" value="#0A1628" />
-        <preference name="AndroidWindowSplashScreenAnimatedIcon" value="res/screen/android/splash-foreground.png" />
-        <preference name="AndroidWindowSplashScreenIconBackgroundColor" value="#0A1628" />
-        <preference name="AndroidWindowSplashScreenAnimationDuration" value="300" />
+       // <preference name="AndroidWindowSplashScreenBackground" value="#0A1628" />
+      //  <preference name="AndroidWindowSplashScreenAnimatedIcon" value="res/screen/android/splash-foreground.png" />
+      //  <preference name="AndroidWindowSplashScreenIconBackgroundColor" value="#0A1628" />
+     //   <preference name="AndroidWindowSplashScreenAnimationDuration" value="300" />
 
         <!-- Ikon -->
      //   <icon src="res/icon/android/ldpi.png" density="ldpi" />
@@ -97,7 +97,7 @@
     </plugin>
 
     <plugin name="cordova-plugin-local-notification" spec="^0.9.0" source="npm" />
-    <plugin name="cordova-plugin-insomnia" spec="^4.3.0" source="npm" />
+    // <plugin name="cordova-plugin-insomnia" spec="^4.3.0" source="npm" />
     <plugin name="cordova-plugin-vibration" spec="^3.1.1" source="npm" />
     <plugin name="cordova-plugin-device" spec="^2.1.0" source="npm" />
     <plugin name="cordova-plugin-network-information" spec="^3.0.0" source="npm" />
