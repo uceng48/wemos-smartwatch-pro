@@ -10,9 +10,17 @@ android {
         implementation 'androidx.core:core:1.13.0'
     
         implementation 'androidx.appcompat:appcompat:1.7.0'
-        configurations.all {
-        resolutionStrategy.force 'org.jetbrains.kotlin:kotlin-stdlib:1.8.22'
-        resolutionStrategy.force 'org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.8.22'
+        // build-extras.gradle
+configurations.all {
+    resolutionStrategy {
+        // Paksa AppCompat 1.7.0+
+        force 'androidx.appcompat:appcompat:1.7.0'
+
+        // Paksa semua pustaka Kotlin ke versi yang sama (1.8.22)
+        force 'org.jetbrains.kotlin:kotlin-stdlib:1.8.22'
+        force 'org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.8.22'
+        force 'org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.8.22'
     }
+}
     }
 }
