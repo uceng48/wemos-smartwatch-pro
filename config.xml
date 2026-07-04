@@ -40,12 +40,12 @@
             <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
         </config-file>
         
+        <!-- FIX: service class name yang benar untuk cordova-plugin-background-mode -->
         <config-file parent="/manifest/application" target="AndroidManifest.xml">
-         <service 
-    android:name="de.appplant.cordova.plugin.background.BackgroundMode" 
-    android:foregroundServiceType="dataSync"
-    android:exported="false" />
-
+            <service 
+                android:name="de.appplant.cordova.plugin.background.BackgroundMode" 
+                android:foregroundServiceType="dataSync"
+                android:exported="false" />
             <meta-data android:name="android.supports_rtl" android:value="true" />
         </config-file>
         
@@ -55,19 +55,14 @@
     <preference name="Orientation" value="portrait" />
     <preference name="Fullscreen" value="false" />
     <preference name="DisallowOverscroll" value="true" />
-    <!-- PERBAIKAN: hapus prefix 0xFF, gunakan #RRGGBB -->
     <preference name="BackgroundColor" value="#0a1628" />
     <preference name="KeepRunning" value="true" />
     <preference name="AndroidLaunchMode" value="singleTop" />
-        <preference name="ShowTitle" value="false" />
+    <preference name="ShowTitle" value="false" />
     
+    <!-- FIX: StatusBar agar tidak overlap tampilan -->
     <preference name="StatusBarOverlaysWebView" value="false" />
     <preference name="StatusBarBackgroundColor" value="#0d0b1a" />
     <preference name="StatusBarStyle" value="lightcontent" />
 
-</widget>
-
-    
-
-    
 </widget>
