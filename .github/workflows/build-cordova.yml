@@ -49,87 +49,16 @@ jobs:
       - name: Add Android platform
         run: cordova platform add android@13.0.0
 
-      - name: Copy build-extras.gradle to Android platform
+      - name: Inject Kotlin exclude rules to build.gradle
         run: |
-          mkdir -p platforms/android
-          cp build-extras.gradle platforms/android/
-          echo "build-extras.gradle copied successfully."
-
-      - name: Configure Gradle properties
-        run: |
-          mkdir -p ~/.gradle
-          cat > ~/.gradle/gradle.properties << EOF
-          org.gradle.jvmargs=-Xmx2048m -XX:MaxMetaspaceSize=512m
-          org.gradle.parallel=true
-          org.gradle.caching=true
-          org.gradle.warning.mode=summary
-          android.useAndroidX=true
-          android.enableJetifier=true
-          EOF
-          echo "Gradle properties configured."
-
-      - name: Create local.properties
-        run: |
-          mkdir -p platforms/android
-          cat > platforms/android/local.properties << EOF
-          sdk.dir=${{ env.ANDROID_SDK_ROOT }}
-          ndk.dir=${{ env.ANDROID_HOME }}/ndk/25.1.8937393
-          EOF
-          echo "local.properties created."
-
-      - name: Update build-extras.gradle with Kotlin configuration
-        run: |
-          cat > build-extras.gradle << 'GRADLE_BUILD'
-          configurations.all {
-              resolutionStrategy {
-                  force 'androidx.appcompat:appcompat:1.7.0'
-                  force 'org.jetbrains.kotlin:kotlin-stdlib:1.8.22'
-              }
-              exclude group: 'org.jetbrains.kotlin', module: 'kotlin-stdlib-jdk7'
-              exclude group: 'org.jetbrains.kotlin', module: 'kotlin-stdlib-jdk8'
-          }
-          
-          allprojects {
-              tasks.withType(JavaCompile) {
-                  options.encoding = 'UTF-8'
-              }
-              tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile) {
-                  kotlinOptions {
-                      jvmTarget = '11'
-                  }
-              }
-          }
-          GRADLE_BUILD
-          cp build-extras.gradle platforms/android/
-          echo "Enhanced build-extras.gradle configured."
-
-      - name: List Android platform structure
-        run: |
-          echo "=== Android Platform Structure ==="
-          ls -la platforms/android/ || echo "Android platform not found"
-          echo ""
-          echo "=== Gradle Files ==="
-          find platforms/android -name "*.gradle" -type f | head -20 || echo "No gradle files found"
+          echo -e "\nallprojects {\n    configurations.all {\n        exclude group: 'org.jetbrains.kotlin', module: 'kotlin-stdlib-jdk7'\n        exclude group: 'org.jetbrains.kotlin', module: 'kotlin-stdlib-jdk8'\n    }\n}" >> platforms/android/build.gradle
+          echo "Kotlin exclude rules injected."
 
       - name: Build debug APK
-        run: |
-          cordova build android --debug -- \
-            --warning-mode=summary \
-            -P android.useAndroidX=true \
-            -P android.enableJetifier=true
+        run: cordova build android --debug
 
       - name: Upload debug APK
         uses: actions/upload-artifact@v4
-        if: success()
         with:
           name: app-debug
           path: platforms/android/app/build/outputs/apk/debug/app-debug.apk
-          retention-days: 30
-
-      - name: Upload build logs on failure
-        uses: actions/upload-artifact@v4
-        if: failure()
-        with:
-          name: build-logs
-          path: platforms/android/build/
-          retention-days: 7
