@@ -987,7 +987,6 @@
                 <h1>Wemos <span>Pro</span></h1>
             </div>
             <div class="header-actions">
-                <!-- TOMBOL MINIMIZE -->
                 <button class="icon-btn" id="minimizeBtn" title="Minimize">➖</button>
                 <button class="icon-btn" id="themeToggle" title="Toggle Theme">🌓</button>
                 <button class="icon-btn" id="settingsToggle" title="Settings">⚙️</button>
@@ -1349,6 +1348,10 @@
         let lastWifiStatus = false;
         let firstPoll = true;
 
+        // Tambahan: cegah loop ganda
+        let loopStarted = false;
+        let loopId = null;
+
         // ===== THEME =====
         function applyTheme(t) {
             theme = t;
@@ -1374,12 +1377,18 @@
             }
         }
 
+        // ===== SWITCH TAB dengan penyimpanan =====
+        let currentTab = localStorage.getItem('sw_currentTab') || 'panelDashboard';
+
         function switchTab(tabId) {
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
             const tabBtn = document.querySelector(`.tab[data-tab="${tabId}"]`);
             if (tabBtn) tabBtn.classList.add('active');
-            document.getElementById(tabId).classList.add('active');
+            const panel = document.getElementById(tabId);
+            if (panel) panel.classList.add('active');
+            currentTab = tabId;
+            localStorage.setItem('sw_currentTab', tabId);
             if (tabId === 'panelLog') {
                 document.getElementById('logBadge').style.display = 'none';
             }
@@ -1441,6 +1450,7 @@
                 localStorage.setItem('sw_vibrateEnabled', vibrateEnabled);
                 localStorage.setItem('sw_snoozeDur', snoozeDuration);
                 localStorage.setItem('sw_theme', theme);
+                localStorage.setItem('sw_currentTab', currentTab);
             } catch (e) { /* ignore */ }
         }
         function loadAppState() {
@@ -1466,6 +1476,12 @@
                     if (Array.isArray(s.chartData)) chartData = s.chartData;
                     if (s.theme) theme = s.theme;
                 }
+                // Pulihkan tab
+                const savedTab = localStorage.getItem('sw_currentTab');
+                if (savedTab && document.getElementById(savedTab)) {
+                    currentTab = savedTab;
+                    switchTab(currentTab);
+                }
             } catch (e) { /* ignore */ }
             applyTheme(theme);
             updateSensorToggle();
@@ -1474,6 +1490,11 @@
             updateVibrateToggle();
             document.getElementById('inpSnoozeDur').value = snoozeDuration;
             document.getElementById('oledMode').textContent = ['TIME','MAIN','CMD','HOUR','MIN','RESET'][mode] || 'TIME';
+            // Update UI lain
+            updateAlarmUI();
+            updateSnoozeUI();
+            drawChart();
+            document.getElementById('statTriggers').textContent = sensorTriggerCount;
         }
 
         // ===== TIME =====
@@ -2310,11 +2331,9 @@
                 if (settingsOverlay.classList.contains('show')) {
                     toggleSettings();
                 }
-                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-                this.classList.add('active');
-                document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-                document.getElementById(this.dataset.tab).classList.add('active');
-                if (this.dataset.tab === 'panelLog') {
+                const tabId = this.dataset.tab;
+                switchTab(tabId);
+                if (tabId === 'panelLog') {
                     document.getElementById('logBadge').style.display = 'none';
                 }
             });
@@ -2329,7 +2348,6 @@
         }
 
         // ===== MAIN LOOP =====
-        let loopId = null;
         function mainLoop() {
             const now = Date.now();
 
@@ -2459,6 +2477,13 @@
                 });
             }
 
+            // Setelah cordova ready, load state dan mulai loop jika belum
+            loadAppState();
+            if (!loopStarted) {
+                loopStarted = true;
+                mainLoop();
+            }
+
             requestNotif();
         }, false);
 
@@ -2467,7 +2492,7 @@
         // ===== RESUME HANDLER =====
         document.addEventListener('resume', function() {
             try {
-                loadAppState();
+                loadAppState(); // pulihkan semua state termasuk tab
                 screenOn();
                 lastBtnMs = Date.now();
                 // Re-init background mode dengan aman
@@ -2480,9 +2505,22 @@
                     wakeUpScreen();
                     onAlarmTriggered();
                 }
-                // Restart polling kalau mati
+                // Pastikan polling berjalan
                 if (!pollIntervalId) {
                     lastPoll = Date.now();
+                }
+                // Update UI
+                updateAlarmUI();
+                updateSnoozeUI();
+                updatePowerSaveUI();
+                updateSensorToggle();
+                updateSoundToggle();
+                updateVibrateToggle();
+                drawChart();
+                // Pastikan loop berjalan
+                if (!loopStarted) {
+                    loopStarted = true;
+                    mainLoop();
                 }
                 log('App resumed', 'ok');
             } catch (e) {
@@ -2558,13 +2596,6 @@
         log('Pin: D0(16), D6(12), D8(15) | Sensor: D5, Trigger: D4', 'dim');
 
         loadAppState();
-        updatePowerSaveUI();
-        updateSensorToggle();
-        updateSoundToggle();
-        updateVibrateToggle();
-        updateAlarmUI();
-        updateSnoozeUI();
-        drawChart();
 
         document.getElementById('inpTargetIP').value = targetIP;
         document.getElementById('inpPollInt').value = POLL_MS;
@@ -2577,7 +2608,11 @@
 
         loadWifiStatus();
 
-        mainLoop();
+        // Loop akan dimulai di deviceready atau resume, tapi jika deviceready sudah terlewat, mulai sekarang
+        if (!loopStarted && cordovaReady) {
+            loopStarted = true;
+            mainLoop();
+        }
 
         if ('Notification' in window && Notification.permission === 'granted') alarmNotifGranted = true;
 
