@@ -73,10 +73,10 @@
         <!-- Ikon -->
      //   <icon src="res/icon/android/ldpi.png" density="ldpi" />
      //   <icon src="res/icon/android/mdpi.png" density="mdpi" />
-        <icon src="res/icon/android/hdpi.png" density="hdpi" />
-        <icon src="res/icon/android/xhdpi.png" density="xhdpi" />
-        <icon src="res/icon/android/xxhdpi.png" density="xxhdpi" />
-        <icon src="res/icon/android/xxxhdpi.png" density="xxxhdpi" />
+        //<icon src="res/icon/android/hdpi.png" density="hdpi" />
+       // <icon src="res/icon/android/xhdpi.png" density="xhdpi" />
+       // <icon src="res/icon/android/xxhdpi.png" density="xxhdpi" />
+       // <icon src="res/icon/android/xxxhdpi.png" density="xxxhdpi" />
 
         <!-- Adaptive Icon -->
         <resource-file src="res/icon/android/ic_launcher_foreground.png" target="app/src/main/res/mipmap-xxxhdpi/ic_launcher_foreground.png" />
