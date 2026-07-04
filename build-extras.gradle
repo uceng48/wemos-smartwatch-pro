@@ -1,27 +1,15 @@
 // build-extras.gradle
-// Memaksa versi dependensi yang kompatibel untuk menghindari error build di Android Gradle Plugin terbaru
+// Memaksa versi AppCompat terbaru dan menghilangkan duplikasi Kotlin
 
 configurations.all {
+    // Force AppCompat 1.7.0+
     resolutionStrategy {
-        // 1. Memaksa AppCompat versi 1.7.0 atau lebih baru
-        //    (menghilangkan error "Invalid <color>" dari versi 1.6.1)
         force 'androidx.appcompat:appcompat:1.7.0'
-
-        // 2. Menyeragamkan semua pustaka Kotlin ke versi 1.8.22
-        //    (mencegah duplikasi kelas antara kotlin-stdlib dan kotlin-stdlib-jdk7/jdk8)
+        // Force kotlin-stdlib utama
         force 'org.jetbrains.kotlin:kotlin-stdlib:1.8.22'
-        force 'org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.8.22'
-        force 'org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.8.22'
-
-        // Jika masih ada masalah dengan dependensi lain yang bentrok, bisa ditambahkan di sini
     }
-}
 
-// (Opsional) Jika kamu butuh mengecualikan modul JDK lama secara paksa,
-// hilangkan komentar di bawah ini:
-/*
-configurations.all {
+    // Hapus total modul jdk7 dan jdk8 yang sudah tidak diperlukan
     exclude group: 'org.jetbrains.kotlin', module: 'kotlin-stdlib-jdk7'
     exclude group: 'org.jetbrains.kotlin', module: 'kotlin-stdlib-jdk8'
 }
-*/
