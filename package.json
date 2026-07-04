@@ -29,7 +29,8 @@
       "cordova-plugin-file": {},
       "cordova-plugin-androidx-adapter": {},
       "cordova-plugin-android-permissions": {},
-      "cordova-plugin-local-notification": {}
+      "cordova-plugin-local-notification": {},
+      "cordova-plugin-appminimize": {}
     }
   }
 }
