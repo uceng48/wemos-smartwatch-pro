@@ -21,19 +21,15 @@
       "android@13.0.0"
     ],
     "plugins": {
-      
-      "cordova-plugin-local-notifications-12": {},
-      "cordova-plugin-insomnia": {},
-      "cordova-plugin-vibration": {},
+      "cordova-plugin-background-mode": {},
       "cordova-plugin-device": {},
+      "cordova-plugin-vibration": {},
       "cordova-plugin-network-information": {},
       "cordova-plugin-statusbar": {},
-      
-      
       "cordova-plugin-file": {},
-      "cordova-plugin-androidx": {},
       "cordova-plugin-androidx-adapter": {},
-      "cordova-plugin-android-permissions": {}
+      "cordova-plugin-android-permissions": {},
+      "cordova-plugin-local-notification": {}
     }
   }
 }
