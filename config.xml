@@ -11,14 +11,9 @@
     <content src="index.html" />
     
     <access origin="*" />
-<allow-navigation href="*" />
-<allow-intent href="http://*/*" />
-<allow-intent href="https://*/*" />
-<allow-intent href="tel:*" />
-<allow-intent href="sms:*" />
-<allow-intent href="mailto:*" />
-<allow-intent href="geo:*" />
-
+    <allow-intent href="http://*/*" />
+    <allow-intent href="https://*/*" />
+    <allow-navigation href="*" />
     
     <preference name="AndroidXEnabled" value="true" />
     
@@ -31,6 +26,7 @@
             <application android:usesCleartextTraffic="true" />
         </edit-config>
         <preference name="AndroidInsecureFileModeEnabled" value="true" />
+   
         
         <config-file parent="/manifest" target="AndroidManifest.xml">
             <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
@@ -43,6 +39,9 @@
             <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
             <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
             <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
+            
+            <!-- PERBAIKAN: Menambahkan izin bypass optimasi baterai native -->
+            <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
         </config-file>
         
         <!-- FIX: service class name yang benar untuk cordova-plugin-background-mode -->
@@ -53,8 +52,8 @@
                 android:exported="false" />
             <meta-data android:name="android.supports_rtl" android:value="true" />
         </config-file>
-
-             <allow-navigation href="http://192.168.4.1/*" />    
+        
+        <allow-navigation href="http://192.168.4.1/*" />
         <allow-intent href="market:*" />
     </platform>
     
