@@ -1,15 +1,8 @@
-// build-extras.gradle
-// Memaksa versi AppCompat terbaru dan menghilangkan duplikasi Kotlin
-
 configurations.all {
-    // Force AppCompat 1.7.0+
     resolutionStrategy {
         force 'androidx.appcompat:appcompat:1.7.0'
-        // Force kotlin-stdlib utama
         force 'org.jetbrains.kotlin:kotlin-stdlib:1.8.22'
     }
-
-    // Hapus total modul jdk7 dan jdk8 yang sudah tidak diperlukan
     exclude group: 'org.jetbrains.kotlin', module: 'kotlin-stdlib-jdk7'
     exclude group: 'org.jetbrains.kotlin', module: 'kotlin-stdlib-jdk8'
 }
