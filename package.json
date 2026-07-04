@@ -32,7 +32,7 @@
       "cordova-plugin-local-notification": {},
     
       "cordova-plugin-splashscreen": {},
-      "cordova-plugin-whitelist": {}
+    
     }
   }
 }
