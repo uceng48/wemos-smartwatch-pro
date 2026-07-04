@@ -42,20 +42,7 @@
         </edit-config>
         <preference name="AndroidInsecureFileModeEnabled" value="true" />
         
-        <!-- ===== KOMPILASI JAVA 17 ===== -->
-        <edit-config file="app/build.gradle" mode="merge" target="/android">
-            <android>
-                <compileOptions>
-                    <sourceCompatibility>17</sourceCompatibility>
-                    <targetCompatibility>17</targetCompatibility>
-                </compileOptions>
-                <!-- Dependency AndroidX versi terbaru untuk kompatibilitas API 34 -->
-                <dependencies>
-                    <implementation>androidx.core:core:1.13.0</implementation>
-                    <implementation>androidx.appcompat:appcompat:1.7.0</implementation>
-                </dependencies>
-            </android>
-        </edit-config>
+        <!-- NOTE: Java/Kotlin compile options and dependencies are set via build-extras.gradle (see repository) -->
         
         <!-- ===== IZIN ANDROID (lengkap untuk API 34) ===== -->
         <config-file parent="/manifest" target="AndroidManifest.xml">
