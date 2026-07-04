@@ -30,8 +30,7 @@
       "cordova-plugin-androidx-adapter": {},
       "cordova-plugin-android-permissions": {},
       "cordova-plugin-local-notification": {},
-      "cordova-plugin-insomnia": {},
-      //"cordova-plugin-splashscreen": {},
+  
       "cordova-plugin-whitelist": {}
     }
   }
