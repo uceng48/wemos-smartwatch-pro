@@ -1,10 +1,8 @@
-
-
 <!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -65,6 +63,14 @@
             overflow: hidden;
         }
 
+        /* ===== SAFE AREA & EDGE-TO-EDGE FIX ===== */
+        html {
+            padding-top: env(safe-area-inset-top);
+            padding-bottom: env(safe-area-inset-bottom);
+            padding-left: env(safe-area-inset-left);
+            padding-right: env(safe-area-inset-right);
+        }
+
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: var(--accent-purple); border-radius: 4px; }
@@ -80,6 +86,8 @@
             position: relative;
             overflow: hidden;
             box-shadow: 0 0 120px rgba(124, 58, 237, 0.06);
+            padding-top: max(0px, env(safe-area-inset-top));
+            padding-bottom: max(0px, env(safe-area-inset-bottom));
         }
         @media (min-width: 481px) {
             #app {
@@ -89,6 +97,8 @@
                 margin-top: 12px;
                 height: calc(100vh - 24px);
                 box-shadow: 0 40px 80px rgba(0, 0, 0, 0.7);
+                padding-top: 14px;
+                padding-bottom: 8px;
             }
         }
 
@@ -97,7 +107,7 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 14px 20px 10px;
+            padding: max(14px, env(safe-area-inset-top)) 20px 10px;
             background: rgba(13, 11, 26, 0.7);
             backdrop-filter: var(--blur);
             -webkit-backdrop-filter: var(--blur);
@@ -258,7 +268,7 @@
             z-index: 10;
             position: sticky;
             bottom: 0;
-            padding: 6px 12px 8px;
+            padding: 6px 12px max(8px, env(safe-area-inset-bottom));
             gap: 4px;
         }
         .tab-nav .tab {
@@ -771,7 +781,7 @@
             background: var(--gradient-4);
             color: #fff;
             text-align: center;
-            padding: 16px 20px;
+            padding: max(16px, env(safe-area-inset-top)) 20px 16px;
             font-weight: 700;
             font-size: 0.85rem;
             z-index: 9999;
@@ -909,6 +919,17 @@
                 border-radius: 28px;
                 margin-top: 12px;
                 height: calc(100vh - 24px);
+                padding-top: 14px;
+                padding-bottom: 8px;
+            }
+            .app-header {
+                padding-top: 14px;
+            }
+            .tab-nav {
+                padding-bottom: 8px;
+            }
+            .alarm-toast {
+                padding-top: 16px;
             }
         }
 
@@ -1342,7 +1363,6 @@
             if (isVisible) {
                 btn.classList.add('active');
                 log('Settings opened', 'dim');
-                // Auto-switch to dashboard if settings opened while on other tab
                 if (!document.getElementById('panelDashboard').classList.contains('active')) {
                     switchTab('panelDashboard');
                 }
@@ -2285,7 +2305,6 @@
         // ===== TABS =====
         document.querySelectorAll('.tab').forEach(tab => {
             tab.addEventListener('click', function() {
-                // Close settings when switching tabs
                 if (settingsOverlay.classList.contains('show')) {
                     toggleSettings();
                 }
@@ -2347,11 +2366,8 @@
             // PERMINTAAN IZIN ALARM EKSAK (Android 13+ / API 33+)
             // ============================================================
             if (cordova.platformId === 'android') {
-                // Coba dapatkan versi API dari cordova.platformVersion
                 var androidVersion = parseInt(cordova.platformVersion) || 0;
-                // Jika tidak diketahui, asumsikan API >= 33 untuk amannya
                 if (androidVersion >= 33 || androidVersion === 0) {
-                    // Gunakan plugin permissions jika tersedia
                     if (cordova.plugins && cordova.plugins.permissions) {
                         cordova.plugins.permissions.hasPermission(
                             'android.permission.SCHEDULE_EXACT_ALARM',
@@ -2379,7 +2395,6 @@
                             }
                         );
                     } else {
-                        // Jika plugin permissions tidak terpasang, beri tahu user manual
                         log('⚠️ Plugin cordova-plugin-android-permissions tidak terdeteksi', 'warn');
                         if (!window._alarmPermissionAlertShown) {
                             window._alarmPermissionAlertShown = true;
@@ -2425,11 +2440,35 @@
         }, false);
 
         document.addEventListener('pause', function() { saveAppState(); }, false);
+
+        // ===== SAFE RESUME HANDLER (FIX CRASH) =====
         document.addEventListener('resume', function() {
-            loadAppState();
-            screenOn();
-            lastBtnMs = Date.now();
-            if (htmlAlarmActive && !htmlAlarmAcked && !snoozeActive) { wakeUpScreen(); onAlarmTriggered(); }
+            try {
+                loadAppState();
+                screenOn();
+                lastBtnMs = Date.now();
+                
+                // Re-init background mode dengan aman
+                if (cordovaReady && cordova.plugins && cordova.plugins.backgroundMode) {
+                    cordova.plugins.backgroundMode.enable();
+                    cordova.plugins.backgroundMode.disableWebViewOptimizations();
+                }
+                
+                // Cek alarm ulang
+                if (htmlAlarmActive && !htmlAlarmAcked && !snoozeActive) {
+                    wakeUpScreen();
+                    onAlarmTriggered();
+                }
+                
+                // Restart polling kalau mati
+                if (!pollIntervalId) {
+                    lastPoll = Date.now();
+                }
+                
+                log('App resumed', 'ok');
+            } catch (e) {
+                log('Resume error: ' + e.message, 'err');
+            }
         }, false);
 
         // ===== WIFI CONFIG =====
