@@ -22,18 +22,17 @@
     ],
     "plugins": {
       "cordova-plugin-background-mode": {},
-      "cordova-plugin-local-notifications": {},
-      "cordova-plugin-insomnia": {},
-      "cordova-plugin-vibration": {},
       "cordova-plugin-device": {},
+      "cordova-plugin-vibration": {},
       "cordova-plugin-network-information": {},
       "cordova-plugin-statusbar": {},
-      "cordova-plugin-splashscreen": {},
-      "cordova-plugin-whitelist": {},
       "cordova-plugin-file": {},
-      "cordova-plugin-androidx": {},
       "cordova-plugin-androidx-adapter": {},
-      "cordova-plugin-android-permissions": {}
+      "cordova-plugin-android-permissions": {},
+      "cordova-plugin-local-notification": {},
+      "cordova-plugin-insomnia": {},
+      "cordova-plugin-splashscreen": {},
+      "cordova-plugin-whitelist": {}
     }
   }
 }
