@@ -23,7 +23,9 @@
     "plugins": {
       "cordova-plugin-background-mode": {},
       
-      "cordova plugin add https://github.com/timkalan/cordova-plugin-local-notifications.git": {},
+      "cordova-plugin-local-notification-12"
+
+      : {},
 
       "cordova-plugin-insomnia": {},
       "cordova-plugin-vibration": {},
