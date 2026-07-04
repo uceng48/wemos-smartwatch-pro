@@ -11,7 +11,7 @@
     <script src="cordova.js"></script>
     <title>Wemos D1 · Smartwatch Pro</title>
     <style>
-        /* ===== S T Y L E  (tetap seperti asli, tidak diubah) ===== */
+        /* ===== S T Y L E  (tetap seperti asli) ===== */
         * {
             margin: 0;
             padding: 0;
@@ -1212,6 +1212,7 @@
                 <h1>Wemos <span>Pro</span></h1>
             </div>
             <div class="header-actions">
+                <button class="icon-btn" id="refreshBtn" title="Refresh">🔄</button>
                 <button class="icon-btn" id="themeToggle" title="Toggle Theme">🌓</button>
                 <button class="icon-btn" id="shortcutsToggle" title="Shortcuts">⌨️</button>
                 <div class="status-badge" id="statusBadge">
@@ -1491,7 +1492,7 @@
 
     <script>
         /* ================================================================
-           WEMOS D1 SMARTWATCH PRO — v4.0 (Neo-Glass UI) — FIXED NETWORK & ALARM
+           WEMOS D1 SMARTWATCH PRO — v4.0 — FIXED BACKGROUND ALARM & REFRESH
            ================================================================ */
 
         // ===== DOM REFS =====
@@ -1546,14 +1547,15 @@
         let startTime = Date.now();
         let logCount = 0;
         let logEntries = [];
-        let lastPoll = 0;
-        let pollIntervalId = null;
         let isPolling = true;
         let audioCtx = null;
         let alarmInterval = null;
         let vibrateInterval = null;
         let isScreenOn = true;
         let lastBtnMs = Date.now();
+
+        // --- Alarm notification interval (background) ---
+        let alarmNotifInterval = null;
 
         const M_TIME = 0,
             M_MAIN = 1,
@@ -1587,6 +1589,7 @@
 
         let lastWifiStatus = false;
         let firstPoll = true;
+        let offlineStartTime = 0; // untuk deteksi offline berkepanjangan
 
         // ===== POLLING INTERVAL =====
         let pollInterval = null;
@@ -1760,6 +1763,7 @@
         // ===== NOTIFICATION =====
         function sendNativeNotification(title, body) {
             if (cordovaReady && cordova.plugins && cordova.plugins.notification && cordova.plugins.notification.local) {
+                // Hapus notifikasi lama agar tidak menumpuk
                 cordova.plugins.notification.local.cancel(1, function() {
                     cordova.plugins.notification.local.schedule({
                         id: 1,
@@ -1769,6 +1773,7 @@
                         androidChannelEnableVibration: true,
                         androidOngoing: true,
                         badgeNumber: 1,
+                        sound: 'default', // suara default sistem
                         trigger: { in: 1, unit: 'second' }
                     });
                 });
@@ -1866,6 +1871,23 @@
             if ('vibrate' in navigator) navigator.vibrate(0);
         }
 
+        // ===== ALARM NOTIFICATION INTERVAL (BACKGROUND) =====
+        function startAlarmNotifInterval() {
+            stopAlarmNotifInterval();
+            alarmNotifInterval = setInterval(function() {
+                if (htmlAlarmActive && !htmlAlarmAcked && !snoozeActive) {
+                    sendNativeNotification('🚨 Wemos Alarm!', 'Sensor atau D4 trigger!');
+                }
+            }, 3000); // setiap 3 detik
+        }
+
+        function stopAlarmNotifInterval() {
+            if (alarmNotifInterval) {
+                clearInterval(alarmNotifInterval);
+                alarmNotifInterval = null;
+            }
+        }
+
         // ===== WAKE LOCK =====
         function wakeUpScreen() {
             if (!cordovaReady) return;
@@ -1896,10 +1918,13 @@
             if (soundEnabled) startContinuousAlarm();
             if (vibrateEnabled) startContinuousVibrate();
 
+            // Kirim notifikasi awal
+            sendNativeNotification('🚨 Wemos Alarm!', 'Sensor atau D4 trigger!');
+            // Mulai interval notifikasi
+            startAlarmNotifInterval();
+
             alarmToast.classList.add('show');
             alarmFlash.classList.add('active');
-
-            sendNativeNotification('Wemos Alarm!', 'Sensor atau D4 trigger!');
 
             saveAppState();
             updateAlarmUI();
@@ -1910,6 +1935,7 @@
             log('Alarm cleared', 'ok');
             stopContinuousAlarm();
             stopContinuousVibrate();
+            stopAlarmNotifInterval();
             releaseWakeLock();
             alarmToast.classList.remove('show');
             alarmFlash.classList.remove('active');
@@ -1929,6 +1955,7 @@
                 }
                 stopContinuousAlarm();
                 stopContinuousVibrate();
+                stopAlarmNotifInterval();
                 log('Alarm RESET oleh user', 'ok');
                 try {
                     sendCommand('/resetAlarm');
@@ -2031,6 +2058,18 @@
 
                 if (offlineGraceCount >= OFFLINE_GRACE_MAX) {
                     updateWifi(false);
+                    // Jika offline lebih dari 10 detik, coba reconnect dengan fetch '/'
+                    if (offlineStartTime === 0) offlineStartTime = Date.now();
+                    if (Date.now() - offlineStartTime > 10000) {
+                        log('Offline too long, trying reconnect...', 'dim');
+                        offlineStartTime = 0;
+                        // Coba fetch root untuk memicu koneksi
+                        try {
+                            await fetch(targetIP + '/', { mode: 'cors', cache: 'no-store' });
+                        } catch (e) {}
+                    }
+                } else {
+                    offlineStartTime = 0;
                 }
                 return;
             }
@@ -2039,6 +2078,7 @@
             if (offlineGraceCount > 0) {
                 log('Poll recovered', 'ok');
                 offlineGraceCount = 0;
+                offlineStartTime = 0;
             }
             updateWifi(true);
 
@@ -2688,6 +2728,12 @@
             if (e.target === this) this.classList.remove('show');
         });
 
+        // ===== REFRESH BUTTON =====
+        document.getElementById('refreshBtn').addEventListener('click', function() {
+            log('🔄 Refresh manual', 'info');
+            location.reload();
+        });
+
         // ===== EXPORT / CLEAR / IMPORT =====
         document.getElementById('exportLogBtn').addEventListener('click', function() {
             let text = '=== WEMOS LOG ===\n';
@@ -2946,7 +2992,6 @@
             requestNotif();
             loadAppState();
 
-            // Nyalakan layar
             screenOn();
             lastBtnMs = Date.now();
 
