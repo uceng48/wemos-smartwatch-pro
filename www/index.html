@@ -987,6 +987,8 @@
                 <h1>Wemos <span>Pro</span></h1>
             </div>
             <div class="header-actions">
+                <!-- TOMBOL MINIMIZE -->
+                <button class="icon-btn" id="minimizeBtn" title="Minimize">➖</button>
                 <button class="icon-btn" id="themeToggle" title="Toggle Theme">🌓</button>
                 <button class="icon-btn" id="settingsToggle" title="Settings">⚙️</button>
                 <div class="status-badge" id="statusBadge">
@@ -2357,14 +2359,26 @@
             loopId = requestAnimationFrame(mainLoop);
         }
 
-        // ===== CORDOVA =====
+        // ============================================================
+        // FUNGSI MINIMIZE
+        // ============================================================
+        function minimizeApp() {
+            if (window.plugins && window.plugins.appMinimize) {
+                window.plugins.appMinimize.minimize();
+                log('Aplikasi diminimalkan', 'dim');
+            } else {
+                log('Plugin appMinimize tidak tersedia', 'warn');
+            }
+        }
+
+        // ============================================================
+        // CORDOVA
+        // ============================================================
         document.addEventListener('deviceready', function() {
             cordovaReady = true;
             log('Cordova ready - Native features available', 'ok');
 
-            // ============================================================
-            // PERMINTAAN IZIN ALARM EKSAK (Android 13+ / API 33+)
-            // ============================================================
+            // ===== PERMINTAAN IZIN ALARM EKSAK (Android 13+) =====
             if (cordova.platformId === 'android') {
                 var androidVersion = parseInt(cordova.platformVersion) || 0;
                 if (androidVersion >= 33 || androidVersion === 0) {
@@ -2436,35 +2450,40 @@
                 log('Background mode enabled', 'ok');
             }
 
+            // ----- TOMBOL MINIMIZE -----
+            const minimizeBtn = document.getElementById('minimizeBtn');
+            if (minimizeBtn) {
+                minimizeBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    minimizeApp();
+                });
+            }
+
             requestNotif();
         }, false);
 
         document.addEventListener('pause', function() { saveAppState(); }, false);
 
-        // ===== SAFE RESUME HANDLER (FIX CRASH) =====
+        // ===== RESUME HANDLER =====
         document.addEventListener('resume', function() {
             try {
                 loadAppState();
                 screenOn();
                 lastBtnMs = Date.now();
-                
                 // Re-init background mode dengan aman
                 if (cordovaReady && cordova.plugins && cordova.plugins.backgroundMode) {
                     cordova.plugins.backgroundMode.enable();
                     cordova.plugins.backgroundMode.disableWebViewOptimizations();
                 }
-                
                 // Cek alarm ulang
                 if (htmlAlarmActive && !htmlAlarmAcked && !snoozeActive) {
                     wakeUpScreen();
                     onAlarmTriggered();
                 }
-                
                 // Restart polling kalau mati
                 if (!pollIntervalId) {
                     lastPoll = Date.now();
                 }
-                
                 log('App resumed', 'ok');
             } catch (e) {
                 log('Resume error: ' + e.message, 'err');
