@@ -1851,33 +1851,41 @@
 
         // ===== NOTIFICATION =====
         function sendNativeNotification(title, body) {
-            if (cordovaReady && cordova.plugins && cordova.plugins.notification && cordova.plugins.notification.local) {
-                cordova.plugins.notification.local.schedule({
-                    id: 1,
-                    title: title,
-                    text: body,
-                    foreground: true,
-                    wakeup: true,
-                    sound: 'default',
-                    vibrate: true,
-                    badge: 1,
-                    data: { alarm: true, timestamp: Date.now() }
-                });
-                return;
-            }
-            if (alarmNotifGranted && 'Notification' in window) {
-                try { new Notification(title, { body, tag: 'wemos-alarm', requireInteraction: true }); } catch (e) {}
-            }
-        }
+    if (cordovaReady && cordova.plugins && cordova.plugins.notification && cordova.plugins.notification.local) {
+        cordova.plugins.notification.local.schedule({
+            id: 1,
+            title: title,
+            text: body,
+            androidChannelId: 'wemos_alarm_channel',
+            androidChannelEnableVibration: true,
+            androidOngoing: true,
+            badgeNumber: 1
+        });
+        return;
+    }
+    if (alarmNotifGranted && 'Notification' in window) {
+        try { new Notification(title, { body, tag: 'wemos-alarm', requireInteraction: true }); } catch (e) {}
+    }
+}
+
 
         function requestNotif() {
-            if (cordovaReady && cordova.plugins && cordova.plugins.notification && cordova.plugins.notification.local) {
-                cordova.plugins.notification.local.requestPermission(g => { alarmNotifGranted = g; });
-                return;
+    if (cordovaReady && cordova.plugins && cordova.plugins.notification && cordova.plugins.notification.local) {
+        cordova.plugins.notification.local.hasPermission(function(granted) {
+            if (!granted) {
+                cordova.plugins.notification.local.requestPermission(function(g) {
+                    alarmNotifGranted = g;
+                });
+            } else {
+                alarmNotifGranted = true;
             }
-            if (!('Notification' in window)) { alarmNotifGranted = true; return; }
-            Notification.requestPermission().then(p => { alarmNotifGranted = (p === 'granted'); });
-        }
+        });
+        return;
+    }
+    if (!('Notification' in window)) { alarmNotifGranted = true; return; }
+    Notification.requestPermission().then(p => { alarmNotifGranted = (p === 'granted'); });
+}
+
 
         // ===== AUDIO =====
         function ensureAudio() {
@@ -1990,9 +1998,17 @@
             releaseWakeLock();
             alarmToast.classList.remove('show');
             alarmFlash.classList.remove('active');
-            if (cordovaReady && cordova.plugins && cordova.plugins.notification && cordova.plugins.notification.local) {
-                cordova.plugins.notification.local.cancel(1);
+             if (!cordovaReady) {
+            loadAppState();
+            // Jika ada alarm aktif, trigger
+            if (htmlAlarmActive && !htmlAlarmAcked && !snoozeActive) {
+                onAlarmTriggered();
             }
+            startPolling();
+            if (!loopId) mainLoop();
+            log('Running in web mode (no Cordova)', 'dim');
+        }
+
             saveAppState();
             updateAlarmUI();
             updateSnoozeUI();
@@ -2954,11 +2970,19 @@
         document.getElementById('saveWifiBtn').addEventListener('click', saveWifiConfig);
 
         // ===== CORDOVA =====
-        document.addEventListener('deviceready', function() {
-            cordovaReady = true;
-            log('Cordova ready - Native features available', 'ok');
+     document.addEventListener('deviceready', function() {
+    cordovaReady = true;
+    log('Cordova ready - Native features available', 'ok');
 
-            // Background mode
+    // Fix StatusBar overlap
+    if (window.StatusBar) {
+        StatusBar.overlaysWebView(false);
+        StatusBar.styleBlackTranslucent();
+        StatusBar.backgroundColorByHexString('#0d0b1a');
+    }
+
+    // Background mode
+
             if (cordova.plugins && cordova.plugins.backgroundMode) {
                 cordovaBgMode = true;
                 cordova.plugins.backgroundMode.enable();
@@ -2973,18 +2997,30 @@
                     bigText: true,
                     silent: false
                 });
-                cordova.plugins.backgroundMode.on('activate', function() {
-                    cordova.plugins.backgroundMode.disableWebViewOptimizations();
-                    // Pastikan polling tetap berjalan
-                    if (!pollInterval) {
-                        startPolling();
-                    }
-                });
+                   cordova.plugins.backgroundMode.on('activate', function() {
+            // Pastikan polling tetap berjalan
+            if (!pollInterval) {
+                startPolling();
+            }
+        });
+     
                 log('Background mode enabled', 'ok');
             }
 
             // Request notification permission
-            requestNotif();
+                // Fix: buat channel notifikasi untuk Android 8+
+    if (cordova.plugins && cordova.plugins.notification && cordova.plugins.notification.local) {
+        cordova.plugins.notification.local.createChannel({
+            androidChannelId: 'wemos_alarm_channel',
+            androidChannelName: 'Wemos Alarm',
+            androidChannelImportance: 'IMPORTANCE_HIGH',
+            androidChannelEnableVibration: true
+        });
+    }
+
+    // Request notification permission
+    requestNotif();
+
 
             // Load state
             loadAppState();
