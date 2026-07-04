@@ -49,16 +49,84 @@ jobs:
       - name: Add Android platform
         run: cordova platform add android@13.0.0
 
+      - name: Copy build-extras.gradle to Android platform
+        run: |
+          mkdir -p platforms/android
+          cp build-extras.gradle platforms/android/
+          echo "build-extras.gradle copied successfully."
+
+      - name: Configure Gradle properties
+        run: |
+          mkdir -p ~/.gradle
+          cat > ~/.gradle/gradle.properties << EOF
+          org.gradle.jvmargs=-Xmx2048m -XX:MaxMetaspaceSize=512m
+          org.gradle.parallel=true
+          org.gradle.caching=true
+          org.gradle.warning.mode=all
+          android.useAndroidX=true
+          android.enableJetifier=true
+          EOF
+          echo "Gradle properties configured."
+
+      - name: Create local.properties
+        run: |
+          mkdir -p platforms/android
+          cat > platforms/android/local.properties << EOF
+          sdk.dir=${{ env.ANDROID_SDK_ROOT }}
+          ndk.dir=${{ env.ANDROID_HOME }}/ndk/25.1.8937393
+          EOF
+          echo "local.properties created."
+
       - name: Inject Kotlin exclude rules to build.gradle
         run: |
-          echo -e "\nallprojects {\n    configurations.all {\n        exclude group: 'org.jetbrains.kotlin', module: 'kotlin-stdlib-jdk7'\n        exclude group: 'org.jetbrains.kotlin', module: 'kotlin-stdlib-jdk8'\n    }\n}" >> platforms/android/build.gradle
+          GRADLE_FILE="platforms/android/build.gradle"
+          if [ -f "$GRADLE_FILE" ]; then
+            # Add allprojects block if it doesn't exist
+            if ! grep -q "allprojects {" "$GRADLE_FILE"; then
+              cat >> "$GRADLE_FILE" << 'GRADLE_CONFIG'
+
+allprojects {
+    configurations.all {
+        resolutionStrategy {
+            force 'org.jetbrains.kotlin:kotlin-stdlib:1.8.22'
+            force 'androidx.appcompat:appcompat:1.7.0'
+        }
+        exclude group: 'org.jetbrains.kotlin', module: 'kotlin-stdlib-jdk7'
+        exclude group: 'org.jetbrains.kotlin', module: 'kotlin-stdlib-jdk8'
+    }
+}
+GRADLE_CONFIG
+            fi
+          fi
           echo "Kotlin exclude rules injected."
 
-      - name: Build debug APK
-        run: cordova build android --debug
+      - name: List Android platform structure
+        run: |
+          echo "=== Android Platform Structure ==="
+          ls -la platforms/android/ || echo "Android platform not found"
+          echo ""
+          echo "=== Gradle Files ==="
+          find platforms/android -name "*.gradle" -type f | head -20 || echo "No gradle files found"
+
+      - name: Build debug APK with verbose output
+        run: |
+          cordova build android --debug -- \
+            --warning-mode=all \
+            -P android.useAndroidX=true \
+            -P android.enableJetifier=true
 
       - name: Upload debug APK
         uses: actions/upload-artifact@v4
+        if: success()
         with:
           name: app-debug
           path: platforms/android/app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 30
+
+      - name: Upload build logs on failure
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: build-logs
+          path: platforms/android/build/
+          retention-days: 7
