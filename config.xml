@@ -20,12 +20,6 @@
     <!-- ===== AKTIFKAN ANDROIDX (WAJIB) ===== -->
     <preference name="AndroidXEnabled" value="true" />
     
-    <!-- ===== STATUS BAR & EDGE FIX ===== -->
-    <preference name="StatusBarOverlaysWebView" value="false" />
-    <preference name="StatusBarStyle" value="lightcontent" />
-    <preference name="StatusBarBackgroundColor" value="#0d0b1a" />
-    <preference name="AndroidWindowOptOutEdgeToEdge" value="true" />
-    
     <!-- ===== PLATFORM ANDROID ===== -->
     <platform name="android">
         
@@ -42,7 +36,20 @@
         </edit-config>
         <preference name="AndroidInsecureFileModeEnabled" value="true" />
         
-        <!-- NOTE: Java/Kotlin compile options and dependencies are set via build-extras.gradle (see repository) -->
+        <!-- ===== KOMPILASI JAVA 17 ===== -->
+        <edit-config file="app/build.gradle" mode="merge" target="/android">
+            <android>
+                <compileOptions>
+                    <sourceCompatibility>17</sourceCompatibility>
+                    <targetCompatibility>17</targetCompatibility>
+                </compileOptions>
+                <!-- Dependency AndroidX versi terbaru untuk kompatibilitas API 34 -->
+                <dependencies>
+                    <implementation>androidx.core:core:1.13.0</implementation>
+                    <implementation>androidx.appcompat:appcompat:1.7.0</implementation>
+                </dependencies>
+            </android>
+        </edit-config>
         
         <!-- ===== IZIN ANDROID (lengkap untuk API 34) ===== -->
         <config-file parent="/manifest" target="AndroidManifest.xml">
@@ -61,8 +68,12 @@
             <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
         </config-file>
         
-        <!-- ===== DEKLARASI FOREGROUND SERVICE (plugin baru auto-generate, tapi meta-data tetap perlu) ===== -->
+        <!-- ===== DEKLARASI FOREGROUND SERVICE ===== -->
         <config-file parent="/manifest/application" target="AndroidManifest.xml">
+            <service 
+                android:name="com.katason.backgroundmode.BackgroundService" 
+                android:foregroundServiceType="dataSync"
+                android:exported="false" />
             <meta-data android:name="android.supports_rtl" android:value="true" />
         </config-file>
         
