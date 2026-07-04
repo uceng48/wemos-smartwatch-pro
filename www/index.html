@@ -8,7 +8,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#0d0b1a">
     <script src="cordova.js"></script>
-    <title>Wemos D2 · Smartwatch Pro</title>
+    <title>Wemos D1 · Smartwatch Pro</title>
     <style>
         /* ============================================================
            RESET & ROOT — Neo-Glass Design
@@ -1687,10 +1687,15 @@
         // ===== POLLING INTERVAL (terpisah dari render loop) =====
         let pollInterval = null;
 
-        function startPolling() {
+               function startPolling() {
             if (pollInterval) {
                 clearInterval(pollInterval);
                 pollInterval = null;
+            }
+            // Saat background, interval minimal 1000ms agar tidak di-throttle Android
+            let interval = POLL_MS;
+            if (cordovaReady && cordova.plugins && cordova.plugins.backgroundMode && cordova.plugins.backgroundMode.isActive()) {
+                interval = Math.max(POLL_MS, 1000);
             }
             pollInterval = setInterval(() => {
                 if (isPolling) {
@@ -1698,9 +1703,10 @@
                     updateUptime();
                     updateSnoozeUI();
                 }
-            }, POLL_MS);
-            log('Polling started with interval ' + POLL_MS + 'ms', 'dim');
+            }, interval);
+            log('Polling started with interval ' + interval + 'ms', 'dim');
         }
+
 
         function stopPolling() {
             if (pollInterval) {
@@ -2062,10 +2068,12 @@
         }
 
         // ===== HTTP =====
-        async function httpGet(endpoint, fireAndForget) {
+                async function httpGet(endpoint, fireAndForget, retries) {
             fireAndForget = fireAndForget || false;
+            retries = retries || 0;
             const url = targetIP + endpoint;
-            const timeout = fireAndForget ? 2000 : 4000;
+            // Lebih panjang saat background: 8 detik
+            const timeout = fireAndForget ? 3000 : 8000;
             try {
                 const ctrl = new AbortController();
                 const to = setTimeout(() => ctrl.abort(), timeout);
@@ -2078,17 +2086,15 @@
                 }
                 return { ok: false, status: r.status, error: 'HTTP ' + r.status };
             } catch (e) {
-                try {
-                    const ctrl2 = new AbortController();
-                    const to2 = setTimeout(() => ctrl2.abort(), timeout);
-                    await fetch(url, { method: 'GET', signal: ctrl2.signal, mode: 'no-cors', cache: 'no-store' });
-                    clearTimeout(to2);
-                    return { ok: true, status: 0, payload: null, opaque: true };
-                } catch (e2) {
-                    return { ok: false, error: (e2.message || 'Network Error') };
+                // Retry sekali lagi untuk request status (bukan fireAndForget)
+                if (!fireAndForget && retries < 1) {
+                    await new Promise(r => setTimeout(r, 500));
+                    return httpGet(endpoint, false, retries + 1);
                 }
+                return { ok: false, error: (e.message || 'Network Error') };
             }
         }
+
 
         async function sendCommand(endpoint) {
             log('TX → ' + endpoint, 'tx');
@@ -2103,15 +2109,21 @@
         }
 
         // ===== POLLING =====
+             let offlineGraceCount = 0;
+        const OFFLINE_GRACE_MAX = 3; // Toleransi 3x gagal baru offline
+
         async function pollStatus() {
             if (!isPolling) return;
             const res = await httpGet('/status');
             if (!res.ok) {
-                const health = await httpGet('/');
-                if (health.ok) { updateWifi(true); return; }
-                updateWifi(false);
+                offlineGraceCount++;
+                if (offlineGraceCount >= OFFLINE_GRACE_MAX) {
+                    updateWifi(false);
+                }
                 return;
             }
+            offlineGraceCount = 0;
+   
             updateWifi(true);
 
             if (res.payload) {
@@ -2997,12 +3009,22 @@
                     bigText: true,
                     silent: false
                 });
-                   cordova.plugins.backgroundMode.on('activate', function() {
-            // Pastikan polling tetap berjalan
+                           cordova.plugins.backgroundMode.on('activate', function() {
+            // Di background, Android bisa pause JS timer. 
+            // Pastikan polling jalan dengan interval lebih longgar
             if (!pollInterval) {
                 startPolling();
             }
+            // Keep CPU awake untuk polling
+            cordova.plugins.backgroundMode.disableWebViewOptimizations();
         });
+        
+        cordova.plugins.backgroundMode.on('deactivate', function() {
+            // Saat kembali foreground, restore normal polling
+            stopPolling();
+            startPolling();
+        });
+
      
                 log('Background mode enabled', 'ok');
             }
@@ -3038,26 +3060,35 @@
         }, false);
 
         // ===== PAUSE / RESUME =====
-        document.addEventListener('pause', function() {
+                document.addEventListener('pause', function() {
             saveAppState();
-            log('App paused, state saved', 'dim');
+            // Jangan stop polling! Background mode harus tetap jalan
+            log('App paused, background polling continues', 'dim');
         }, false);
 
         document.addEventListener('resume', function() {
             loadAppState();
             screenOn();
             lastBtnMs = Date.now();
-            // Jika ada alarm aktif, trigger ulang
+            
+            // FORCE restart polling bersih
+            stopPolling();
+            offlineGraceCount = 0;
+            firstPoll = true;
+            lastWifiStatus = true; // Asumsi online dulu, nanti dicek
+            
+            startPolling();
+            
+            // Immediate poll saat resume
+            setTimeout(() => pollStatus(), 300);
+            
             if (htmlAlarmActive && !htmlAlarmAcked && !snoozeActive) {
                 wakeUpScreen();
                 onAlarmTriggered();
             }
-            // Pastikan polling berjalan
-            if (!pollInterval) {
-                startPolling();
-            }
-            log('App resumed, state restored', 'ok');
+            log('App resumed, polling force-restarted', 'ok');
         }, false);
+
 
         // ===== BOOT =====
         log('=== Wemos D1 Smartwatch Pro v4.0 (Neo-Glass) ===', 'ok');
