@@ -1,7 +1,7 @@
 {
   "name": "wemos-d1-smartwatch-pro",
   "displayName": "Wemos D1 Smartwatch Pro",
-  "version": "4.2.0",
+  "version": "4.3.0",
   "description": "Aplikasi IoT Smartwatch untuk monitoring dan kontrol Wemos D1",
   "main": "index.js",
   "scripts": {
