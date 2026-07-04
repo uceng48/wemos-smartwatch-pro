@@ -1687,25 +1687,29 @@
         // ===== POLLING INTERVAL (terpisah dari render loop) =====
         let pollInterval = null;
 
-               function startPolling() {
-            if (pollInterval) {
-                clearInterval(pollInterval);
-                pollInterval = null;
-            }
-            // Saat background, interval minimal 1000ms agar tidak di-throttle Android
-            let interval = POLL_MS;
-            if (cordovaReady && cordova.plugins && cordova.plugins.backgroundMode && cordova.plugins.backgroundMode.isActive()) {
-                interval = Math.max(POLL_MS, 1000);
-            }
-            pollInterval = setInterval(() => {
-                if (isPolling) {
-                    pollStatus();
-                    updateUptime();
-                    updateSnoozeUI();
-                }
-            }, interval);
-            log('Polling started with interval ' + interval + 'ms', 'dim');
+            function startPolling() {
+    if (pollInterval) {
+        clearInterval(pollInterval);
+        pollInterval = null;
+    }
+    
+    // Interval minimal 1000ms saat background, normal saat foreground
+    let interval = POLL_MS;
+    if (cordovaReady && cordova.plugins && cordova.plugins.backgroundMode && cordova.plugins.backgroundMode.isActive()) {
+        interval = Math.max(POLL_MS, 1000);
+    }
+    
+    pollInterval = setInterval(function() {
+        if (isPolling) {
+            pollStatus();
+            updateUptime();
+            updateSnoozeUI();
         }
+    }, interval);
+    
+    log('Polling started: ' + interval + 'ms', 'dim');
+}
+   
 
 
         function stopPolling() {
@@ -1857,22 +1861,39 @@
 
         // ===== NOTIFICATION =====
         function sendNativeNotification(title, body) {
+    // Prioritas: Cordova Local Notification
     if (cordovaReady && cordova.plugins && cordova.plugins.notification && cordova.plugins.notification.local) {
-        cordova.plugins.notification.local.schedule({
-            id: 1,
-            title: title,
-            text: body,
-            androidChannelId: 'wemos_alarm_channel',
-            androidChannelEnableVibration: true,
-            androidOngoing: true,
-            badgeNumber: 1
+        // Hapus notifikasi lama dulu agar tidak stack
+        cordova.plugins.notification.local.cancel(1, function() {
+            // Schedule baru setelah cancel
+            cordova.plugins.notification.local.schedule({
+                id: 1,
+                title: title,
+                text: body,
+                androidChannelId: 'wemos_alarm_channel',
+                androidChannelEnableVibration: true,
+                androidOngoing: true,
+                badgeNumber: 1,
+                // Trigger sekarang juga
+                trigger: { in: 1, unit: 'second' }
+            });
         });
         return;
     }
+    
+    // Fallback: Web Notification (hanya works saat foreground/visible)
     if (alarmNotifGranted && 'Notification' in window) {
-        try { new Notification(title, { body, tag: 'wemos-alarm', requireInteraction: true }); } catch (e) {}
+        try {
+            new Notification(title, { 
+                body: body, 
+                tag: 'wemos-alarm', 
+                requireInteraction: true,
+                icon: 'icon.png' // optional
+            });
+        } catch (e) {}
     }
 }
+
 
 
         function requestNotif() {
@@ -1983,19 +2004,35 @@
 
         // ===== ALARM =====
         function onAlarmTriggered() {
-            log('🚨 ALARM TRIGGERED! (Suara+Getar+Notif+Wake)', 'alarm');
-            screenOn();
-            lastBtnMs = Date.now();
-            wakeUpScreen();
-            if (soundEnabled) startContinuousAlarm();
-            if (vibrateEnabled) startContinuousVibrate();
-            alarmToast.classList.add('show');
-            alarmFlash.classList.add('active');
-            sendNativeNotification('Wemos Alarm!', 'Sensor atau D4 trigger!');
-            saveAppState();
-            updateAlarmUI();
-            updateSnoozeUI();
-        }
+    log('🚨 ALARM TRIGGERED! (Suara+Getar+Notif+Wake)', 'alarm');
+    
+    // Screen & wake
+    screenOn();
+    lastBtnMs = Date.now();
+    wakeUpScreen();
+    
+    // PENTING: Bangun device jika sleep
+    if (cordovaReady && cordova.plugins && cordova.plugins.backgroundMode) {
+        cordova.plugins.backgroundMode.wakeUp();
+        cordova.plugins.backgroundMode.unlock();
+    }
+    
+    // Audio & vibrate
+    if (soundEnabled) startContinuousAlarm();
+    if (vibrateEnabled) startContinuousVibrate();
+    
+    // UI
+    alarmToast.classList.add('show');
+    alarmFlash.classList.add('active');
+    
+    // Notifikasi
+    sendNativeNotification('Wemos Alarm!', 'Sensor atau D4 trigger!');
+    
+    saveAppState();
+    updateAlarmUI();
+    updateSnoozeUI();
+}
+
 
         function onAlarmCleared() {
             log('Alarm cleared', 'ok');
@@ -2068,32 +2105,45 @@
         }
 
         // ===== HTTP =====
-                async function httpGet(endpoint, fireAndForget, retries) {
-            fireAndForget = fireAndForget || false;
-            retries = retries || 0;
-            const url = targetIP + endpoint;
-            // Lebih panjang saat background: 8 detik
-            const timeout = fireAndForget ? 3000 : 8000;
-            try {
-                const ctrl = new AbortController();
-                const to = setTimeout(() => ctrl.abort(), timeout);
-                const r = await fetch(url, { method: 'GET', signal: ctrl.signal, mode: 'cors', cache: 'no-store' });
-                clearTimeout(to);
-                if (r.ok) {
-                    const text = await r.text();
-                    try { return { ok: true, status: r.status, payload: JSON.parse(text) }; } catch (e) { return { ok: true,
-                            status: r.status, payload: null }; }
-                }
-                return { ok: false, status: r.status, error: 'HTTP ' + r.status };
-            } catch (e) {
-                // Retry sekali lagi untuk request status (bukan fireAndForget)
-                if (!fireAndForget && retries < 1) {
-                    await new Promise(r => setTimeout(r, 500));
-                    return httpGet(endpoint, false, retries + 1);
-                }
-                return { ok: false, error: (e.message || 'Network Error') };
+          async function httpGet(endpoint, fireAndForget, retries) {
+    fireAndForget = fireAndForget || false;
+    retries = retries || 0;
+    const url = targetIP + endpoint;
+    // Timeout lebih panjang saat background
+    const isBg = cordovaReady && cordova.plugins && cordova.plugins.backgroundMode && cordova.plugins.backgroundMode.isActive();
+    const timeout = fireAndForget ? 3000 : (isBg ? 10000 : 5000);
+    
+    try {
+        const ctrl = new AbortController();
+        const to = setTimeout(function() { ctrl.abort(); }, timeout);
+        const r = await fetch(url, { 
+            method: 'GET', 
+            signal: ctrl.signal, 
+            mode: 'cors', 
+            cache: 'no-store',
+            headers: { 'Accept': 'application/json' }
+        });
+        clearTimeout(to);
+        
+        if (r.ok) {
+            const text = await r.text();
+            try { 
+                return { ok: true, status: r.status, payload: JSON.parse(text) }; 
+            } catch (e) { 
+                return { ok: true, status: r.status, payload: null }; 
             }
         }
+        return { ok: false, status: r.status, error: 'HTTP ' + r.status };
+    } catch (e) {
+        // Retry sekali untuk status poll
+        if (!fireAndForget && retries < 1) {
+            await new Promise(function(r) { setTimeout(r, 800); });
+            return httpGet(endpoint, false, retries + 1);
+        }
+        return { ok: false, error: (e.message || 'Network Error') };
+    }
+}
+      
 
 
         async function sendCommand(endpoint) {
@@ -2112,19 +2162,38 @@
              let offlineGraceCount = 0;
         const OFFLINE_GRACE_MAX = 3; // Toleransi 3x gagal baru offline
 
-        async function pollStatus() {
-            if (!isPolling) return;
-            const res = await httpGet('/status');
-            if (!res.ok) {
-                offlineGraceCount++;
-                if (offlineGraceCount >= OFFLINE_GRACE_MAX) {
-                    updateWifi(false);
-                }
+       async function pollStatus() {
+    if (!isPolling) return;
+    
+    const res = await httpGet('/status');
+    
+    if (!res.ok) {
+        offlineGraceCount++;
+        log('Poll fail #' + offlineGraceCount + ': ' + (res.error || 'unknown'), 'err');
+        
+        // Cek health hanya jika grace belum max
+        if (offlineGraceCount < OFFLINE_GRACE_MAX) {
+            const health = await httpGet('/');
+            if (health.ok) {
+                offlineGraceCount = 0;
+                updateWifi(true);
                 return;
             }
-            offlineGraceCount = 0;
-   
-            updateWifi(true);
+        }
+        
+        if (offlineGraceCount >= OFFLINE_GRACE_MAX) {
+            updateWifi(false);
+        }
+        return;
+    }
+    
+    // Reset grace saat sukses
+    if (offlineGraceCount > 0) {
+        log('Poll recovered', 'ok');
+        offlineGraceCount = 0;
+    }
+    updateWifi(true);
+ 
 
             if (res.payload) {
                 id0State = !!res.payload['0'];
@@ -2234,23 +2303,28 @@
             }
         }
 
-        function updateWifi(connected) {
-            if (connected !== lastWifiStatus) {
-                lastWifiStatus = connected;
-                log(connected ? 'WiFi Connected' : 'WiFi Disconnected', connected ? 'ok' : 'err');
-                screenOn();
-                lastBtnMs = Date.now();
-            }
-            const dot = document.getElementById('statusDot');
-            const txt = document.getElementById('statusText');
-            if (connected) {
-                dot.className = 'dot on';
-                txt.textContent = 'ONLINE';
-            } else {
-                dot.className = 'dot off';
-                txt.textContent = 'OFFLINE';
-            }
+     function updateWifi(connected) {
+    if (connected !== lastWifiStatus) {
+        lastWifiStatus = connected;
+        if (!connected) {
+            log('WiFi Disconnected', 'err');
+        } else {
+            log('WiFi Connected', 'ok');
+            screenOn();
+            lastBtnMs = Date.now();
         }
+    }
+    const dot = document.getElementById('statusDot');
+    const txt = document.getElementById('statusText');
+    if (connected) {
+        dot.className = 'dot on';
+        txt.textContent = 'ONLINE';
+    } else {
+        dot.className = 'dot off';
+        txt.textContent = 'OFFLINE';
+    }
+}
+
 
         // ===== CHART =====
         function addChartPoint(val) {
@@ -2986,51 +3060,47 @@
     cordovaReady = true;
     log('Cordova ready - Native features available', 'ok');
 
-    // Fix StatusBar overlap
+    // Fix StatusBar
     if (window.StatusBar) {
         StatusBar.overlaysWebView(false);
         StatusBar.styleBlackTranslucent();
         StatusBar.backgroundColorByHexString('#0d0b1a');
     }
 
-    // Background mode
-
-            if (cordova.plugins && cordova.plugins.backgroundMode) {
-                cordovaBgMode = true;
-                cordova.plugins.backgroundMode.enable();
-                cordova.plugins.backgroundMode.overrideBackButton();
-                cordova.plugins.backgroundMode.setDefaults({
-                    title: 'Wemos Alarm Aktif',
-                    text: 'Monitoring sensor Wemos...',
-                    icon: 'icon',
-                    color: 'F39C12',
-                    resume: true,
-                    hidden: false,
-                    bigText: true,
-                    silent: false
-                });
-                           cordova.plugins.backgroundMode.on('activate', function() {
-            // Di background, Android bisa pause JS timer. 
-            // Pastikan polling jalan dengan interval lebih longgar
-            if (!pollInterval) {
-                startPolling();
-            }
-            // Keep CPU awake untuk polling
-            cordova.plugins.backgroundMode.disableWebViewOptimizations();
-        });
+    // Background mode setup
+    if (cordova.plugins && cordova.plugins.backgroundMode) {
+        cordova.plugins.backgroundMode.enable();
+        cordova.plugins.backgroundMode.overrideBackButton();
         
-        cordova.plugins.backgroundMode.on('deactivate', function() {
-            // Saat kembali foreground, restore normal polling
-            stopPolling();
-            startPolling();
+        // Set defaults notification foreground service
+        cordova.plugins.backgroundMode.setDefaults({
+            title: 'Wemos Alarm Aktif',
+            text: 'Monitoring sensor Wemos...',
+            icon: 'icon',
+            color: 'F39C12',
+            resume: true,
+            hidden: false,
+            bigText: true,
+            silent: true  // silent=true agar tidak bentrok dengan notifikasi alarm
         });
 
-     
-                log('Background mode enabled', 'ok');
-            }
+        // Saat masuk background: tetap polling, jangan matikan
+        cordova.plugins.backgroundMode.on('activate', function() {
+            log('Background mode ACTIVE', 'dim');
+            // PENTING: keep webview awake untuk JS timers
+            cordova.plugins.backgroundMode.disableWebViewOptimizations();
+            // Pastikan polling jalan
+            if (!pollInterval) startPolling();
+        });
 
-            // Request notification permission
-                // Fix: buat channel notifikasi untuk Android 8+
+        // Saat balik foreground: smooth transition
+        cordova.plugins.backgroundMode.on('deactivate', function() {
+            log('Background mode DEACTIVATED', 'dim');
+            // Jangan stop polling! Biarkan jalan terus
+        });
+    }
+
+    // Notification channel
     if (cordova.plugins && cordova.plugins.notification && cordova.plugins.notification.local) {
         cordova.plugins.notification.local.createChannel({
             androidChannelId: 'wemos_alarm_channel',
@@ -3040,54 +3110,58 @@
         });
     }
 
-    // Request notification permission
     requestNotif();
+    loadAppState();
 
+    // Jika ada alarm aktif saat boot, trigger ulang
+    if (htmlAlarmActive && !htmlAlarmAcked && !snoozeActive) {
+        onAlarmTriggered();
+    }
 
-            // Load state
-            loadAppState();
+    // Start polling & render
+    if (!pollInterval) startPolling();
+    if (!loopId) mainLoop();
 
-            // Jika ada alarm aktif yang belum di-ack, trigger ulang
-            if (htmlAlarmActive && !htmlAlarmAcked && !snoozeActive) {
-                onAlarmTriggered();
-            }
+    log('Aplikasi siap dengan background mode! 🚀', 'ok');
+}, false);
 
-            // Mulai polling dan render loop
-            startPolling();
-            if (!loopId) mainLoop();
-
-            log('Aplikasi siap dengan background mode! 🚀', 'ok');
-        }, false);
 
         // ===== PAUSE / RESUME =====
-                document.addEventListener('pause', function() {
-            saveAppState();
-            // Jangan stop polling! Background mode harus tetap jalan
-            log('App paused, background polling continues', 'dim');
-        }, false);
+             document.addEventListener('pause', function() {
+    saveAppState();
+    // JANGAN stop polling! Background mode akan handle
+    // Tapi naikkan interval untuk hemat baterai
+    log('App paused, background polling continues', 'dim');
+}, false);
 
-        document.addEventListener('resume', function() {
-            loadAppState();
-            screenOn();
-            lastBtnMs = Date.now();
-            
-            // FORCE restart polling bersih
-            stopPolling();
-            offlineGraceCount = 0;
-            firstPoll = true;
-            lastWifiStatus = true; // Asumsi online dulu, nanti dicek
-            
-            startPolling();
-            
-            // Immediate poll saat resume
-            setTimeout(() => pollStatus(), 300);
-            
-            if (htmlAlarmActive && !htmlAlarmAcked && !snoozeActive) {
-                wakeUpScreen();
-                onAlarmTriggered();
-            }
-            log('App resumed, polling force-restarted', 'ok');
-        }, false);
+document.addEventListener('resume', function() {
+    log('App resumed', 'ok');
+    
+    // Reset grace counter
+    offlineGraceCount = 0;
+    lastWifiStatus = true; // optimistic, akan dicek poll berikutnya
+    
+    // Wake screen
+    screenOn();
+    lastBtnMs = Date.now();
+    
+    // Restart polling hanya jika memang mati
+    if (!pollInterval) {
+        startPolling();
+    }
+    
+    // Force poll sekali setelah 500ms (tunggu network ready)
+    setTimeout(function() {
+        pollStatus();
+    }, 500);
+
+    // Restore alarm state jika masih aktif
+    if (htmlAlarmActive && !htmlAlarmAcked && !snoozeActive) {
+        wakeUpScreen();
+        onAlarmTriggered();
+    }
+}, false);
+   
 
 
         // ===== BOOT =====
@@ -3096,16 +3170,17 @@
         log('Fitur: Snooze, Theme, Export/Import, Shortcuts, Background Polling', 'info');
 
         // Load state dan mulai polling jika tidak di Cordova (web)
-        if (!cordovaReady) {
-            loadAppState();
-            // Jika ada alarm aktif, trigger
-            if (htmlAlarmActive && !htmlAlarmAcked && !snoozeActive) {
-                onAlarmTriggered();
-            }
-            startPolling();
-            if (!loopId) mainLoop();
-            log('Running in web mode (no Cordova)', 'dim');
-        }
+// Web mode fallback (hanya jika tidak ada Cordova)
+if (!window.cordova) {
+    loadAppState();
+    if (htmlAlarmActive && !htmlAlarmAcked && !snoozeActive) {
+        onAlarmTriggered();
+    }
+    if (!pollInterval) startPolling();
+    if (!loopId) mainLoop();
+    log('Running in web mode (no Cordova)', 'dim');
+}
+
 
         loadWifiStatus();
 
