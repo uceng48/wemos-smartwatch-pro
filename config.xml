@@ -48,7 +48,8 @@
                 android:exported="false" />
             <meta-data android:name="android.supports_rtl" android:value="true" />
         </config-file>
-        
+
+             <allow-navigation href="http://192.168.4.1/*" />    
         <allow-intent href="market:*" />
     </platform>
     
