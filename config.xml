@@ -1,110 +1,65 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<widget xmlns="http://www.w3.org/ns/widgets"
+<?xml version='1.0' encoding='utf-8'?>
+<widget id="com.uceng48.wemospro" version="4.2.0" 
+        xmlns="http://www.w3.org/ns/widgets" 
         xmlns:cdv="http://cordova.apache.org/ns/1.0"
-        xmlns:android="http://schemas.android.com/apk/res/android"
-        id="com.jamdeep.wemos.smartwatch"
-        version="4.0.0"
-        versionCode="40000">
-
-    <!-- Identitas Aplikasi -->
-    <name>Wemos D1 Smartwatch Pro</name>
-    <description>Aplikasi IoT Smartwatch untuk monitoring dan kontrol Wemos D1 dengan fitur alarm, sensor, OLED, snooze, dan tema.</description>
-    <author email="dev@jamdeep.id" href="https://jamdeep.id">Jamdeep Team</author>
+        xmlns:android="http://schemas.android.com/apk/res/android">
+    
+    <name>Wemos Pro</name>
+    <description>Wemos D1 Smartwatch Pro — Alarm, Sensor, Kontrol Pin, OLED, Snooze, Theme, Export/Import</description>
+    <author email="uceng@gmail.com" href="https://uceng48.github.io/wemos">uceng48</author>
+    
     <content src="index.html" />
-
-    <!-- Preferensi Umum -->
-    <preference name="orientation" value="portrait" />
-    <preference name="fullscreen" value="false" />
-    <preference name="BackgroundColor" value="0xFF0A1628" />
-    <preference name="StatusBarOverlaysWebView" value="true" />
-    <preference name="StatusBarBackgroundColor" value="#0A1628" />
-    <preference name="StatusBarStyle" value="blacktranslucent" />
-    <preference name="DisallowOverscroll" value="true" />
-    <preference name="EnableViewportScale" value="false" />
-    <preference name="KeyboardDisplayRequiresUserAction" value="false" />
-    <preference name="SuppressesLongPressGesture" value="true" />
-    <preference name="android-minSdkVersion" value="22" />
-    <preference name="android-targetSdkVersion" value="34" />
-    <preference name="android-compileSdkVersion" value="34" />
-    <preference name="AndroidInsecureFileModeEnabled" value="true" />
-    <preference name="AndroidPersistentFileLocation" value="Compatibility" />
-    <preference name="AndroidLaunchMode" value="singleTop" />
-    <preference name="KeepRunning" value="true" />
-    // <preference name="FadeSplashScreen" value="true" />
-    // <preference name="FadeSplashScreenDuration" value="300" />
-    // <preference name="SplashScreenDelay" value="2000" />
-    // <preference name="AutoHideSplashScreen" value="true" />
-    // <preference name="ShowSplashScreenSpinner" value="false" />
-
-    <!-- Akses Network -->
+    
     <access origin="*" />
     <allow-intent href="http://*/*" />
     <allow-intent href="https://*/*" />
-    <allow-intent href="tel:*" />
-    <allow-intent href="sms:*" />
-    <allow-intent href="mailto:*" />
-    <allow-intent href="geo:*" />
     <allow-navigation href="*" />
-
-    <!-- Platform Android -->
+    
+    <preference name="AndroidXEnabled" value="true" />
+    
     <platform name="android">
-        <!-- Permission -->
-        <uses-permission android:name="android.permission.INTERNET" />
-        <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-        <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
-        <uses-permission android:name="android.permission.WAKE_LOCK" />
-        <uses-permission android:name="android.permission.VIBRATE" />
-        <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-        <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
-        <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
-        <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
-        <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
-
-        <!-- Fitur -->
-        <uses-feature android:name="android.hardware.sensor.accelerometer" android:required="false" />
-        <uses-feature android:name="android.hardware.touchscreen" android:required="true" />
-
-        <!-- Config -->
-       // <preference name="AndroidWindowSplashScreenBackground" value="#0A1628" />
-      //  <preference name="AndroidWindowSplashScreenAnimatedIcon" value="res/screen/android/splash-foreground.png" />
-      //  <preference name="AndroidWindowSplashScreenIconBackgroundColor" value="#0A1628" />
-     //   <preference name="AndroidWindowSplashScreenAnimationDuration" value="300" />
-
-        <!-- Ikon -->
-     //   <icon src="res/icon/android/ldpi.png" density="ldpi" />
-     //   <icon src="res/icon/android/mdpi.png" density="mdpi" />
-        //<icon src="res/icon/android/hdpi.png" density="hdpi" />
-       // <icon src="res/icon/android/xhdpi.png" density="xhdpi" />
-       // <icon src="res/icon/android/xxhdpi.png" density="xxhdpi" />
-       // <icon src="res/icon/android/xxxhdpi.png" density="xxxhdpi" />
-
-        <!-- Adaptive Icon -->
-        <resource-file src="res/icon/android/ic_launcher_foreground.png" target="app/src/main/res/mipmap-xxxhdpi/ic_launcher_foreground.png" />
-        <resource-file src="res/icon/android/ic_launcher_background.png" target="app/src/main/res/mipmap-xxxhdpi/ic_launcher_background.png" />
-
-        <!-- Splash Screen Legacy -->
-    //    <splash src="res/screen/android/splash-port-ldpi.png" density="ldpi" orientation="portrait" />
-     //   <splash src="res/screen/android/splash-port-mdpi.png" density="mdpi" orientation="portrait" />
-     //   <splash src="res/screen/android/splash-port-hdpi.png" density="hdpi" orientation="portrait" />
-      //  <splash src="res/screen/android/splash-port-xhdpi.png" density="xhdpi" orientation="portrait" />
-      //  <splash src="res/screen/android/splash-port-xxhdpi.png" density="xxhdpi" orientation="portrait" />
-     //   <splash src="res/screen/android/splash-port-xxxhdpi.png" density="xxxhdpi" orientation="portrait" />
+        <preference name="android-minSdkVersion" value="24" />
+        <preference name="android-targetSdkVersion" value="34" />
+        <preference name="AndroidForegroundServiceType" value="dataSync" />
+        
+        <edit-config file="app/src/main/AndroidManifest.xml" mode="merge" target="/manifest/application">
+            <application android:usesCleartextTraffic="true" />
+        </edit-config>
+        <preference name="AndroidInsecureFileModeEnabled" value="true" />
+        
+        <config-file parent="/manifest" target="AndroidManifest.xml">
+            <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+            <uses-permission android:name="android.permission.VIBRATE" />
+            <uses-permission android:name="android.permission.WAKE_LOCK" />
+            <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+            <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+            <uses-permission android:name="android.permission.INTERNET" />
+            <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+            <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+            <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+            <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
+        </config-file>
+        
+        <config-file parent="/manifest/application" target="AndroidManifest.xml">
+            <service 
+                android:name="com.katason.backgroundmode.BackgroundService" 
+                android:foregroundServiceType="dataSync"
+                android:exported="false" />
+            <meta-data android:name="android.supports_rtl" android:value="true" />
+        </config-file>
+        
+        <allow-intent href="market:*" />
     </platform>
-
-    <!-- Plugin Cordova -->
-    <plugin name="cordova-plugin-background-mode" spec="^0.7.3" source="npm">
-        <variable name="ANDROID_SUPPORT_LIBRARY_VERSION" value="26.+" />
-    </plugin>
-
-    <plugin name="cordova-plugin-local-notification" spec="^0.9.0" source="npm" />
-    // <plugin name="cordova-plugin-insomnia" spec="^4.3.0" source="npm" />
-    <plugin name="cordova-plugin-vibration" spec="^3.1.1" source="npm" />
-    <plugin name="cordova-plugin-device" spec="^2.1.0" source="npm" />
-    <plugin name="cordova-plugin-network-information" spec="^3.0.0" source="npm" />
-    <plugin name="cordova-plugin-statusbar" spec="^3.0.0" source="npm" />
-  //  <plugin name="cordova-plugin-splashscreen" spec="^6.0.2" source="npm" />
-    <plugin name="cordova-plugin-whitelist" spec="^1.3.5" source="npm" />
-    <plugin name="cordova-plugin-file" spec="^8.0.0" source="npm" />
-    <plugin name="cordova-plugin-androidx-adapter" spec="^1.1.3" source="npm" />
-    <plugin name="cordova-plugin-android-permissions" spec="^1.1.4" source="npm" />
+    
+    <preference name="Orientation" value="portrait" />
+    <preference name="Fullscreen" value="false" />
+    <preference name="DisallowOverscroll" value="true" />
+    <!-- PERBAIKAN: hapus prefix 0xFF, gunakan #RRGGBB -->
+    <preference name="BackgroundColor" value="#0a1628" />
+    <preference name="KeepRunning" value="true" />
+    <preference name="AndroidLaunchMode" value="singleTop" />
+    <preference name="ShowTitle" value="false" />
+    <preference name="AutoHideSplashScreen" value="true" />
+    <preference name="SplashScreenDelay" value="1000" />
+    
 </widget>
