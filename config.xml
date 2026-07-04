@@ -59,7 +59,6 @@
     <preference name="KeepRunning" value="true" />
     <preference name="AndroidLaunchMode" value="singleTop" />
     <preference name="ShowTitle" value="false" />
-    <preference name="AutoHideSplashScreen" value="true" />
-    <preference name="SplashScreenDelay" value="1000" />
+
     
 </widget>
