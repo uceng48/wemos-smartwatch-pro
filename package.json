@@ -31,7 +31,7 @@
       "cordova-plugin-android-permissions": {},
       "cordova-plugin-local-notification": {},
       "cordova-plugin-appminimize": {}
-            "cordova-plugin-insomnia": {}
+          
     }
   }
 }
