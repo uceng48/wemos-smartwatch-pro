@@ -3,31 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval' data: gap:; connect-src *; style-src 'unsafe-inline'; script-src 'unsafe-inline' 'unsafe-eval';"> 
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#0d0b1a">
-    
-    <!-- WAJIB untuk Cordova APK -->
-    <meta http-equiv="Content-Security-Policy" 
-          content="default-src 'self' 'unsafe-inline' 'unsafe-eval' http://192.168.4.1 data: gap: https://ssl.gstatic.com; 
-                   connect-src 'self' http://192.168.4.1 http://* https://*; 
-                   style-src 'self' 'unsafe-inline'; 
-                   media-src *; 
-                   img-src 'self' data: content:;">
-    
     <script src="cordova.js"></script>
     <title>Wemos D1 · Smartwatch Pro</title>
     <style>
-        /* ============================================================
-           RESET & ROOT — Neo-Glass Design
-           ============================================================ */
+        /* ===== S T Y L E  (tetap seperti asli, tidak diubah) ===== */
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
-
         :root {
             --bg-primary: #0d0b1a;
             --bg-secondary: rgba(20, 18, 40, 0.85);
@@ -37,13 +26,11 @@
             --text-primary: #f0edff;
             --text-secondary: #b8b0d6;
             --text-dim: #6a6090;
-
             --gradient-1: linear-gradient(135deg, #7c3aed, #4f46e5);
             --gradient-2: linear-gradient(135deg, #ec4899, #8b5cf6);
             --gradient-3: linear-gradient(135deg, #06b6d4, #3b82f6);
             --gradient-4: linear-gradient(135deg, #f59e0b, #ef4444);
             --gradient-5: linear-gradient(135deg, #10b981, #34d399);
-
             --accent-purple: #8b5cf6;
             --accent-pink: #ec4899;
             --accent-cyan: #06b6d4;
@@ -51,17 +38,14 @@
             --accent-green: #34d399;
             --accent-red: #f87171;
             --accent-orange: #fbbf24;
-
             --radius-lg: 24px;
             --radius-md: 16px;
             --radius-sm: 10px;
             --radius-full: 9999px;
-
             --font: 'Inter', -apple-system, system-ui, 'Segoe UI', sans-serif;
             --transition: 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
             --blur: blur(24px);
         }
-
         html,
         body {
             height: 100%;
@@ -72,7 +56,6 @@
             -webkit-tap-highlight-color: transparent;
             overflow: hidden;
         }
-
         ::-webkit-scrollbar {
             width: 4px;
         }
@@ -83,10 +66,6 @@
             background: var(--accent-purple);
             border-radius: 4px;
         }
-
-        /* ============================================================
-           APP SHELL
-           ============================================================ */
         #app {
             display: flex;
             flex-direction: column;
@@ -108,10 +87,6 @@
                 box-shadow: 0 40px 80px rgba(0, 0, 0, 0.7);
             }
         }
-
-        /* ============================================================
-           HEADER — Glossy
-           ============================================================ */
         .app-header {
             display: flex;
             align-items: center;
@@ -134,7 +109,6 @@
             height: 1px;
             background: linear-gradient(90deg, transparent, rgba(139, 92, 246, 0.3), transparent);
         }
-
         .app-header .brand {
             display: flex;
             align-items: center;
@@ -176,7 +150,6 @@
             opacity: 0.5;
             -webkit-text-fill-color: var(--text-secondary);
         }
-
         .header-actions {
             display: flex;
             align-items: center;
@@ -204,7 +177,6 @@
         .header-actions .icon-btn:active {
             transform: scale(0.92);
         }
-
         .status-badge {
             display: flex;
             align-items: center;
@@ -252,20 +224,12 @@
                 transform: scale(0.7);
             }
         }
-
-        /* ============================================================
-           MAIN CONTENT
-           ============================================================ */
         .main-content {
             flex: 1;
             overflow-y: auto;
             padding: 14px 16px 80px;
             scroll-behavior: smooth;
         }
-
-        /* ============================================================
-           TABS — Pill Style
-           ============================================================ */
         .tab-nav {
             display: flex;
             background: rgba(13, 11, 26, 0.85);
@@ -329,10 +293,6 @@
             border-radius: 50%;
             border: 2px solid var(--bg-primary);
         }
-
-        /* ============================================================
-           PANELS
-           ============================================================ */
         .panel {
             display: none;
             animation: fadeUp 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -350,10 +310,6 @@
                 transform: translateY(0) scale(1);
             }
         }
-
-        /* ============================================================
-           CARDS — Glass
-           ============================================================ */
         .card {
             background: var(--glass-bg);
             backdrop-filter: var(--blur);
@@ -369,7 +325,6 @@
             border-color: rgba(139, 92, 246, 0.15);
             box-shadow: var(--glass-shadow), 0 0 40px rgba(139, 92, 246, 0.03);
         }
-
         .card .card-title {
             font-size: 0.6rem;
             text-transform: uppercase;
@@ -411,10 +366,6 @@
             color: #000;
             border-color: var(--accent-cyan);
         }
-
-        /* ============================================================
-           STATS GRID — Glossy Tiles
-           ============================================================ */
         .stats-grid {
             display: grid;
             grid-template-columns: 1fr 1fr 1fr 1fr;
@@ -492,10 +443,6 @@
                 font-size: 1.15rem;
             }
         }
-
-        /* ============================================================
-           OLED DISPLAY
-           ============================================================ */
         .oled-wrapper {
             position: relative;
             width: 100%;
@@ -529,7 +476,6 @@
             background-size: 4px 4px;
             border-radius: var(--radius-md);
         }
-
         .oled-status-row {
             display: flex;
             justify-content: space-between;
@@ -570,10 +516,6 @@
             box-shadow: 0 0 20px rgba(248, 113, 113, 0.6);
             animation: pulse-dot 0.6s infinite;
         }
-
-        /* ============================================================
-           BUTTON GRID — Premium
-           ============================================================ */
         .btn-grid {
             display: grid;
             grid-template-columns: 1fr 1fr 1fr 1fr;
@@ -643,10 +585,6 @@
                 opacity: 0;
             }
         }
-
-        /* ============================================================
-           PIN STATUS — Glass Grid
-           ============================================================ */
         .pin-grid {
             display: grid;
             grid-template-columns: 1fr 1fr 1fr;
@@ -744,10 +682,6 @@
                 opacity: 0.2;
             }
         }
-
-        /* ============================================================
-           CHART
-           ============================================================ */
         .chart-container {
             width: 100%;
             height: 70px;
@@ -759,10 +693,6 @@
             border-radius: var(--radius-sm);
             background: rgba(255, 255, 255, 0.02);
         }
-
-        /* ============================================================
-           LOG — Terminal Style
-           ============================================================ */
         .log-container {
             background: rgba(0, 0, 0, 0.4);
             border-radius: var(--radius-md);
@@ -812,10 +742,6 @@
         .log-container .log-entry .msg.info {
             color: var(--accent-cyan);
         }
-
-        /* ============================================================
-           SETTINGS — Clean
-           ============================================================ */
         .setting-row {
             display: flex;
             justify-content: space-between;
@@ -864,7 +790,6 @@
             background: #0d0b1a;
             color: var(--text-primary);
         }
-
         .setting-row .toggle-wrap {
             display: flex;
             align-items: center;
@@ -908,10 +833,6 @@
             min-width: 30px;
             text-align: right;
         }
-
-        /* ============================================================
-           ALARM TOAST
-           ============================================================ */
         .alarm-toast {
             position: fixed;
             top: 0;
@@ -971,7 +892,6 @@
         .alarm-toast .snooze-btn:active {
             transform: scale(0.92);
         }
-
         .alarm-flash {
             position: fixed;
             inset: 0;
@@ -991,10 +911,6 @@
                 background: rgba(239, 68, 68, 0.12);
             }
         }
-
-        /* ============================================================
-           SHORTCUTS OVERLAY
-           ============================================================ */
         .shortcuts-overlay {
             position: fixed;
             inset: 0;
@@ -1068,10 +984,6 @@
         .shortcuts-overlay .shortcuts-box .close-shortcuts:active {
             transform: scale(0.94);
         }
-
-        /* ============================================================
-           UTILITY
-           ============================================================ */
         .flex-between {
             display: flex;
             justify-content: space-between;
@@ -1098,7 +1010,6 @@
             color: var(--text-secondary);
             font-size: 0.6rem;
         }
-
         .btn-ghost {
             background: transparent;
             border: 1px solid var(--glass-border);
@@ -1124,7 +1035,6 @@
             border-color: var(--accent-red);
             color: var(--accent-red);
         }
-
         .badge-pill {
             font-size: 0.45rem;
             padding: 2px 12px;
@@ -1160,7 +1070,6 @@
             color: #fff;
             border-color: var(--accent-purple);
         }
-
         .action-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -1171,10 +1080,6 @@
             font-size: 0.55rem;
             border-radius: var(--radius-sm);
         }
-
-        /* ============================================================
-           RESPONSIVE
-           ============================================================ */
         @media (max-width: 400px) {
             .btn-grid {
                 gap: 6px;
@@ -1213,7 +1118,6 @@
                 grid-template-columns: 1fr 1fr;
             }
         }
-
         @media (min-width: 481px) {
             #app {
                 border-left: 1px solid var(--glass-border);
@@ -1223,10 +1127,6 @@
                 height: calc(100vh - 24px);
             }
         }
-
-        /* ============================================================
-           SCROLLBAR LOG
-           ============================================================ */
         .log-container::-webkit-scrollbar {
             width: 3px;
         }
@@ -1237,10 +1137,6 @@
             background: var(--accent-purple);
             border-radius: 4px;
         }
-
-        /* ============================================================
-           WIFI CONFIG CARD
-           ============================================================ */
         .wifi-status-text {
             font-size: 0.6rem;
             font-weight: 500;
@@ -1258,7 +1154,6 @@
         .wifi-status-text.idle {
             color: var(--text-dim);
         }
-
         .btn-save-wifi {
             background: var(--gradient-3);
             width: 100%;
@@ -1550,7 +1445,7 @@
                 <div class="card">
                     <div class="card-title">ℹ️ Tentang</div>
                     <p class="text-muted" style="font-size:0.6rem;line-height:1.8;opacity:0.7;">
-                        Wemos D1 Smartwatch Pro v4.1<br>
+                        Wemos D1 Smartwatch Pro v4.0<br>
                         Pin output: D0(16), D6(12), D8(15) • Input: D4(trigger), D5(sensor)<br>
                         Fitur: Snooze, Theme, Export/Import, Shortcuts, PWM visual<br>
                         Dibangun dengan ❤️ untuk IoT
@@ -1596,33 +1491,33 @@
 
     <script>
         /* ================================================================
-           WEMOS D1 SMARTWATCH PRO — v4.1 (APK Fix)
+           WEMOS D1 SMARTWATCH PRO — v4.0 (Neo-Glass UI) — FIXED NETWORK & ALARM
            ================================================================ */
 
         // ===== DOM REFS =====
         const canvas = document.getElementById('oled');
-        const ctx = canvas ? canvas.getContext('2d') : null;
+        const ctx = canvas.getContext('2d');
         const logBox = document.getElementById('logBox');
         const alarmToast = document.getElementById('alarmToast');
         const alarmFlash = document.getElementById('alarmFlash');
         const sensorChartCanvas = document.getElementById('sensorChart');
-        const sensorChartCtx = sensorChartCanvas ? sensorChartCanvas.getContext('2d') : null;
+        const sensorChartCtx = sensorChartCanvas.getContext('2d');
 
         // ===== STATE =====
         let cordovaReady = false;
         let cordovaBgMode = false;
 
-        let targetIP = safeGet('sw_ip', 'http://192.168.4.1');
-        let POLL_MS = parseInt(safeGet('sw_poll', '500')) || 500;
-        let TOUT_MS = parseInt(safeGet('sw_tout', '5000')) || 5000;
-        let powerSaving = safeGet('sw_powerSave') === 'true';
-        let sensorEnabled = safeGet('sw_sensorEnabled') !== 'false';
-        let soundEnabled = safeGet('sw_soundEnabled') !== 'false';
-        let vibrateEnabled = safeGet('sw_vibrateEnabled') !== 'false';
-        let snoozeDuration = parseInt(safeGet('sw_snoozeDur', '60')) || 60;
-        let theme = safeGet('sw_theme', 'dark');
+        let targetIP = localStorage.getItem('sw_ip') || 'http://192.168.4.1';
+        let POLL_MS = parseInt(localStorage.getItem('sw_poll')) || 500;
+        let TOUT_MS = parseInt(localStorage.getItem('sw_tout')) || 5000;
+        let powerSaving = localStorage.getItem('sw_powerSave') === 'true';
+        let sensorEnabled = localStorage.getItem('sw_sensorEnabled') !== 'false';
+        let soundEnabled = localStorage.getItem('sw_soundEnabled') !== 'false';
+        let vibrateEnabled = localStorage.getItem('sw_vibrateEnabled') !== 'false';
+        let snoozeDuration = parseInt(localStorage.getItem('sw_snoozeDur')) || 60;
+        let theme = localStorage.getItem('sw_theme') || 'dark';
 
-        let baseTime = parseInt(safeGet('sw_time', String(Math.floor(Date.now() / 1000)))) || Math.floor(Date.now() / 1000);
+        let baseTime = parseInt(localStorage.getItem('sw_time')) || Math.floor(Date.now() / 1000);
         let baseMillis = Date.now();
 
         let id0State = false,
@@ -1632,8 +1527,8 @@
         let d4AlarmActive = false;
         let alarmActive = false;
         let clientCount = 0;
-        let sensorTriggerCount = parseInt(safeGet('sw_triggerCount', '0')) || 0;
-        let lastSensorEvent = parseInt(safeGet('sw_lastEvent', '0')) || 0;
+        let sensorTriggerCount = parseInt(localStorage.getItem('sw_triggerCount')) || 0;
+        let lastSensorEvent = parseInt(localStorage.getItem('sw_lastEvent')) || 0;
 
         let htmlAlarmActive = false;
         let htmlAlarmAcked = true;
@@ -1692,34 +1587,21 @@
 
         let lastWifiStatus = false;
         let firstPoll = true;
-        let offlineGraceCount = 0;
-        const OFFLINE_GRACE_MAX = 3;
 
-        // ===== SAFE LOCAL STORAGE =====
-        function safeGet(key, fallback) {
-            try {
-                const v = localStorage.getItem(key);
-                return v !== null ? v : fallback;
-            } catch (e) {
-                return fallback;
-            }
-        }
-        function safeSet(key, val) {
-            try { localStorage.setItem(key, val); } catch (e) {}
-        }
+        // ===== POLLING INTERVAL =====
+        let pollInterval = null;
 
-        // ===== POLLING =====
         function startPolling() {
-            if (pollIntervalId) {
-                clearInterval(pollIntervalId);
-                pollIntervalId = null;
+            if (pollInterval) {
+                clearInterval(pollInterval);
+                pollInterval = null;
             }
             let interval = POLL_MS;
-            if (powerSaving) interval = Math.max(interval, 2000);
-            if (cordovaReady && cordova.plugins && cordova.plugins.backgroundMode && cordova.plugins.backgroundMode.isActive()) {
-                interval = Math.max(interval, 1000);
+            if (cordovaReady && cordova.plugins && cordova.plugins.backgroundMode && cordova.plugins.backgroundMode
+                .isActive()) {
+                interval = Math.max(POLL_MS, 1000);
             }
-            pollIntervalId = setInterval(function() {
+            pollInterval = setInterval(function() {
                 if (isPolling) {
                     pollStatus();
                     updateUptime();
@@ -1730,24 +1612,18 @@
         }
 
         function stopPolling() {
-            if (pollIntervalId) {
-                clearInterval(pollIntervalId);
-                pollIntervalId = null;
+            if (pollInterval) {
+                clearInterval(pollInterval);
+                pollInterval = null;
             }
-        }
-
-        function restartPolling() {
-            stopPolling();
-            startPolling();
         }
 
         // ===== THEME =====
         function applyTheme(t) {
             theme = t;
             document.documentElement.setAttribute('data-theme', t);
-            safeSet('sw_theme', t);
-            const el = document.getElementById('themeToggle');
-            if (el) el.textContent = t === 'dark' ? '🌓' : '☀️';
+            localStorage.setItem('sw_theme', t);
+            document.getElementById('themeToggle').textContent = t === 'dark' ? '🌓' : '☀️';
         }
 
         function toggleTheme() {
@@ -1778,15 +1654,13 @@
                     }
                     updateSnoozeUI();
                 } else {
-                    const el = document.getElementById('snoozeCountdown');
-                    if (el) el.textContent = remain + 's';
+                    document.getElementById('snoozeCountdown').textContent = remain + 's';
                 }
             }, 500);
         }
 
         function updateSnoozeUI() {
             const el = document.getElementById('snoozeCountdown');
-            if (!el) return;
             if (snoozeActive) {
                 const remain = Math.ceil((snoozeEndTime - Date.now()) / 1000);
                 el.textContent = (remain > 0) ? remain + 's' : '—';
@@ -1801,27 +1675,23 @@
         const STATE_KEY = 'sw_appstate_v4';
 
         function saveAppState() {
-            const state = {
-                mode, menuIdx, baseTime, sensorEnabled, soundEnabled, vibrateEnabled,
-                htmlAlarmActive, htmlAlarmAcked, targetIP, POLL_MS, TOUT_MS,
-                snoozeDuration, sensorTriggerCount, lastSensorEvent,
-                powerSaving, chartData, theme
-            };
+            const state = { mode, menuIdx, baseTime, sensorEnabled, soundEnabled, vibrateEnabled, htmlAlarmActive,
+                htmlAlarmAcked, targetIP, POLL_MS, TOUT_MS, snoozeDuration, sensorTriggerCount, lastSensorEvent,
+                powerSaving, chartData, theme };
             try {
                 localStorage.setItem(STATE_KEY, JSON.stringify(state));
-                safeSet('sw_triggerCount', sensorTriggerCount);
-                safeSet('sw_lastEvent', lastSensorEvent);
-                safeSet('sw_powerSave', powerSaving);
-                safeSet('sw_sensorEnabled', sensorEnabled);
-                safeSet('sw_soundEnabled', soundEnabled);
-                safeSet('sw_vibrateEnabled', vibrateEnabled);
-                safeSet('sw_snoozeDur', snoozeDuration);
-                safeSet('sw_theme', theme);
-                safeSet('sw_ip', targetIP);
-                safeSet('sw_poll', POLL_MS);
-                safeSet('sw_tout', TOUT_MS);
-                safeSet('sw_time', baseTime);
-            } catch (e) {}
+                localStorage.setItem('sw_triggerCount', sensorTriggerCount);
+                localStorage.setItem('sw_lastEvent', lastSensorEvent);
+                localStorage.setItem('sw_powerSave', powerSaving);
+                localStorage.setItem('sw_sensorEnabled', sensorEnabled);
+                localStorage.setItem('sw_soundEnabled', soundEnabled);
+                localStorage.setItem('sw_vibrateEnabled', vibrateEnabled);
+                localStorage.setItem('sw_snoozeDur', snoozeDuration);
+                localStorage.setItem('sw_theme', theme);
+                localStorage.setItem('sw_ip', targetIP);
+                localStorage.setItem('sw_poll', POLL_MS);
+                localStorage.setItem('sw_tout', TOUT_MS);
+            } catch (e) { /* ignore */ }
         }
 
         function loadAppState() {
@@ -1831,10 +1701,8 @@
                     const s = JSON.parse(raw);
                     if (typeof s.mode === 'number') mode = s.mode;
                     if (typeof s.menuIdx === 'number') menuIdx = s.menuIdx;
-                    if (typeof s.baseTime === 'number') {
-                        baseTime = s.baseTime;
-                        baseMillis = Date.now();
-                    }
+                    if (typeof s.baseTime === 'number') { baseTime = s.baseTime;
+                        baseMillis = Date.now(); }
                     if (typeof s.sensorEnabled === 'boolean') sensorEnabled = s.sensorEnabled;
                     if (typeof s.soundEnabled === 'boolean') soundEnabled = s.soundEnabled;
                     if (typeof s.vibrateEnabled === 'boolean') vibrateEnabled = s.vibrateEnabled;
@@ -1850,34 +1718,24 @@
                     if (Array.isArray(s.chartData)) chartData = s.chartData;
                     if (s.theme) theme = s.theme;
                 }
-            } catch (e) {}
+            } catch (e) { /* ignore */ }
             applyTheme(theme);
             updateSensorToggle();
             updatePowerSaveUI();
             updateSoundToggle();
             updateVibrateToggle();
-            const elSnooze = document.getElementById('inpSnoozeDur');
-            if (elSnooze) elSnooze.value = snoozeDuration;
-            const elOledMode = document.getElementById('oledMode');
-            if (elOledMode) elOledMode.textContent = ['TIME', 'MAIN', 'CMD', 'HOUR', 'MIN', 'RESET'][mode] || 'TIME';
-            const elIP = document.getElementById('inpTargetIP');
-            if (elIP) elIP.value = targetIP;
-            const elPoll = document.getElementById('inpPollInt');
-            if (elPoll) elPoll.value = POLL_MS;
-            const elTout = document.getElementById('inpScrTout');
-            if (elTout) elTout.value = TOUT_MS;
-            const elTrig = document.getElementById('statTriggers');
-            if (elTrig) elTrig.textContent = sensorTriggerCount;
+            document.getElementById('inpSnoozeDur').value = snoozeDuration;
+            document.getElementById('oledMode').textContent = ['TIME', 'MAIN', 'CMD', 'HOUR', 'MIN', 'RESET'][mode] || 'TIME';
+            document.getElementById('inpTargetIP').value = targetIP;
+            document.getElementById('inpPollInt').value = POLL_MS;
+            document.getElementById('inpScrTout').value = TOUT_MS;
+            document.getElementById('statTriggers').textContent = sensorTriggerCount;
         }
 
         // ===== TIME =====
-        function nowSec() {
-            return baseTime + Math.floor((Date.now() - baseMillis) / 1000);
-        }
+        function nowSec() { return baseTime + Math.floor((Date.now() - baseMillis) / 1000); }
 
-        function saveTime() {
-            safeSet('sw_time', baseTime);
-        }
+        function saveTime() { localStorage.setItem('sw_time', baseTime); }
 
         // ===== LOGGING =====
         function log(txt, cls) {
@@ -1887,21 +1745,15 @@
             if (logEntries.length > MAX_LOG_ENTRIES) {
                 logEntries = logEntries.slice(-MAX_LOG_ENTRIES);
             }
-            if (!logBox) return;
             const div = document.createElement('div');
             div.className = 'log-entry ' + (cls || '');
-            div.innerHTML = `<span class="time">[${entry.time}]</span> <span class="msg ${cls||''}">${txt}</span>`;
-            logBox.appendChild(div);
-            logBox.scrollTop = logBox.scrollHeight;
-            while (logBox.children.length > MAX_LOG_ENTRIES) {
-                logBox.removeChild(logBox.firstChild);
-            }
-            const lc = document.getElementById('logCount');
-            if (lc) lc.textContent = logEntries.length;
-            const logTab = document.querySelector('.tab[data-tab="panelLog"]');
-            if (logTab && !logTab.classList.contains('active')) {
-                const badge = document.getElementById('logBadge');
-                if (badge) badge.style.display = 'block';
+            div.innerHTML = `<span class="log-time">[${entry.time}]</span> ${txt}`;
+            if (logBox) {
+                logBox.appendChild(div);
+                logBox.scrollTop = logBox.scrollHeight;
+                while (logBox.children.length > MAX_LOG_ENTRIES) {
+                    logBox.removeChild(logBox.firstChild);
+                }
             }
         }
 
@@ -1924,11 +1776,7 @@
             }
             if (alarmNotifGranted && 'Notification' in window) {
                 try {
-                    new Notification(title, {
-                        body: body,
-                        tag: 'wemos-alarm',
-                        requireInteraction: true
-                    });
+                    new Notification(title, { body: body, tag: 'wemos-alarm', requireInteraction: true });
                 } catch (e) {}
             }
         }
@@ -1946,101 +1794,75 @@
                 });
                 return;
             }
-            if (!('Notification' in window)) {
-                alarmNotifGranted = true;
-                return;
-            }
-            Notification.requestPermission().then(p => {
-                alarmNotifGranted = (p === 'granted');
-            });
+            if (!('Notification' in window)) { alarmNotifGranted = true; return; }
+            Notification.requestPermission().then(p => { alarmNotifGranted = (p === 'granted'); });
         }
 
-        // ===== AUDIO ALARM (HIGH PITCH, NON-STOP) =====
+        // ===== AUDIO =====
         function ensureAudio() {
-            if (!audioCtx) {
-                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            }
-            if (audioCtx.state === 'suspended') {
-                audioCtx.resume().catch(() => {});
-            }
+            if (!audioCtx) audioCtx = new(window.AudioContext || window.webkitAudioContext)();
+            if (audioCtx.state === 'suspended') audioCtx.resume();
         }
 
+        // ===== ALARM SOUND: NADA TINGGI BERULANG =====
         function startContinuousAlarm() {
             if (!soundEnabled) return;
             ensureAudio();
             stopContinuousAlarm();
 
-            function playSirenCycle() {
-                if (!audioCtx || !soundEnabled) return;
+            function playBeep() {
+                if (!audioCtx || !soundEnabled || audioCtx.state === 'closed') return;
                 if (audioCtx.state === 'suspended') {
-                    audioCtx.resume().catch(() => {
+                    audioCtx.resume().catch(e => {
                         soundEnabled = false;
                         updateSoundToggle();
                         return;
                     });
                 }
                 if (audioCtx.state !== 'running') return;
-
                 const now = audioCtx.currentTime;
-                const osc1 = audioCtx.createOscillator();
-                const osc2 = audioCtx.createOscillator();
+                const osc = audioCtx.createOscillator();
                 const gain = audioCtx.createGain();
-
-                osc1.connect(gain);
-                osc2.connect(gain);
+                osc.connect(gain);
                 gain.connect(audioCtx.destination);
-
-                osc1.type = 'sine';
-                osc1.frequency.setValueAtTime(1000, now);
-                osc1.frequency.linearRampToValueAtTime(1800, now + 0.25);
-                osc1.frequency.linearRampToValueAtTime(1000, now + 0.5);
-
-                osc2.type = 'square';
-                osc2.frequency.setValueAtTime(1010, now);
-                osc2.frequency.linearRampToValueAtTime(1810, now + 0.25);
-                osc2.frequency.linearRampToValueAtTime(1010, now + 0.5);
-
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(2000, now);
                 gain.gain.setValueAtTime(0, now);
-                gain.gain.linearRampToValueAtTime(0.9, now + 0.05);
-                gain.gain.linearRampToValueAtTime(0, now + 0.5);
-
-                osc1.start(now);
-                osc1.stop(now + 0.5);
-                osc2.start(now);
-                osc2.stop(now + 0.5);
+                gain.gain.linearRampToValueAtTime(0.6, now + 0.02);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.18);
+                osc.start(now);
+                osc.stop(now + 0.2);
             }
 
-            playSirenCycle();
-            alarmInterval = setInterval(playSirenCycle, 600);
+            alarmInterval = setInterval(playBeep, 400);
+            playBeep();
         }
 
         function stopContinuousAlarm() {
-            if (alarmInterval) {
-                clearInterval(alarmInterval);
-                alarmInterval = null;
-            }
+            if (alarmInterval) { clearInterval(alarmInterval);
+                alarmInterval = null; }
         }
 
         function startContinuousVibrate() {
             if (!vibrateEnabled) return;
             stopContinuousVibrate();
-            const pattern = [1000, 150, 1000, 150, 1000, 150];
-            function doVibrate() {
-                if (navigator.vibrate) navigator.vibrate(pattern);
+            const pattern = [200, 200, 200, 200, 200, 200];
+            if (cordovaReady && navigator.vibrate) {
+                navigator.vibrate(pattern);
+                vibrateInterval = setInterval(() => {
+                    if (htmlAlarmActive && !htmlAlarmAcked && vibrateEnabled) navigator.vibrate(pattern);
+                }, 1200);
+            } else if ('vibrate' in navigator) {
+                navigator.vibrate(pattern);
+                vibrateInterval = setInterval(() => {
+                    if (htmlAlarmActive && !htmlAlarmAcked && vibrateEnabled) navigator.vibrate(pattern);
+                }, 1200);
             }
-            doVibrate();
-            vibrateInterval = setInterval(() => {
-                if (htmlAlarmActive && !htmlAlarmAcked && !snoozeActive && vibrateEnabled) {
-                    doVibrate();
-                }
-            }, 3400);
         }
 
         function stopContinuousVibrate() {
-            if (vibrateInterval) {
-                clearInterval(vibrateInterval);
-                vibrateInterval = null;
-            }
+            if (vibrateInterval) { clearInterval(vibrateInterval);
+                vibrateInterval = null; }
             if ('vibrate' in navigator) navigator.vibrate(0);
         }
 
@@ -2065,15 +1887,20 @@
             screenOn();
             lastBtnMs = Date.now();
             wakeUpScreen();
+
             if (cordovaReady && cordova.plugins && cordova.plugins.backgroundMode) {
                 cordova.plugins.backgroundMode.wakeUp();
                 cordova.plugins.backgroundMode.unlock();
             }
+
             if (soundEnabled) startContinuousAlarm();
             if (vibrateEnabled) startContinuousVibrate();
+
             alarmToast.classList.add('show');
             alarmFlash.classList.add('active');
+
             sendNativeNotification('Wemos Alarm!', 'Sensor atau D4 trigger!');
+
             saveAppState();
             updateAlarmUI();
             updateSnoozeUI();
@@ -2106,7 +1933,9 @@
                 try {
                     sendCommand('/resetAlarm');
                     if (d4AlarmActive) sendCommand('/toggle?id=4');
-                } catch (e) {}
+                } catch (e) {
+                    console.warn("Gagal kirim command reset:", e);
+                }
                 onAlarmCleared();
                 updateSnoozeUI();
             }
@@ -2114,7 +1943,6 @@
 
         function updateAlarmUI() {
             const el = document.getElementById('alarmStatusBadge');
-            if (!el) return;
             const anyAlarm = htmlAlarmActive && !htmlAlarmAcked && !snoozeActive;
             if (anyAlarm) {
                 el.textContent = '🚨 ACTIVE!';
@@ -2131,54 +1959,36 @@
             }
         }
 
-        // ===== HTTP (FIXED FOR CORDOVA WEBVIEW) =====
+        // ===== HTTP =====
         async function httpGet(endpoint, fireAndForget, retries) {
             fireAndForget = fireAndForget || false;
             retries = retries || 0;
             const url = targetIP + endpoint;
-            const isBg = cordovaReady && cordova.plugins && cordova.plugins.backgroundMode && cordova.plugins.backgroundMode.isActive();
-            const timeout = fireAndForget ? 3000 : (isBg ? 10000 : 8000);
+            const isBg = cordovaReady && cordova.plugins && cordova.plugins.backgroundMode && cordova.plugins
+                .backgroundMode.isActive();
+            const timeout = fireAndForget ? 3000 : (isBg ? 10000 : 5000);
 
             try {
                 const ctrl = new AbortController();
-                const to = setTimeout(() => ctrl.abort(), timeout);
-
-                // Untuk Cordova/APK: selalu gunakan no-cors untuk IP lokal
-                // karena WebView Cordova sering gagal CORS ke AP mode
-                const isLocalIP = url.includes('192.168.') || url.includes('10.0.') || url.includes('172.') || url.includes('127.0.') || url.includes('localhost');
-                
-                const fetchOpts = {
+                const to = setTimeout(function() { ctrl.abort(); }, timeout);
+                const r = await fetch(url, {
                     method: 'GET',
                     signal: ctrl.signal,
+                    mode: 'cors',
                     cache: 'no-store',
                     headers: { 'Accept': 'application/json' }
-                };
-
-                // Cordova WebView butuh no-cors untuk HTTP local
-                if (isLocalIP || cordovaReady) {
-                    fetchOpts.mode = 'no-cors';
-                } else {
-                    fetchOpts.mode = 'cors';
-                }
-
-                const r = await fetch(url, fetchOpts);
+                });
                 clearTimeout(to);
 
-                // no-cors menghasilkan opaque response (status 0)
-                // Di Cordova, ini berarti sukses jika tidak error
-                if (r.type === 'opaque' || r.ok || r.status === 0) {
-                    try {
-                        const text = await r.text();
-                        return { ok: true, status: r.status || 200, payload: JSON.parse(text) };
-                    } catch (e) {
-                        // Opaque atau JSON invalid, anggap sukses tapi payload kosong
-                        return { ok: true, status: r.status || 200, payload: null };
-                    }
+                if (r.ok) {
+                    const text = await r.text();
+                    try { return { ok: true, status: r.status, payload: JSON.parse(text) }; } catch (e) { return { ok: true,
+                            status: r.status, payload: null }; }
                 }
                 return { ok: false, status: r.status, error: 'HTTP ' + r.status };
             } catch (e) {
                 if (!fireAndForget && retries < 1) {
-                    await new Promise(r => setTimeout(r, 800));
+                    await new Promise(function(r) { setTimeout(r, 800); });
                     return httpGet(endpoint, false, retries + 1);
                 }
                 return { ok: false, error: (e.message || 'Network Error') };
@@ -2197,13 +2007,19 @@
             }
         }
 
-        // ===== POLLING STATUS =====
+        // ===== POLLING =====
+        let offlineGraceCount = 0;
+        const OFFLINE_GRACE_MAX = 3;
+
         async function pollStatus() {
             if (!isPolling) return;
+
             const res = await httpGet('/status');
 
             if (!res.ok) {
                 offlineGraceCount++;
+                log('Poll fail #' + offlineGraceCount + ': ' + (res.error || 'unknown'), 'err');
+
                 if (offlineGraceCount < OFFLINE_GRACE_MAX) {
                     const health = await httpGet('/');
                     if (health.ok) {
@@ -2212,12 +2028,14 @@
                         return;
                     }
                 }
+
                 if (offlineGraceCount >= OFFLINE_GRACE_MAX) {
                     updateWifi(false);
                 }
                 return;
             }
 
+            // Reset grace
             if (offlineGraceCount > 0) {
                 log('Poll recovered', 'ok');
                 offlineGraceCount = 0;
@@ -2230,8 +2048,10 @@
                 id8State = !!res.payload['8'];
                 d5SensorState = !!res.payload['5'];
                 d4AlarmActive = !!res.payload['4'];
-                alarmActive = !!(res.payload['alarm'] === 1 || res.payload['alarm'] === '1' || res.payload['alarm'] === true);
-                sensorEnabled = !!(res.payload['sensorEnabled'] === 1 || res.payload['sensorEnabled'] === '1' || res.payload['sensorEnabled'] === true);
+                alarmActive = !!(res.payload['alarm'] === 1 || res.payload['alarm'] === '1' || res.payload['alarm'] ===
+                true);
+                sensorEnabled = !!(res.payload['sensorEnabled'] === 1 || res.payload['sensorEnabled'] === '1' || res
+                    .payload['sensorEnabled'] === true);
                 clientCount = parseInt(res.payload['clients']) || 0;
                 let sensorEvent = parseInt(res.payload['sensorEvent']) || 0;
 
@@ -2240,38 +2060,23 @@
                 updatePinUI('D8', id8State);
                 updatePinUI('D4', d4AlarmActive, 'alarm');
                 updatePinUI('D5', d5SensorState, 'trigger');
+                document.getElementById('pinSensorVal').textContent = sensorEnabled ? 'ON' : 'OFF';
+                document.getElementById('pinSensorVal').className = 'pin-value ' + (sensorEnabled ? 'on' : 'off');
+                document.getElementById('pinSensorBar').className = 'fill ' + (sensorEnabled ? 'on' : 'off');
+                document.getElementById('pinSensorBar').style.width = sensorEnabled ? '100%' : '0%';
 
-                const psv = document.getElementById('pinSensorVal');
-                const psb = document.getElementById('pinSensorBar');
-                if (psv) {
-                    psv.textContent = sensorEnabled ? 'ON' : 'OFF';
-                    psv.className = 'pin-value ' + (sensorEnabled ? 'on' : 'off');
-                }
-                if (psb) {
-                    psb.className = 'fill ' + (sensorEnabled ? 'on' : 'off');
-                    psb.style.width = sensorEnabled ? '100%' : '0%';
-                }
-
-                const l0 = document.getElementById('oledLedD0');
-                const l6 = document.getElementById('oledLedD6');
-                const l8 = document.getElementById('oledLedD8');
-                const la = document.getElementById('oledLedAlarm');
-                if (l0) l0.className = 'led ' + (id0State ? 'on' : 'off');
-                if (l6) l6.className = 'led ' + (id6State ? 'on' : 'off');
-                if (l8) l8.className = 'led ' + (id8State ? 'on' : 'off');
+                document.getElementById('oledLedD0').className = 'led ' + (id0State ? 'on' : 'off');
+                document.getElementById('oledLedD6').className = 'led ' + (id6State ? 'on' : 'off');
+                document.getElementById('oledLedD8').className = 'led ' + (id8State ? 'on' : 'off');
                 const anyAlarm = htmlAlarmActive && !htmlAlarmAcked && !snoozeActive;
-                if (la) la.className = 'led ' + (anyAlarm ? 'alarm' : 'off');
+                document.getElementById('oledLedAlarm').className = 'led ' + (anyAlarm ? 'alarm' : 'off');
 
-                const s5 = document.getElementById('sensorD5Status');
-                const s4 = document.getElementById('sensorD4Status');
-                if (s5) {
-                    s5.textContent = d5SensorState ? '🔴 TRIGGERED' : '🟢 HIGH';
-                    s5.style.color = d5SensorState ? 'var(--accent-red)' : 'var(--accent-green)';
-                }
-                if (s4) {
-                    s4.textContent = d4AlarmActive ? '🔴 TRIGGERED' : '✅ NORMAL';
-                    s4.style.color = d4AlarmActive ? 'var(--accent-red)' : 'var(--text-secondary)';
-                }
+                document.getElementById('sensorD5Status').textContent = d5SensorState ? '🔴 TRIGGERED' : '🟢 HIGH';
+                document.getElementById('sensorD5Status').style.color = d5SensorState ? 'var(--accent-red)' :
+                    'var(--accent-green)';
+                document.getElementById('sensorD4Status').textContent = d4AlarmActive ? '🔴 TRIGGERED' : '✅ NORMAL';
+                document.getElementById('sensorD4Status').style.color = d4AlarmActive ? 'var(--accent-red)' :
+                    'var(--text-secondary)';
 
                 if (firstPoll) {
                     lastSensorEvent = sensorEvent;
@@ -2298,32 +2103,26 @@
                     log('D4 TRIGGERED!', 'alarm');
                 }
 
-                const st = document.getElementById('statTriggers');
-                const sc = document.getElementById('statClients');
-                const sa = document.getElementById('statAlarms');
-                if (st) st.textContent = sensorTriggerCount;
-                if (sc) sc.textContent = clientCount;
+                document.getElementById('statTriggers').textContent = sensorTriggerCount;
+                document.getElementById('statClients').textContent = clientCount;
                 const anyAlarmState = htmlAlarmActive && !htmlAlarmAcked && !snoozeActive;
-                if (sa) {
-                    sa.textContent = anyAlarmState ? '1' : '0';
-                    sa.className = 'stat-value ' + (anyAlarmState ? 'danger' : '');
-                }
+                document.getElementById('statAlarms').textContent = anyAlarmState ? '1' : '0';
+                document.getElementById('statAlarms').className = 'stat-value ' + (anyAlarmState ? 'danger' : '');
 
                 updateAlarmUI();
                 updateSnoozeUI();
 
                 const shouldAlarm = htmlAlarmActive && !htmlAlarmAcked && !snoozeActive;
-                if (shouldAlarm && !lastHtmlAlarmState) {
-                    onAlarmTriggered();
-                }
-                if (!shouldAlarm && lastHtmlAlarmState) {
-                    onAlarmCleared();
-                }
+                if (shouldAlarm && !lastHtmlAlarmState) { onAlarmTriggered(); }
+                if (!shouldAlarm && lastHtmlAlarmState) { onAlarmCleared(); }
                 lastHtmlAlarmState = shouldAlarm;
 
                 if (Math.random() < 0.08) {
-                    log('Status OK | D0:' + (id0State ? 'ON' : 'OFF') + ' D6:' + (id6State ? 'ON' : 'OFF') + ' D8:' + (id8State ? 'ON' : 'OFF') + ' CLI:' + clientCount + ' EVT#' + sensorEvent, 'dim');
+                    log('Status OK | D0:' + (id0State ? 'ON' : 'OFF') + ' D6:' + (id6State ? 'ON' : 'OFF') + ' D8:' + (id8State ?
+                        'ON' : 'OFF') + ' CLI:' + clientCount + ' EVT#' + sensorEvent, 'dim');
                 }
+            } else if (res.opaque) {
+                updateWifi(true);
             }
         }
 
@@ -2336,24 +2135,18 @@
             if (type === 'alarm') {
                 el.textContent = value ? '🚨 TRIGGER' : 'NORMAL';
                 el.className = 'pin-value ' + (value ? 'alarm' : 'off');
-                if (bar) {
-                    bar.className = 'fill ' + (value ? 'alarm' : 'off');
-                    bar.style.width = value ? '100%' : '0%';
-                }
+                if (bar) { bar.className = 'fill ' + (value ? 'alarm' : 'off');
+                    bar.style.width = value ? '100%' : '0%'; }
             } else if (type === 'trigger') {
                 el.textContent = value ? '🔴 TRIG' : 'HIGH';
                 el.className = 'pin-value ' + (value ? 'trigger' : 'off');
-                if (bar) {
-                    bar.className = 'fill ' + (value ? 'trigger' : 'off');
-                    bar.style.width = value ? '100%' : '0%';
-                }
+                if (bar) { bar.className = 'fill ' + (value ? 'trigger' : 'off');
+                    bar.style.width = value ? '100%' : '0%'; }
             } else {
                 el.textContent = value ? 'ON' : 'OFF';
                 el.className = 'pin-value ' + (value ? 'on' : 'off');
-                if (bar) {
-                    bar.className = 'fill ' + (value ? 'on' : 'off');
-                    bar.style.width = value ? '100%' : '0%';
-                }
+                if (bar) { bar.className = 'fill ' + (value ? 'on' : 'off');
+                    bar.style.width = value ? '100%' : '0%'; }
             }
         }
 
@@ -2370,8 +2163,13 @@
             }
             const dot = document.getElementById('statusDot');
             const txt = document.getElementById('statusText');
-            if (dot) dot.className = 'dot ' + (connected ? 'on' : 'off');
-            if (txt) txt.textContent = connected ? 'ONLINE' : 'OFFLINE';
+            if (connected) {
+                dot.className = 'dot on';
+                txt.textContent = 'ONLINE';
+            } else {
+                dot.className = 'dot off';
+                txt.textContent = 'OFFLINE';
+            }
         }
 
         // ===== CHART =====
@@ -2379,17 +2177,16 @@
             chartData.push(val);
             if (chartData.length > CHART_MAX) chartData.shift();
             drawChart();
-            const cc = document.getElementById('chartCount');
-            if (cc) cc.textContent = chartData.filter(v => v > 0).length + ' events';
+            document.getElementById('chartCount').textContent = chartData.filter(v => v > 0).length + ' events';
             saveAppState();
         }
 
         function drawChart() {
-            if (!sensorChartCtx) return;
             const w = sensorChartCanvas.width;
             const h = sensorChartCanvas.height;
             const c = sensorChartCtx;
             c.clearRect(0, 0, w, h);
+
             c.fillStyle = 'rgba(255,255,255,0.02)';
             c.fillRect(0, 0, w, h);
 
@@ -2406,6 +2203,11 @@
             const graphH = h - pad * 2;
             const step = graphW / (CHART_MAX - 1);
             const maxVal = Math.max(1, ...chartData);
+
+            const gradient = c.createLinearGradient(0, 0, w, 0);
+            gradient.addColorStop(0, 'rgba(139,92,246,0.1)');
+            gradient.addColorStop(0.5, 'rgba(139,92,246,0.6)');
+            gradient.addColorStop(1, 'rgba(139,92,246,0.1)');
 
             c.strokeStyle = '#8b5cf6';
             c.lineWidth = 2;
@@ -2445,21 +2247,15 @@
 
         // ===== SCREEN =====
         function screenOn() {
-            if (!isScreenOn) {
-                canvas.classList.remove('off');
+            if (!isScreenOn) { canvas.classList.remove('off');
                 isScreenOn = true;
-                const el = document.getElementById('oledStatus');
-                if (el) el.textContent = 'ON';
-            }
+                document.getElementById('oledStatus').textContent = 'ON'; }
         }
 
         function screenOff() {
-            if (isScreenOn) {
-                canvas.classList.add('off');
+            if (isScreenOn) { canvas.classList.add('off');
                 isScreenOn = false;
-                const el = document.getElementById('oledStatus');
-                if (el) el.textContent = 'OFF';
-            }
+                document.getElementById('oledStatus').textContent = 'OFF'; }
         }
 
         // ===== RENDER OLED =====
@@ -2483,79 +2279,61 @@
             ctx.font = sz + 'px "Courier New", monospace';
             ctx.fillStyle = '#fff';
             ctx.textBaseline = 'top';
-            if (align === 'center') {
-                ctx.textAlign = 'center';
+            if (align === 'center') { ctx.textAlign = 'center';
                 ctx.fillText(s, x, y);
-                ctx.textAlign = 'left';
-            } else if (align === 'right') {
-                ctx.textAlign = 'right';
+                ctx.textAlign = 'left'; } else if (align === 'right') { ctx.textAlign = 'right';
                 ctx.fillText(s, x, y);
-                ctx.textAlign = 'left';
-            } else {
-                ctx.fillText(s, x, y);
-            }
+                ctx.textAlign = 'left'; } else ctx.fillText(s, x, y);
         }
 
-        function dLine(x1, y1, x2, y2) {
-            ctx.strokeStyle = '#fff';
+        function dLine(x1, y1, x2, y2) { ctx.strokeStyle = '#fff';
             ctx.lineWidth = 1;
             ctx.beginPath();
             ctx.moveTo(x1, y1);
             ctx.lineTo(x2, y2);
-            ctx.stroke();
-        }
+            ctx.stroke(); }
 
-        function dDisc(cx, cy, r) {
-            ctx.fillStyle = '#fff';
+        function dDisc(cx, cy, r) { ctx.fillStyle = '#fff';
             ctx.beginPath();
             ctx.arc(cx, cy, r, 0, Math.PI * 2);
-            ctx.fill();
-        }
+            ctx.fill(); }
 
-        function dCirc(cx, cy, r) {
-            ctx.strokeStyle = '#fff';
+        function dCirc(cx, cy, r) { ctx.strokeStyle = '#fff';
             ctx.lineWidth = 1;
             ctx.beginPath();
             ctx.arc(cx, cy, r, 0, Math.PI * 2);
-            ctx.stroke();
-        }
+            ctx.stroke(); }
 
         function render() {
-            if (!isScreenOn || !ctx) return;
+            if (!isScreenOn) return;
             const now = Date.now();
             const t = new Date(nowSec() * 1000);
             const H = t.getHours(),
                 M = t.getMinutes();
             const shouldAlarm = htmlAlarmActive && !htmlAlarmAcked && !snoozeActive;
 
-            if (now - lastColonMs >= COLON_MS) {
-                lastColonMs = now;
-                colonOn = !colonOn;
-            }
+            if (now - lastColonMs >= COLON_MS) { lastColonMs = now;
+                colonOn = !colonOn; }
 
             ctx.fillStyle = '#000';
             ctx.fillRect(0, 0, 128, 64);
 
             dTxt(0, 0, lastWifiStatus ? 'WEMOS' : 'NO AP', 7);
             if (commandBlinkCount > 0) {
-                if (now - lastCommandBlink >= CMD_BLINK_INT) {
-                    lastCommandBlink = now;
-                    commandBlinkCount--;
-                }
+                if (now - lastCommandBlink >= CMD_BLINK_INT) { lastCommandBlink = now;
+                    commandBlinkCount--; }
                 if (commandBlinkCount % 2 === 0) dTxt(35, 0, 'TX', 7);
             }
             if (shouldAlarm) drawBell(48, 6, 6);
-            if (snoozeActive) dTxt(48, 0, 'Zzz', 7);
+            if (snoozeActive) { dTxt(48, 0, '⏰', 8); }
             dTxt(50, 0, 'D0', 6);
             id0State ? dDisc(62, 3, 2) : dCirc(62, 3, 2);
             dTxt(70, 0, 'D6', 6);
             id6State ? dDisc(82, 3, 2) : dCirc(82, 3, 2);
             dTxt(90, 0, 'D8', 6);
             id8State ? dDisc(102, 3, 2) : dCirc(102, 3, 2);
-            if (d4AlarmActive) {
-                ctx.fillStyle = '#f00';
-                ctx.fillRect(110, 1, 4, 4);
-            }
+            if (d4AlarmActive) { ctx.fillStyle = '#f00';
+                ctx.fillRect(110, 1, 4, 4); }
             dLine(0, 10, 128, 10);
 
             switch (mode) {
@@ -2564,7 +2342,7 @@
                         if (alarmBlink) {
                             ctx.fillStyle = 'rgba(255,0,0,0.3)';
                             ctx.fillRect(0, 0, 128, 64);
-                            dTxt(64, 12, 'ALARM!', 14, 'center');
+                            dTxt(64, 12, '🚨 ALARM!', 14, 'center');
                             dTxt(64, 30, 'SENSOR #' + sensorTriggerCount, 9, 'center');
                             dTxt(64, 44, 'PRESS SEL!', 8, 'center');
                         } else {
@@ -2574,7 +2352,7 @@
                         }
                     } else if (snoozeActive) {
                         const remain = Math.ceil((snoozeEndTime - now) / 1000);
-                        dTxt(64, 14, 'SNOOZE', 12, 'center');
+                        dTxt(64, 14, '⏰ SNOOZE', 12, 'center');
                         dTxt(64, 30, remain + 's', 16, 'center');
                         dTxt(64, 48, 'SEL to wake', 7, 'center');
                     } else {
@@ -2587,9 +2365,9 @@
                     break;
                 case M_MAIN:
                     dTxt(64, 10, 'MAIN MENU', 7, 'center');
-                    dTxt(5, 26, (menuIdx === 0 ? '> ' : '  ') + 'Set Time', 7);
-                    dTxt(5, 38, (menuIdx === 1 ? '> ' : '  ') + 'Send Cmd', 7);
-                    dTxt(5, 50, (menuIdx === 2 ? '> ' : '  ') + 'Reset Alarm', 7);
+                    dTxt(5, 26, (menuIdx === 0 ? '▶ ' : '  ') + 'Set Time', 7);
+                    dTxt(5, 38, (menuIdx === 1 ? '▶ ' : '  ') + 'Send Cmd', 7);
+                    dTxt(5, 50, (menuIdx === 2 ? '▶ ' : '  ') + 'Reset Alarm', 7);
                     break;
                 case M_CMD:
                     dTxt(5, 14, 'UP:  Toggle D8', 7);
@@ -2616,10 +2394,8 @@
             }
 
             if (shouldAlarm) {
-                if (now - lastAlarmBlink >= ALARM_BLINK_MS) {
-                    lastAlarmBlink = now;
-                    alarmBlink = !alarmBlink;
-                }
+                if (now - lastAlarmBlink >= ALARM_BLINK_MS) { lastAlarmBlink = now;
+                    alarmBlink = !alarmBlink; }
                 if (alarmBlink) {
                     ctx.strokeStyle = '#f00';
                     ctx.lineWidth = 3;
@@ -2627,15 +2403,14 @@
                     if (mode !== M_TIME) {
                         ctx.fillStyle = 'rgba(0,0,0,0.85)';
                         ctx.fillRect(10, 18, 108, 30);
-                        dTxt(64, 20, 'ALARM!', 12, 'center');
+                        dTxt(64, 20, '🚨 ALARM!', 12, 'center');
                         dTxt(64, 36, 'PRESS SEL!', 8, 'center');
                     }
                 }
             }
 
             const modeNames = ['TIME', 'MAIN', 'CMD', 'HOUR', 'MIN', 'RESET'];
-            const elMode = document.getElementById('oledMode');
-            if (elMode) elMode.textContent = modeNames[mode] || 'TIME';
+            document.getElementById('oledMode').textContent = modeNames[mode] || 'TIME';
         }
 
         // ===== INPUT HANDLING =====
@@ -2649,7 +2424,8 @@
                 screenOn();
                 lastBtnMs = Date.now();
                 ensureAudio();
-                const elId = id === BTN_MENU ? 'btnMenu' : id === BTN_UP ? 'btnUp' : id === BTN_DOWN ? 'btnDown' : 'btnSelect';
+                const elId = id === BTN_MENU ? 'btnMenu' : id === BTN_UP ? 'btnUp' : id === BTN_DOWN ? 'btnDown' :
+                'btnSelect';
                 const el = document.getElementById(elId);
                 if (el) el.classList.add('pressed');
             }
@@ -2659,7 +2435,8 @@
             const s = btnState[id];
             if (s.down) {
                 s.down = false;
-                const elId = id === BTN_MENU ? 'btnMenu' : id === BTN_UP ? 'btnUp' : id === BTN_DOWN ? 'btnDown' : 'btnSelect';
+                const elId = id === BTN_MENU ? 'btnMenu' : id === BTN_UP ? 'btnUp' : id === BTN_DOWN ? 'btnDown' :
+                'btnSelect';
                 const el = document.getElementById(elId);
                 if (el) el.classList.remove('pressed');
                 if (!s.proc && !s.longDone) handleShort(id);
@@ -2669,17 +2446,12 @@
 
         function handleShort(btn) {
             const shouldAlarm = htmlAlarmActive && !htmlAlarmAcked && !snoozeActive;
-            if (shouldAlarm && btn !== BTN_MENU) {
-                resetHtmlAlarm();
-                return;
-            }
+            if (shouldAlarm && btn !== BTN_MENU) { resetHtmlAlarm(); return; }
             if (snoozeActive && btn === BTN_SEL) {
                 htmlAlarmAcked = false;
                 snoozeActive = false;
-                if (snoozeIntervalId) {
-                    clearInterval(snoozeIntervalId);
-                    snoozeIntervalId = null;
-                }
+                if (snoozeIntervalId) { clearInterval(snoozeIntervalId);
+                    snoozeIntervalId = null; }
                 onAlarmTriggered();
                 updateSnoozeUI();
                 return;
@@ -2687,57 +2459,43 @@
 
             switch (mode) {
                 case M_TIME:
-                    if (btn === BTN_MENU) {
-                        mode = M_MAIN;
+                    if (btn === BTN_MENU) { mode = M_MAIN;
                         menuIdx = 0;
-                    } else if (btn === BTN_SEL) {
-                        sendCommand('/pulse?id=6');
-                    }
+                        saveAppState(); } else if (btn === BTN_SEL) sendCommand('/pulse?id=6');
                     break;
                 case M_MAIN:
-                    if (btn === BTN_UP) {
-                        menuIdx = (menuIdx + 2) % 3;
-                    } else if (btn === BTN_DOWN) {
-                        menuIdx = (menuIdx + 1) % 3;
-                    } else if (btn === BTN_SEL) {
-                        if (menuIdx === 0) {
-                            const n = new Date(nowSec() * 1000);
+                    if (btn === BTN_UP) { menuIdx = (menuIdx + 2) % 3;
+                        saveAppState(); } else if (btn === BTN_DOWN) { menuIdx = (menuIdx + 1) % 3;
+                        saveAppState(); } else if (btn === BTN_SEL) {
+                        if (menuIdx === 0) { const n = new Date(nowSec() * 1000);
                             editH = n.getHours();
                             editM = n.getMinutes();
                             editT = nowSec();
                             mode = M_HOUR;
-                        } else if (menuIdx === 1) {
-                            mode = M_CMD;
-                        } else if (menuIdx === 2) {
-                            mode = M_RESET;
-                        }
-                    } else if (btn === BTN_MENU) {
-                        mode = M_TIME;
-                    }
+                            saveAppState(); } else if (menuIdx === 1) { mode = M_CMD;
+                            saveAppState(); } else if (menuIdx === 2) { mode = M_RESET;
+                            saveAppState(); }
+                    } else if (btn === BTN_MENU) { mode = M_TIME;
+                        saveAppState(); }
                     break;
                 case M_CMD:
                     if (btn === BTN_UP) sendCommand('/toggle?id=8');
                     else if (btn === BTN_DOWN) sendCommand('/toggle?id=0');
                     else if (btn === BTN_SEL) sendCommand('/pulse?id=6');
-                    else if (btn === BTN_MENU) mode = M_MAIN;
+                    else if (btn === BTN_MENU) { mode = M_MAIN;
+                        saveAppState(); }
                     break;
                 case M_HOUR:
-                    if (btn === BTN_UP) {
-                        editH = (editH + 1) % 24;
-                    } else if (btn === BTN_DOWN) {
-                        editH = (editH + 23) % 24;
-                    } else if (btn === BTN_SEL) {
-                        mode = M_MIN;
-                    } else if (btn === BTN_MENU) {
-                        mode = M_MAIN;
-                    }
+                    if (btn === BTN_UP) { editH = (editH + 1) % 24;
+                        saveAppState(); } else if (btn === BTN_DOWN) { editH = (editH + 23) % 24;
+                        saveAppState(); } else if (btn === BTN_SEL) { mode = M_MIN;
+                        saveAppState(); } else if (btn === BTN_MENU) { mode = M_MAIN;
+                        saveAppState(); }
                     break;
                 case M_MIN:
-                    if (btn === BTN_UP) {
-                        editM = (editM + 1) % 60;
-                    } else if (btn === BTN_DOWN) {
-                        editM = (editM + 59) % 60;
-                    } else if (btn === BTN_SEL) {
+                    if (btn === BTN_UP) { editM = (editM + 1) % 60;
+                        saveAppState(); } else if (btn === BTN_DOWN) { editM = (editM + 59) % 60;
+                        saveAppState(); } else if (btn === BTN_SEL) {
                         const d = new Date(editT * 1000);
                         d.setHours(editH);
                         d.setMinutes(editM);
@@ -2746,20 +2504,17 @@
                         baseMillis = Date.now();
                         saveTime();
                         mode = M_TIME;
-                    } else if (btn === BTN_MENU) {
-                        mode = M_HOUR;
-                    }
+                        saveAppState();
+                    } else if (btn === BTN_MENU) { mode = M_HOUR;
+                        saveAppState(); }
                     break;
                 case M_RESET:
-                    if (btn === BTN_SEL) {
-                        resetHtmlAlarm();
+                    if (btn === BTN_SEL) { resetHtmlAlarm();
                         mode = M_TIME;
-                    } else if (btn === BTN_MENU) {
-                        mode = M_MAIN;
-                    }
+                        saveAppState(); } else if (btn === BTN_MENU) { mode = M_MAIN;
+                        saveAppState(); }
                     break;
             }
-            saveAppState();
         }
 
         function handleLong(btn) {
@@ -2773,14 +2528,10 @@
         // ===== BIND BUTTONS =====
         function bindBtn(el, id) {
             if (!el) return;
-            const start = function(e) {
-                e.preventDefault();
-                btnDown(id);
-            };
-            const end = function(e) {
-                e.preventDefault();
-                btnUp(id);
-            };
+            const start = function(e) { e.preventDefault();
+                btnDown(id); };
+            const end = function(e) { e.preventDefault();
+                btnUp(id); };
             el.addEventListener('mousedown', start);
             el.addEventListener('mouseup', end);
             el.addEventListener('mouseleave', end);
@@ -2797,51 +2548,31 @@
         window.addEventListener('keydown', function(e) {
             if (e.repeat) return;
             const k = e.key.toLowerCase();
-            if (k === 't') {
-                toggleTheme();
-                return;
-            }
-            if (k === 'x') {
-                const st = document.getElementById('sensorToggle');
-                if (st) st.click();
-                return;
-            }
-            if (KEY_MAP[k]) {
-                e.preventDefault();
-                btnDown(KEY_MAP[k]);
-            }
+            if (k === 't') { toggleTheme(); return; }
+            if (k === 'x') { document.getElementById('sensorToggle').click(); return; }
+            if (KEY_MAP[k]) { e.preventDefault();
+                btnDown(KEY_MAP[k]); }
         });
         window.addEventListener('keyup', function(e) {
             const k = e.key.toLowerCase();
-            if (KEY_MAP[k]) {
-                e.preventDefault();
-                btnUp(KEY_MAP[k]);
-            }
+            if (KEY_MAP[k]) { e.preventDefault();
+                btnUp(KEY_MAP[k]); }
         });
 
         // ===== QUICK ACTIONS =====
-        const qd8 = document.getElementById('quickToggleD8');
-        const qd0 = document.getElementById('quickToggleD0');
-        const qd6 = document.getElementById('quickPulseD6');
-        const qra = document.getElementById('quickResetAlarm');
-        const bda = document.getElementById('btnDismissAlarm');
-        const bsa = document.getElementById('btnSnoozeAlarm');
-        const qpa = document.getElementById('quickPulseAll');
-        const qta = document.getElementById('quickToggleAlarm');
-
-        if (qd8) qd8.addEventListener('click', () => sendCommand('/toggle?id=8'));
-        if (qd0) qd0.addEventListener('click', () => sendCommand('/toggle?id=0'));
-        if (qd6) qd6.addEventListener('click', () => sendCommand('/pulse?id=6'));
-        if (qra) qra.addEventListener('click', resetHtmlAlarm);
-        if (bda) bda.addEventListener('click', resetHtmlAlarm);
-        if (bsa) bsa.addEventListener('click', startSnooze);
-        if (qpa) qpa.addEventListener('click', () => {
+        document.getElementById('quickToggleD8').addEventListener('click', () => sendCommand('/toggle?id=8'));
+        document.getElementById('quickToggleD0').addEventListener('click', () => sendCommand('/toggle?id=0'));
+        document.getElementById('quickPulseD6').addEventListener('click', () => sendCommand('/pulse?id=6'));
+        document.getElementById('quickResetAlarm').addEventListener('click', resetHtmlAlarm);
+        document.getElementById('btnDismissAlarm').addEventListener('click', resetHtmlAlarm);
+        document.getElementById('btnSnoozeAlarm').addEventListener('click', startSnooze);
+        document.getElementById('quickPulseAll').addEventListener('click', () => {
             sendCommand('/pulse?id=0');
             setTimeout(() => sendCommand('/pulse?id=6'), 200);
             setTimeout(() => sendCommand('/pulse?id=8'), 400);
             log('Pulse all pins', 'tx');
         });
-        if (qta) qta.addEventListener('click', () => {
+        document.getElementById('quickToggleAlarm').addEventListener('click', () => {
             htmlAlarmActive = true;
             htmlAlarmAcked = false;
             saveAppState();
@@ -2850,65 +2581,51 @@
         });
 
         // ===== SETTINGS =====
-        const inpIP = document.getElementById('inpTargetIP');
-        const inpPoll = document.getElementById('inpPollInt');
-        const inpTout = document.getElementById('inpScrTout');
-        const inpSnz = document.getElementById('inpSnoozeDur');
-        const pwrTog = document.getElementById('powerSaveToggle');
-        const snsTog = document.getElementById('sensorToggle');
-        const sndTog = document.getElementById('soundToggle');
-        const vibTog = document.getElementById('vibrateToggle');
-        const thmTog = document.getElementById('themeToggle');
-        const shtTog = document.getElementById('shortcutsToggle');
-        const clsSht = document.getElementById('closeShortcuts');
-        const shtOvr = document.getElementById('shortcutsOverlay');
-
-        if (inpIP) inpIP.addEventListener('change', function(e) {
-            targetIP = e.target.value;
-            saveAppState();
-        });
-        if (inpPoll) inpPoll.addEventListener('change', function(e) {
+        document.getElementById('inpTargetIP').addEventListener('change', function(e) { targetIP = e.target.value;
+            saveAppState(); });
+        document.getElementById('inpPollInt').addEventListener('change', function(e) {
             POLL_MS = parseInt(e.target.value) || 500;
             saveAppState();
-            restartPolling();
+            if (pollInterval) {
+                stopPolling();
+                startPolling();
+            }
         });
-        if (inpTout) inpTout.addEventListener('change', function(e) {
-            TOUT_MS = parseInt(e.target.value) || 5000;
-            saveAppState();
-        });
-        if (inpSnz) inpSnz.addEventListener('change', function(e) {
+        document.getElementById('inpScrTout').addEventListener('change', function(e) { TOUT_MS = parseInt(e.target.value) ||
+                5000;
+            saveAppState(); });
+        document.getElementById('inpSnoozeDur').addEventListener('change', function(e) {
             snoozeDuration = parseInt(e.target.value) || 60;
             saveAppState();
         });
 
-        if (pwrTog) pwrTog.addEventListener('click', function() {
+        document.getElementById('powerSaveToggle').addEventListener('click', function() {
             powerSaving = !powerSaving;
             updatePowerSaveUI();
             saveAppState();
             if (powerSaving) {
                 POLL_MS = Math.max(POLL_MS, 2000);
-                if (inpPoll) inpPoll.value = POLL_MS;
+                document.getElementById('inpPollInt').value = POLL_MS;
                 log('Power saving ENABLED', 'dim');
             } else {
-                POLL_MS = parseInt(inpPoll ? inpPoll.value : 500) || 500;
+                POLL_MS = parseInt(document.getElementById('inpPollInt').value) || 500;
                 log('Power saving DISABLED', 'dim');
             }
-            restartPolling();
+            if (pollInterval) {
+                stopPolling();
+                startPolling();
+            }
         });
 
         function updatePowerSaveUI() {
             const el = document.getElementById('powerSaveToggle');
             const label = document.getElementById('powerSaveLabel');
-            if (powerSaving) {
-                if (el) el.classList.add('active');
-                if (label) label.textContent = 'ON';
-            } else {
-                if (el) el.classList.remove('active');
-                if (label) label.textContent = 'OFF';
-            }
+            if (powerSaving) { el.classList.add('active');
+                label.textContent = 'ON'; } else { el.classList.remove('active');
+                label.textContent = 'OFF'; }
         }
 
-        if (snsTog) snsTog.addEventListener('click', function() {
+        document.getElementById('sensorToggle').addEventListener('click', function() {
             sensorEnabled = !sensorEnabled;
             updateSensorToggle();
             saveAppState();
@@ -2919,26 +2636,16 @@
         function updateSensorToggle() {
             const el = document.getElementById('sensorToggle');
             const label = document.getElementById('sensorToggleLabel');
-            if (sensorEnabled) {
-                if (el) el.classList.add('active');
-                if (label) label.textContent = 'ON';
-            } else {
-                if (el) el.classList.remove('active');
-                if (label) label.textContent = 'OFF';
-            }
-            const psv = document.getElementById('pinSensorVal');
-            const psb = document.getElementById('pinSensorBar');
-            if (psv) {
-                psv.textContent = sensorEnabled ? 'ON' : 'OFF';
-                psv.className = 'pin-value ' + (sensorEnabled ? 'on' : 'off');
-            }
-            if (psb) {
-                psb.className = 'fill ' + (sensorEnabled ? 'on' : 'off');
-                psb.style.width = sensorEnabled ? '100%' : '0%';
-            }
+            if (sensorEnabled) { el.classList.add('active');
+                label.textContent = 'ON'; } else { el.classList.remove('active');
+                label.textContent = 'OFF'; }
+            document.getElementById('pinSensorVal').textContent = sensorEnabled ? 'ON' : 'OFF';
+            document.getElementById('pinSensorVal').className = 'pin-value ' + (sensorEnabled ? 'on' : 'off');
+            document.getElementById('pinSensorBar').className = 'fill ' + (sensorEnabled ? 'on' : 'off');
+            document.getElementById('pinSensorBar').style.width = sensorEnabled ? '100%' : '0%';
         }
 
-        if (sndTog) sndTog.addEventListener('click', function() {
+        document.getElementById('soundToggle').addEventListener('click', function() {
             soundEnabled = !soundEnabled;
             updateSoundToggle();
             saveAppState();
@@ -2949,16 +2656,12 @@
         function updateSoundToggle() {
             const el = document.getElementById('soundToggle');
             const label = document.getElementById('soundToggleLabel');
-            if (soundEnabled) {
-                if (el) el.classList.add('active');
-                if (label) label.textContent = 'ON';
-            } else {
-                if (el) el.classList.remove('active');
-                if (label) label.textContent = 'OFF';
-            }
+            if (soundEnabled) { el.classList.add('active');
+                label.textContent = 'ON'; } else { el.classList.remove('active');
+                label.textContent = 'OFF'; }
         }
 
-        if (vibTog) vibTog.addEventListener('click', function() {
+        document.getElementById('vibrateToggle').addEventListener('click', function() {
             vibrateEnabled = !vibrateEnabled;
             updateVibrateToggle();
             saveAppState();
@@ -2969,39 +2672,26 @@
         function updateVibrateToggle() {
             const el = document.getElementById('vibrateToggle');
             const label = document.getElementById('vibrateToggleLabel');
-            if (vibrateEnabled) {
-                if (el) el.classList.add('active');
-                if (label) label.textContent = 'ON';
-            } else {
-                if (el) el.classList.remove('active');
-                if (label) label.textContent = 'OFF';
-            }
+            if (vibrateEnabled) { el.classList.add('active');
+                label.textContent = 'ON'; } else { el.classList.remove('active');
+                label.textContent = 'OFF'; }
         }
 
-        if (thmTog) thmTog.addEventListener('click', toggleTheme);
-        if (shtTog) shtTog.addEventListener('click', function() {
-            if (shtOvr) shtOvr.classList.toggle('show');
+        document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+        document.getElementById('shortcutsToggle').addEventListener('click', function() {
+            document.getElementById('shortcutsOverlay').classList.toggle('show');
         });
-        if (clsSht) clsSht.addEventListener('click', function() {
-            if (shtOvr) shtOvr.classList.remove('show');
+        document.getElementById('closeShortcuts').addEventListener('click', function() {
+            document.getElementById('shortcutsOverlay').classList.remove('show');
         });
-        if (shtOvr) shtOvr.addEventListener('click', function(e) {
+        document.getElementById('shortcutsOverlay').addEventListener('click', function(e) {
             if (e.target === this) this.classList.remove('show');
         });
 
         // ===== EXPORT / CLEAR / IMPORT =====
-        const expLog = document.getElementById('exportLogBtn');
-        const clrLog = document.getElementById('clearLogBtn');
-        const rstStat = document.getElementById('resetStatsBtn');
-        const expSet = document.getElementById('exportSettingsBtn');
-        const impSet = document.getElementById('importSettingsBtn');
-        const impInp = document.getElementById('importSettingsInput');
-
-        if (expLog) expLog.addEventListener('click', function() {
+        document.getElementById('exportLogBtn').addEventListener('click', function() {
             let text = '=== WEMOS LOG ===\n';
-            logEntries.forEach(e => {
-                text += '[' + e.time + '] ' + e.text + '\n';
-            });
+            logEntries.forEach(e => { text += '[' + e.time + '] ' + e.txt + '\n'; });
             const blob = new Blob([text], { type: 'text/plain' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
@@ -3012,31 +2702,27 @@
             log('Log exported', 'ok');
         });
 
-        if (clrLog) clrLog.addEventListener('click', function() {
-            if (logBox) logBox.innerHTML = '';
+        document.getElementById('clearLogBtn').addEventListener('click', function() {
+            logBox.innerHTML = '';
             logEntries = [];
             logCount = 0;
-            const lc = document.getElementById('logCount');
-            if (lc) lc.textContent = '0';
-            const lb = document.getElementById('logBadge');
-            if (lb) lb.style.display = 'none';
+            document.getElementById('logCount').textContent = '0';
+            document.getElementById('logBadge').style.display = 'none';
             log('Log cleared', 'dim');
         });
 
-        if (rstStat) rstStat.addEventListener('click', function() {
+        document.getElementById('resetStatsBtn').addEventListener('click', function() {
             sensorTriggerCount = 0;
             lastSensorEvent = 0;
             chartData = [];
-            const st = document.getElementById('statTriggers');
-            if (st) st.textContent = '0';
+            document.getElementById('statTriggers').textContent = '0';
             saveAppState();
             drawChart();
-            const cc = document.getElementById('chartCount');
-            if (cc) cc.textContent = '0 events';
+            document.getElementById('chartCount').textContent = '0 events';
             log('Stats reset', 'ok');
         });
 
-        if (expSet) expSet.addEventListener('click', function() {
+        document.getElementById('exportSettingsBtn').addEventListener('click', function() {
             const settings = {
                 targetIP,
                 POLL_MS,
@@ -3047,7 +2733,7 @@
                 soundEnabled,
                 vibrateEnabled,
                 theme,
-                version: 'v4.1'
+                version: 'v4.0'
             };
             const blob = new Blob([JSON.stringify(settings, null, 2)], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
@@ -3059,52 +2745,39 @@
             log('Settings exported', 'ok');
         });
 
-        if (impSet) impSet.addEventListener('click', function() {
-            if (impInp) impInp.click();
+        document.getElementById('importSettingsBtn').addEventListener('click', function() {
+            document.getElementById('importSettingsInput').click();
         });
 
-        if (impInp) impInp.addEventListener('change', function(e) {
+        document.getElementById('importSettingsInput').addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (!file) return;
             const reader = new FileReader();
             reader.onload = function(ev) {
                 try {
                     const settings = JSON.parse(ev.target.result);
-                    if (settings.targetIP) {
-                        targetIP = settings.targetIP;
-                        if (inpIP) inpIP.value = targetIP;
-                    }
-                    if (settings.POLL_MS) {
-                        POLL_MS = settings.POLL_MS;
-                        if (inpPoll) inpPoll.value = POLL_MS;
-                    }
-                    if (settings.TOUT_MS) {
-                        TOUT_MS = settings.TOUT_MS;
-                        if (inpTout) inpTout.value = TOUT_MS;
-                    }
-                    if (settings.snoozeDuration) {
-                        snoozeDuration = settings.snoozeDuration;
-                        if (inpSnz) inpSnz.value = snoozeDuration;
-                    }
-                    if (typeof settings.powerSaving === 'boolean') {
-                        powerSaving = settings.powerSaving;
-                        updatePowerSaveUI();
-                    }
-                    if (typeof settings.sensorEnabled === 'boolean') {
-                        sensorEnabled = settings.sensorEnabled;
-                        updateSensorToggle();
-                    }
-                    if (typeof settings.soundEnabled === 'boolean') {
-                        soundEnabled = settings.soundEnabled;
-                        updateSoundToggle();
-                    }
-                    if (typeof settings.vibrateEnabled === 'boolean') {
-                        vibrateEnabled = settings.vibrateEnabled;
-                        updateVibrateToggle();
-                    }
-                    if (settings.theme) applyTheme(settings.theme);
+                    if (settings.targetIP) { targetIP = settings.targetIP;
+                        document.getElementById('inpTargetIP').value = targetIP; }
+                    if (settings.POLL_MS) { POLL_MS = settings.POLL_MS;
+                        document.getElementById('inpPollInt').value = POLL_MS; }
+                    if (settings.TOUT_MS) { TOUT_MS = settings.TOUT_MS;
+                        document.getElementById('inpScrTout').value = TOUT_MS; }
+                    if (settings.snoozeDuration) { snoozeDuration = settings.snoozeDuration;
+                        document.getElementById('inpSnoozeDur').value = snoozeDuration; }
+                    if (typeof settings.powerSaving === 'boolean') { powerSaving = settings.powerSaving;
+                        updatePowerSaveUI(); }
+                    if (typeof settings.sensorEnabled === 'boolean') { sensorEnabled = settings.sensorEnabled;
+                        updateSensorToggle(); }
+                    if (typeof settings.soundEnabled === 'boolean') { soundEnabled = settings.soundEnabled;
+                        updateSoundToggle(); }
+                    if (typeof settings.vibrateEnabled === 'boolean') { vibrateEnabled = settings.vibrateEnabled;
+                        updateVibrateToggle(); }
+                    if (settings.theme) { applyTheme(settings.theme); }
                     saveAppState();
-                    restartPolling();
+                    if (pollInterval) {
+                        stopPolling();
+                        startPolling();
+                    }
                     log('Settings imported successfully', 'ok');
                 } catch (err) {
                     log('Import failed: ' + err.message, 'err');
@@ -3120,11 +2793,9 @@
                 document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
                 this.classList.add('active');
                 document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-                const target = document.getElementById(this.dataset.tab);
-                if (target) target.classList.add('active');
+                document.getElementById(this.dataset.tab).classList.add('active');
                 if (this.dataset.tab === 'panelLog') {
-                    const lb = document.getElementById('logBadge');
-                    if (lb) lb.style.display = 'none';
+                    document.getElementById('logBadge').style.display = 'none';
                 }
             });
         });
@@ -3135,8 +2806,8 @@
             let s = diff % 60;
             let m = Math.floor(diff / 60) % 60;
             let h = Math.floor(diff / 3600);
-            const el = document.getElementById('statUptime');
-            if (el) el.textContent = (h > 0 ? h + 'h ' : '') + (m > 0 ? m + 'm ' : '') + s + 's';
+            document.getElementById('statUptime').textContent =
+                (h > 0 ? h + 'h ' : '') + (m > 0 ? m + 'm ' : '') + s + 's';
         }
 
         // ===== MAIN LOOP (RENDER ONLY) =====
@@ -3167,25 +2838,22 @@
         // ===== WIFI CONFIG =====
         async function loadWifiStatus() {
             const statusEl = document.getElementById('staStatus');
-            if (!statusEl) return;
             try {
-                const res = await httpGet('/status');
+                const res = await fetch(targetIP + '/status');
                 if (!res.ok) throw new Error('Network error');
-                const data = res.payload || {};
-                const wmode = data.wifiMode || 0;
+                const data = await res.json();
+                const mode = data.wifiMode || 0;
                 const ssid = data.staSSID || '';
                 const ip = data.staIP || '';
                 const connected = data.staConnected || false;
 
-                const wm = document.getElementById('wifiMode');
-                const ws = document.getElementById('wifiSSID');
-                if (wm) wm.value = wmode;
-                if (ws) ws.value = ssid;
+                document.getElementById('wifiMode').value = mode;
+                document.getElementById('wifiSSID').value = ssid;
 
                 if (connected && ip.length > 0) {
                     statusEl.textContent = '✅ Terhubung ke "' + ssid + '" (IP: ' + ip + ')';
                     statusEl.className = 'wifi-status-text connected';
-                } else if (wmode === 1 || wmode === 2) {
+                } else if (mode === 1 || mode === 2) {
                     statusEl.textContent = '⏳ Mencoba konek ke "' + ssid + '"...';
                     statusEl.className = 'wifi-status-text connecting';
                 } else {
@@ -3227,8 +2895,7 @@
             }
         }
 
-        const swb = document.getElementById('saveWifiBtn');
-        if (swb) swb.addEventListener('click', saveWifiConfig);
+        document.getElementById('saveWifiBtn').addEventListener('click', saveWifiConfig);
 
         // ===== CORDOVA =====
         document.addEventListener('deviceready', function() {
@@ -3244,6 +2911,7 @@
             if (cordova.plugins && cordova.plugins.backgroundMode) {
                 cordova.plugins.backgroundMode.enable();
                 cordova.plugins.backgroundMode.overrideBackButton();
+
                 cordova.plugins.backgroundMode.setDefaults({
                     title: 'Wemos Alarm Aktif',
                     text: 'Monitoring sensor Wemos...',
@@ -3258,7 +2926,7 @@
                 cordova.plugins.backgroundMode.on('activate', function() {
                     log('Background mode ACTIVE', 'dim');
                     cordova.plugins.backgroundMode.disableWebViewOptimizations();
-                    if (!pollIntervalId) startPolling();
+                    if (!pollInterval) startPolling();
                 });
 
                 cordova.plugins.backgroundMode.on('deactivate', function() {
@@ -3278,11 +2946,15 @@
             requestNotif();
             loadAppState();
 
+            // Nyalakan layar
+            screenOn();
+            lastBtnMs = Date.now();
+
             if (htmlAlarmActive && !htmlAlarmAcked && !snoozeActive) {
                 onAlarmTriggered();
             }
 
-            if (!pollIntervalId) startPolling();
+            if (!pollInterval) startPolling();
             if (!loopId) mainLoop();
 
             log('Aplikasi siap dengan background mode! 🚀', 'ok');
@@ -3300,47 +2972,44 @@
             lastWifiStatus = true;
             screenOn();
             lastBtnMs = Date.now();
-            if (!pollIntervalId) startPolling();
+
+            if (!pollInterval) {
+                startPolling();
+            }
+
             setTimeout(function() {
                 pollStatus();
             }, 500);
+
             if (htmlAlarmActive && !htmlAlarmAcked && !snoozeActive) {
                 wakeUpScreen();
                 onAlarmTriggered();
             }
         }, false);
 
-        // ===== BOOT (WEB FALLBACK) =====
-        function bootApp() {
-            log('=== Wemos D1 Smartwatch Pro v4.1 (APK Fix) ===', 'ok');
-            log('Pin: D0(16), D6(12), D8(15) | Sensor: D5, Trigger: D4', 'dim');
-            log('Fitur: Snooze, Theme, Export/Import, Shortcuts, Background Polling', 'info');
+        // ===== BOOT =====
+        log('=== Wemos D1 Smartwatch Pro v4.0 (Neo-Glass) ===', 'ok');
+        log('Pin: D0(16), D6(12), D8(15) | Sensor: D5, Trigger: D4', 'dim');
+        log('Fitur: Snooze, Theme, Export/Import, Shortcuts, Background Polling', 'info');
 
+        // Web mode fallback
+        if (!window.cordova) {
             loadAppState();
-            loadWifiStatus();
-
+            screenOn();
+            lastBtnMs = Date.now();
             if (htmlAlarmActive && !htmlAlarmAcked && !snoozeActive) {
                 onAlarmTriggered();
             }
-
-            if (!pollIntervalId) startPolling();
+            if (!pollInterval) startPolling();
             if (!loopId) mainLoop();
-
-            if ('Notification' in window && Notification.permission === 'granted') {
-                alarmNotifGranted = true;
-            }
-
-            log('Aplikasi siap! 🚀', 'ok');
+            log('Running in web mode (no Cordova)', 'dim');
         }
 
-        // Jalankan boot jika tidak ada Cordova (web mode)
-        if (!window.cordova) {
-            document.addEventListener('DOMContentLoaded', bootApp);
-        } else {
-            document.addEventListener('DOMContentLoaded', function() {
-                log('Waiting for Cordova...', 'dim');
-            });
-        }
+        loadWifiStatus();
+
+        if ('Notification' in window && Notification.permission === 'granted') alarmNotifGranted = true;
+
+        log('Aplikasi siap! 🚀', 'ok');
     </script>
 </body>
 </html>
