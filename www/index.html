@@ -1587,7 +1587,8 @@
 
     <script>
         /* ================================================================
-           WEMOS D1 SMARTWATCH PRO — v4.0 (Neo-Glass UI) — REVISI STABIL
+           WEMOS D1 SMARTWATCH PRO — v4.0 (Neo-Glass UI)
+           PATCH KONEKSI DARI V_BISA — STABIL DI APK
            ================================================================ */
 
         // ===== DOM REFS =====
@@ -1642,7 +1643,7 @@
         let startTime = Date.now();
         let logCount = 0;
         let logEntries = [];
-        let pollInterval = null; // untuk setInterval polling
+        let pollInterval = null;
         let isPolling = true;
         let audioCtx = null;
         let alarmInterval = null;
@@ -2035,6 +2036,7 @@
         }
 
         // ===== HTTP =====
+        // === PATCH DARI V_BISA ===
         async function httpGet(endpoint, fireAndForget) {
             fireAndForget = fireAndForget || false;
             const url = targetIP + endpoint;
@@ -2051,13 +2053,12 @@
                 }
                 return { ok: false, status: r.status, error: 'HTTP ' + r.status };
             } catch (e) {
-                // Fallback no-cors untuk mengatasi CORS
+                // FALLBACK NO-CORS — INI YANG MEMBUAT KONEKSI STABIL DI APK
                 try {
                     const ctrl2 = new AbortController();
                     const to2 = setTimeout(() => ctrl2.abort(), timeout);
                     await fetch(url, { method: 'GET', signal: ctrl2.signal, mode: 'no-cors', cache: 'no-store' });
                     clearTimeout(to2);
-                    // no-cors sukses, tapi kita tidak bisa baca response
                     return { ok: true, status: 0, payload: null, opaque: true };
                 } catch (e2) {
                     return { ok: false, error: (e2.message || 'Network Error') };
@@ -2078,6 +2079,7 @@
         }
 
         // ===== POLLING =====
+        // === PATCH DARI V_BISA ===
         async function pollStatus() {
             if (!isPolling) return;
             const res = await httpGet('/status');
