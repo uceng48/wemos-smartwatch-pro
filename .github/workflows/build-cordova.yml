@@ -64,8 +64,19 @@ jobs:
 
       - name: Inject Kotlin exclude rules to build.gradle
         run: |
-          echo -e "\nallprojects {\n    configurations.all {\n        exclude group: 'org.jetbrains.kotlin', module: 'kotlin-stdlib-jdk7'\n        exclude group: 'org.jetbrains.kotlin', module: 'kotlin-stdlib-jdk8'\n    }\n}" >> platforms/android/build.gradle
-          echo "Kotlin exclude rules injected."
+          GRADLE_FILE="platforms/android/app/build.gradle"
+          if [ -f "$GRADLE_FILE" ]; then
+            cat >> "$GRADLE_FILE" << 'GRADLE_EOF'
+          
+          configurations.all {
+              exclude group: 'org.jetbrains.kotlin', module: 'kotlin-stdlib-jdk7'
+              exclude group: 'org.jetbrains.kotlin', module: 'kotlin-stdlib-jdk8'
+          }
+          GRADLE_EOF
+            echo "Kotlin exclude rules injected."
+          else
+            echo "WARNING: build.gradle not found yet, will be created during build"
+          fi
 
       - name: Build debug APK
         run: cordova build android --debug
@@ -78,7 +89,13 @@ jobs:
           mkdir -p dist/platforms
           
           # Copy APK to dist
-          cp platforms/android/app/build/outputs/apk/debug/app-debug.apk dist/apk/
+          if [ -f "platforms/android/app/build/outputs/apk/debug/app-debug.apk" ]; then
+            cp platforms/android/app/build/outputs/apk/debug/app-debug.apk dist/apk/
+            echo "APK copied successfully"
+          else
+            echo "ERROR: APK not found!"
+            exit 1
+          fi
           
           # Copy plugins directory
           if [ -d plugins ]; then
@@ -87,27 +104,27 @@ jobs:
           fi
           
           # Copy platforms/android build output
-          if [ -d platforms/android/app/build ]; then
+          if [ -d "platforms/android/app/build" ]; then
             cp -r platforms/android/app/build dist/platforms/
             echo "Build output copied to dist/platforms/"
           fi
           
           # Create a summary file
-          cat > dist/BUILD_INFO.txt << EOF
-Build Information
-==================
-Build Date: $(date)
-Commit: ${{ github.sha }}
-Branch: ${{ github.ref_name }}
-
-Contents:
-- apk/app-debug.apk: Debug APK file
-- plugins/: All installed Cordova plugins
-- platforms/: Android build outputs
-
-Installed Plugins:
-$(cordova plugin list)
-EOF
+          cat > dist/BUILD_INFO.txt << 'EOF'
+          Build Information
+          ==================
+          Build Date: $(date)
+          Commit: ${{ github.sha }}
+          Branch: ${{ github.ref_name }}
+          
+          Contents:
+          - apk/app-debug.apk: Debug APK file
+          - plugins/: All installed Cordova plugins
+          - platforms/: Android build outputs
+          
+          Installed Plugins:
+          $(cordova plugin list)
+          EOF
           
           echo "Dist folder prepared successfully."
           ls -la dist/
@@ -117,13 +134,20 @@ EOF
         with:
           name: build-artifacts
           path: dist/
+          retention-days: 30
 
       - name: Push dist folder to repository
         if: success()
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add dist/
-          git commit -m "chore: Update build artifacts - $(date +%Y-%m-%d\ %H:%M:%S)" || echo "No changes to commit"
-          git push origin main || echo "Push failed - repository may be up to date"
+          
+          # Check if there are changes
+          if [ -z "$(git status --porcelain)" ]; then
+            echo "No changes to commit"
+          else
+            git add dist/
+            git commit -m "chore: Update build artifacts - $(date +%Y-%m-%d\ %H:%M:%S)"
+            git push origin main
+          fi
         continue-on-error: true
