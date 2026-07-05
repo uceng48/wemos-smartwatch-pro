@@ -1643,7 +1643,6 @@
         let logCount = 0;
         let logEntries = [];
         let lastPoll = 0;
-        let pollIntervalId = null;
         let isPolling = true;
         let audioCtx = null;
         let alarmInterval = null;
@@ -1684,29 +1683,47 @@
         let lastWifiStatus = false;
         let firstPoll = true;
 
-        // ===== POLLING INTERVAL (terpisah dari render loop) =====
-        let pollInterval = null;
+        // ===== BACKGROUND-ROBUST POLLING =====
+        let pollTimer = null;
+        let failCount = 0;
+        const MAX_FAIL = 3; // toleransi gagal sebelum dianggap offline
+        let isVisible = true;
+        let lastSuccessPoll = 0;
 
         function startPolling() {
-            if (pollInterval) {
-                clearInterval(pollInterval);
-                pollInterval = null;
-            }
-            pollInterval = setInterval(() => {
-                if (isPolling) {
-                    pollStatus();
-                    updateUptime();
-                    updateSnoozeUI();
-                }
-            }, POLL_MS);
+            stopPolling();
+            isPolling = true;
+            failCount = 0;
+            lastSuccessPoll = Date.now();
             log('Polling started with interval ' + POLL_MS + 'ms', 'dim');
+            scheduleNextPoll(100); // poll pertama segera
         }
 
         function stopPolling() {
-            if (pollInterval) {
-                clearInterval(pollInterval);
-                pollInterval = null;
+            isPolling = false;
+            if (pollTimer) {
+                clearTimeout(pollTimer);
+                pollTimer = null;
             }
+        }
+
+        function scheduleNextPoll(delay) {
+            if (!isPolling) return;
+            if (pollTimer) clearTimeout(pollTimer);
+            pollTimer = setTimeout(() => {
+                if (!isPolling) return;
+                pollStatus().then(() => {
+                    updateUptime();
+                    updateSnoozeUI();
+                    // Jika di background, polling tetap jalan tapi interval bisa lebih lambat
+                    const actualDelay = (!isVisible && powerSaving) ? Math.max(POLL_MS, 2000) : POLL_MS;
+                    scheduleNextPoll(actualDelay);
+                }).catch(() => {
+                    updateUptime();
+                    updateSnoozeUI();
+                    scheduleNextPoll(POLL_MS);
+                });
+            }, delay);
         }
 
         // ===== THEME =====
@@ -2053,7 +2070,13 @@
             try {
                 const ctrl = new AbortController();
                 const to = setTimeout(() => ctrl.abort(), timeout);
-                const r = await fetch(url, { method: 'GET', signal: ctrl.signal, mode: 'cors', cache: 'no-store' });
+                const r = await fetch(url, { 
+                    method: 'GET', 
+                    signal: ctrl.signal, 
+                    mode: 'cors', 
+                    cache: 'no-store',
+                    keepalive: true  // Penting: agar request tetap dikirim saat app di-background
+                });
                 clearTimeout(to);
                 if (r.ok) {
                     const text = await r.text();
@@ -2062,10 +2085,17 @@
                 }
                 return { ok: false, status: r.status, error: 'HTTP ' + r.status };
             } catch (e) {
+                // Fallback: coba dengan no-cors (opaque response)
                 try {
                     const ctrl2 = new AbortController();
                     const to2 = setTimeout(() => ctrl2.abort(), timeout);
-                    await fetch(url, { method: 'GET', signal: ctrl2.signal, mode: 'no-cors', cache: 'no-store' });
+                    await fetch(url, { 
+                        method: 'GET', 
+                        signal: ctrl2.signal, 
+                        mode: 'no-cors', 
+                        cache: 'no-store',
+                        keepalive: true
+                    });
                     clearTimeout(to2);
                     return { ok: true, status: 0, payload: null, opaque: true };
                 } catch (e2) {
@@ -2089,96 +2119,121 @@
         // ===== POLLING =====
         async function pollStatus() {
             if (!isPolling) return;
-            const res = await httpGet('/status');
-            if (!res.ok) {
-                const health = await httpGet('/');
-                if (health.ok) { updateWifi(true); return; }
-                updateWifi(false);
-                return;
-            }
-            updateWifi(true);
+            try {
+                const res = await httpGet('/status');
+                if (!res.ok) {
+                    // Coba health check sekali sebelum menambah fail count
+                    const health = await httpGet('/');
+                    if (health.ok) {
+                        failCount = 0;
+                        lastSuccessPoll = Date.now();
+                        updateWifi(true);
+                        return;
+                    }
+                    failCount++;
+                    if (failCount >= MAX_FAIL) {
+                        updateWifi(false);
+                    } else {
+                        // Masih dalam toleransi, tampilkan status "syncing"
+                        updateWifiSyncing();
+                    }
+                    return;
+                }
+                failCount = 0;
+                lastSuccessPoll = Date.now();
+                updateWifi(true);
 
-            if (res.payload) {
-                id0State = !!res.payload['0'];
-                id6State = !!res.payload['6'];
-                id8State = !!res.payload['8'];
-                d5SensorState = !!res.payload['5'];
-                d4AlarmActive = !!res.payload['4'];
-                alarmActive = !!(res.payload['alarm'] === 1 || res.payload['alarm'] === '1' || res.payload['alarm'] ===
-                true);
-                sensorEnabled = !!(res.payload['sensorEnabled'] === 1 || res.payload['sensorEnabled'] === '1' || res
-                    .payload['sensorEnabled'] === true);
-                clientCount = parseInt(res.payload['clients']) || 0;
-                let sensorEvent = parseInt(res.payload['sensorEvent']) || 0;
+                if (res.payload) {
+                    id0State = !!res.payload['0'];
+                    id6State = !!res.payload['6'];
+                    id8State = !!res.payload['8'];
+                    d5SensorState = !!res.payload['5'];
+                    d4AlarmActive = !!res.payload['4'];
+                    alarmActive = !!(res.payload['alarm'] === 1 || res.payload['alarm'] === '1' || res.payload['alarm'] ===
+                    true);
+                    sensorEnabled = !!(res.payload['sensorEnabled'] === 1 || res.payload['sensorEnabled'] === '1' || res
+                        .payload['sensorEnabled'] === true);
+                    clientCount = parseInt(res.payload['clients']) || 0;
+                    let sensorEvent = parseInt(res.payload['sensorEvent']) || 0;
 
-                updatePinUI('D0', id0State);
-                updatePinUI('D6', id6State);
-                updatePinUI('D8', id8State);
-                updatePinUI('D4', d4AlarmActive, 'alarm');
-                updatePinUI('D5', d5SensorState, 'trigger');
-                document.getElementById('pinSensorVal').textContent = sensorEnabled ? 'ON' : 'OFF';
-                document.getElementById('pinSensorVal').className = 'pin-value ' + (sensorEnabled ? 'on' : 'off');
-                document.getElementById('pinSensorBar').className = 'fill ' + (sensorEnabled ? 'on' : 'off');
-                document.getElementById('pinSensorBar').style.width = sensorEnabled ? '100%' : '0%';
+                    updatePinUI('D0', id0State);
+                    updatePinUI('D6', id6State);
+                    updatePinUI('D8', id8State);
+                    updatePinUI('D4', d4AlarmActive, 'alarm');
+                    updatePinUI('D5', d5SensorState, 'trigger');
+                    document.getElementById('pinSensorVal').textContent = sensorEnabled ? 'ON' : 'OFF';
+                    document.getElementById('pinSensorVal').className = 'pin-value ' + (sensorEnabled ? 'on' : 'off');
+                    document.getElementById('pinSensorBar').className = 'fill ' + (sensorEnabled ? 'on' : 'off');
+                    document.getElementById('pinSensorBar').style.width = sensorEnabled ? '100%' : '0%';
 
-                document.getElementById('oledLedD0').className = 'led ' + (id0State ? 'on' : 'off');
-                document.getElementById('oledLedD6').className = 'led ' + (id6State ? 'on' : 'off');
-                document.getElementById('oledLedD8').className = 'led ' + (id8State ? 'on' : 'off');
-                const anyAlarm = htmlAlarmActive && !htmlAlarmAcked && !snoozeActive;
-                document.getElementById('oledLedAlarm').className = 'led ' + (anyAlarm ? 'alarm' : 'off');
+                    document.getElementById('oledLedD0').className = 'led ' + (id0State ? 'on' : 'off');
+                    document.getElementById('oledLedD6').className = 'led ' + (id6State ? 'on' : 'off');
+                    document.getElementById('oledLedD8').className = 'led ' + (id8State ? 'on' : 'off');
+                    const anyAlarm = htmlAlarmActive && !htmlAlarmAcked && !snoozeActive;
+                    document.getElementById('oledLedAlarm').className = 'led ' + (anyAlarm ? 'alarm' : 'off');
 
-                document.getElementById('sensorD5Status').textContent = d5SensorState ? '🔴 TRIGGERED' : '🟢 HIGH';
-                document.getElementById('sensorD5Status').style.color = d5SensorState ? 'var(--accent-red)' :
-                    'var(--accent-green)';
-                document.getElementById('sensorD4Status').textContent = d4AlarmActive ? '🔴 TRIGGERED' : '✅ NORMAL';
-                document.getElementById('sensorD4Status').style.color = d4AlarmActive ? 'var(--accent-red)' :
-                    'var(--text-secondary)';
+                    document.getElementById('sensorD5Status').textContent = d5SensorState ? '🔴 TRIGGERED' : '🟢 HIGH';
+                    document.getElementById('sensorD5Status').style.color = d5SensorState ? 'var(--accent-red)' :
+                        'var(--accent-green)';
+                    document.getElementById('sensorD4Status').textContent = d4AlarmActive ? '🔴 TRIGGERED' : '✅ NORMAL';
+                    document.getElementById('sensorD4Status').style.color = d4AlarmActive ? 'var(--accent-red)' :
+                        'var(--text-secondary)';
 
-                if (firstPoll) {
-                    lastSensorEvent = sensorEvent;
-                    firstPoll = false;
-                } else if (sensorEvent > lastSensorEvent) {
-                    lastSensorEvent = sensorEvent;
-                    sensorTriggerCount = sensorEvent;
-                    if (!snoozeActive) {
+                    if (firstPoll) {
+                        lastSensorEvent = sensorEvent;
+                        firstPoll = false;
+                    } else if (sensorEvent > lastSensorEvent) {
+                        lastSensorEvent = sensorEvent;
+                        sensorTriggerCount = sensorEvent;
+                        if (!snoozeActive) {
+                            htmlAlarmActive = true;
+                            htmlAlarmAcked = false;
+                        }
+                        addChartPoint(1);
+                        saveAppState();
+                        log('⚡ SENSOR TRIGGERED! Event #' + sensorEvent + ' (Clients: ' + clientCount + ')', 'alarm');
+                    } else {
+                        addChartPoint(0);
+                    }
+
+                    if (d4AlarmActive && !htmlAlarmActive && htmlAlarmAcked && !snoozeActive) {
                         htmlAlarmActive = true;
                         htmlAlarmAcked = false;
+                        addChartPoint(1);
+                        saveAppState();
+                        log('D4 TRIGGERED!', 'alarm');
                     }
-                    addChartPoint(1);
-                    saveAppState();
-                    log('⚡ SENSOR TRIGGERED! Event #' + sensorEvent + ' (Clients: ' + clientCount + ')', 'alarm');
+
+                    document.getElementById('statTriggers').textContent = sensorTriggerCount;
+                    document.getElementById('statClients').textContent = clientCount;
+                    const anyAlarmState = htmlAlarmActive && !htmlAlarmAcked && !snoozeActive;
+                    document.getElementById('statAlarms').textContent = anyAlarmState ? '1' : '0';
+                    document.getElementById('statAlarms').className = 'stat-value ' + (anyAlarmState ? 'danger' : '');
+
+                    updateAlarmUI();
+                    updateSnoozeUI();
+
+                    const shouldAlarm = htmlAlarmActive && !htmlAlarmAcked && !snoozeActive;
+                    if (shouldAlarm && !lastHtmlAlarmState) { onAlarmTriggered(); }
+                    if (!shouldAlarm && lastHtmlAlarmState) { onAlarmCleared(); }
+                    lastHtmlAlarmState = shouldAlarm;
+
+                    if (Math.random() < 0.08) {
+                        log('Status OK | D0:' + (id0State ? 'ON' : 'OFF') + ' D6:' + (id6State ? 'ON' : 'OFF') + ' D8:' + (id8State ?
+                            'ON' : 'OFF') + ' CLI:' + clientCount + ' EVT#' + sensorEvent, 'dim');
+                    }
+                } else if (res.opaque) {
+                    failCount = 0;
+                    lastSuccessPoll = Date.now();
+                    updateWifi(true);
+                }
+            } catch (e) {
+                failCount++;
+                if (failCount >= MAX_FAIL) {
+                    updateWifi(false);
                 } else {
-                    addChartPoint(0);
+                    updateWifiSyncing();
                 }
-
-                if (d4AlarmActive && !htmlAlarmActive && htmlAlarmAcked && !snoozeActive) {
-                    htmlAlarmActive = true;
-                    htmlAlarmAcked = false;
-                    addChartPoint(1);
-                    saveAppState();
-                    log('D4 TRIGGERED!', 'alarm');
-                }
-
-                document.getElementById('statTriggers').textContent = sensorTriggerCount;
-                document.getElementById('statClients').textContent = clientCount;
-                const anyAlarmState = htmlAlarmActive && !htmlAlarmAcked && !snoozeActive;
-                document.getElementById('statAlarms').textContent = anyAlarmState ? '1' : '0';
-                document.getElementById('statAlarms').className = 'stat-value ' + (anyAlarmState ? 'danger' : '');
-
-                updateAlarmUI();
-                updateSnoozeUI();
-
-                const shouldAlarm = htmlAlarmActive && !htmlAlarmAcked && !snoozeActive;
-                if (shouldAlarm && !lastHtmlAlarmState) { onAlarmTriggered(); }
-                if (!shouldAlarm && lastHtmlAlarmState) { onAlarmCleared(); }
-                lastHtmlAlarmState = shouldAlarm;
-
-                if (Math.random() < 0.08) {
-                    log('Status OK | D0:' + (id0State ? 'ON' : 'OFF') + ' D6:' + (id6State ? 'ON' : 'OFF') + ' D8:' + (id8State ?
-                        'ON' : 'OFF') + ' CLI:' + clientCount + ' EVT#' + sensorEvent, 'dim');
-                }
-            } else if (res.opaque) {
-                updateWifi(true);
             }
         }
 
@@ -2206,12 +2261,21 @@
             }
         }
 
+        function updateWifiSyncing() {
+            const dot = document.getElementById('statusDot');
+            const txt = document.getElementById('statusText');
+            dot.className = 'dot warn';
+            txt.textContent = 'SYNCING';
+        }
+
         function updateWifi(connected) {
             if (connected !== lastWifiStatus) {
                 lastWifiStatus = connected;
                 log(connected ? 'WiFi Connected' : 'WiFi Disconnected', connected ? 'ok' : 'err');
-                screenOn();
-                lastBtnMs = Date.now();
+                if (connected) {
+                    screenOn();
+                    lastBtnMs = Date.now();
+                }
             }
             const dot = document.getElementById('statusDot');
             const txt = document.getElementById('statusText');
@@ -2611,6 +2675,26 @@
                 btnUp(KEY_MAP[k]); }
         });
 
+        // ===== PAGE VISIBILITY (minimize / maximize handling) =====
+        document.addEventListener('visibilitychange', function() {
+            isVisible = !document.hidden;
+            if (!document.hidden) {
+                // App kembali terlihat: langsung poll, reset fail count
+                failCount = 0;
+                screenOn();
+                lastBtnMs = Date.now();
+                scheduleNextPoll(50);
+                log('App visible, fast reconnect...', 'dim');
+            } else {
+                // App di-minimize: pastikan background mode tetap aktif
+                if (cordovaReady && cordova.plugins && cordova.plugins.backgroundMode) {
+                    cordova.plugins.backgroundMode.wakeUp();
+                    cordova.plugins.backgroundMode.unlock();
+                }
+                log('App hidden, background polling active', 'dim');
+            }
+        });
+
         // ===== QUICK ACTIONS =====
         document.getElementById('quickToggleD8').addEventListener('click', () => sendCommand('/toggle?id=8'));
         document.getElementById('quickToggleD0').addEventListener('click', () => sendCommand('/toggle?id=0'));
@@ -2639,7 +2723,7 @@
             POLL_MS = parseInt(e.target.value) || 500;
             saveAppState();
             // Restart polling dengan interval baru
-            if (pollInterval) {
+            if (isPolling) {
                 stopPolling();
                 startPolling();
             }
@@ -2665,7 +2749,7 @@
                 log('Power saving DISABLED', 'dim');
             }
             // Restart polling
-            if (pollInterval) {
+            if (isPolling) {
                 stopPolling();
                 startPolling();
             }
@@ -2829,7 +2913,7 @@
                     if (settings.theme) { applyTheme(settings.theme); }
                     saveAppState();
                     // Restart polling
-                    if (pollInterval) {
+                    if (isPolling) {
                         stopPolling();
                         startPolling();
                     }
@@ -2963,6 +3047,12 @@
                 cordovaBgMode = true;
                 cordova.plugins.backgroundMode.enable();
                 cordova.plugins.backgroundMode.overrideBackButton();
+                
+                // Kunci penting: disable battery optimizations agar tidak di-kill OS
+                try {
+                    cordova.plugins.backgroundMode.disableBatteryOptimizations();
+                } catch(e) { log('Battery optim disable skipped: ' + e.message, 'dim'); }
+                
                 cordova.plugins.backgroundMode.setDefaults({
                     title: 'Wemos Alarm Aktif',
                     text: 'Monitoring sensor Wemos...',
@@ -2973,13 +3063,26 @@
                     bigText: true,
                     silent: false
                 });
+                
                 cordova.plugins.backgroundMode.on('activate', function() {
                     cordova.plugins.backgroundMode.disableWebViewOptimizations();
-                    // Pastikan polling tetap berjalan
-                    if (!pollInterval) {
+                    // PENTING: Saat masuk background, pastikan polling tetap jalan
+                    if (!isPolling) {
                         startPolling();
+                    } else {
+                        // Force reschedule agar tidak terjeda
+                        scheduleNextPoll(100);
                     }
+                    log('Background mode active, polling maintained', 'ok');
                 });
+                
+                cordova.plugins.backgroundMode.on('deactivate', function() {
+                    // Saat kembali foreground, langsung sync
+                    failCount = 0;
+                    scheduleNextPoll(50);
+                    log('Foreground restored, fast sync', 'ok');
+                });
+                
                 log('Background mode enabled', 'ok');
             }
 
@@ -3004,21 +3107,27 @@
         // ===== PAUSE / RESUME =====
         document.addEventListener('pause', function() {
             saveAppState();
-            log('App paused, state saved', 'dim');
+            isVisible = false;
+            // Jangan stop polling! Biarkan tetap jalan di background
+            log('App paused, background polling maintained', 'dim');
         }, false);
 
         document.addEventListener('resume', function() {
+            isVisible = true;
             loadAppState();
             screenOn();
             lastBtnMs = Date.now();
+            failCount = 0;
             // Jika ada alarm aktif, trigger ulang
             if (htmlAlarmActive && !htmlAlarmAcked && !snoozeActive) {
                 wakeUpScreen();
                 onAlarmTriggered();
             }
-            // Pastikan polling berjalan
-            if (!pollInterval) {
+            // Pastikan polling berjalan dan langsung sync
+            if (!isPolling) {
                 startPolling();
+            } else {
+                scheduleNextPoll(50);
             }
             log('App resumed, state restored', 'ok');
         }, false);
@@ -3043,6 +3152,9 @@
         loadWifiStatus();
 
         if ('Notification' in window && Notification.permission === 'granted') alarmNotifGranted = true;
+
+        // Inisialisasi visibility state
+        isVisible = !document.hidden;
 
         log('Aplikasi siap! 🚀', 'ok');
     </script>
