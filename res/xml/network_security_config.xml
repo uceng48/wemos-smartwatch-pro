@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <!-- Allow cleartext traffic for local network devices -->
+    <domain-config cleartextTrafficPermitted="true">
+        <!-- Local network IP ranges for Wemos devices -->
+        <domain includeSubdomains="true">192.168.4.1</domain>
+    
+        <domain includeSubdomains="true">192.168.100.101</domain>
+        <domain includeSubdomains="false">192.168.0.0</domain>
+        <domain includeSubdomains="false">10.0.0.0</domain>
+        <domain includeSubdomains="false">172.16.0.0</domain>
+        <!-- mDNS local domains -->
+        <domain includeSubdomains="true">local</domain>
+        <domain includeSubdomains="true">localhost</domain>
+    </domain-config>
+    <!-- Default policy: HTTPS only for internet traffic -->
+    <base-config cleartextTrafficPermitted="false" />
+</network-security-config>
