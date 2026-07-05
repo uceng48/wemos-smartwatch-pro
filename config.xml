@@ -1,10 +1,11 @@
 <?xml version='1.0' encoding='utf-8'?>
-<widget id="com.wemos.alarm" version="1.0.0" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
-    <name>Wemos Alarm</name>
-    <description>Aplikasi monitoring Wemos dengan alarm lokal.</description>
-    <author email="dev@wemos.com" href="http://wemos.com">
-        Wemos Team
-    </author>
+<widget id="com.uceng48.wemospro" version="4.2.0" 
+        xmlns="http://www.w3.org/ns/widgets" 
+        xmlns:cdv="http://cordova.apache.org/ns/1.0"
+        xmlns:android="http://schemas.android.com/apk/res/android">
+<name>Wemos Pro</name>
+    <description>Wemos D1 Smartwatch Pro — Alarm, Sensor, Kontrol Pin, OLED, Snooze, Theme, Export/Import</description>
+    <author email="uceng@gmail.com" href="https://uceng48.github.io/wemos">uceng48</author>
     
     <!-- Konten utama aplikasi -->
     <content src="index.html" />
