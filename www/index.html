@@ -1,11 +1,8 @@
-
-
 <!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval' data: gap:; connect-src *; style-src 'unsafe-inline'; script-src 'unsafe-inline' 'unsafe-eval';"> 
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -13,12 +10,15 @@
     <script src="cordova.js"></script>
     <title>Wemos D1 · Smartwatch Pro</title>
     <style>
-        /* ===== S T Y L E  (tetap seperti asli) ===== */
+        /* ============================================================
+           RESET & ROOT — Neo-Glass Design
+           ============================================================ */
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
+
         :root {
             --bg-primary: #0d0b1a;
             --bg-secondary: rgba(20, 18, 40, 0.85);
@@ -28,11 +28,13 @@
             --text-primary: #f0edff;
             --text-secondary: #b8b0d6;
             --text-dim: #6a6090;
+
             --gradient-1: linear-gradient(135deg, #7c3aed, #4f46e5);
             --gradient-2: linear-gradient(135deg, #ec4899, #8b5cf6);
             --gradient-3: linear-gradient(135deg, #06b6d4, #3b82f6);
             --gradient-4: linear-gradient(135deg, #f59e0b, #ef4444);
             --gradient-5: linear-gradient(135deg, #10b981, #34d399);
+
             --accent-purple: #8b5cf6;
             --accent-pink: #ec4899;
             --accent-cyan: #06b6d4;
@@ -40,14 +42,17 @@
             --accent-green: #34d399;
             --accent-red: #f87171;
             --accent-orange: #fbbf24;
+
             --radius-lg: 24px;
             --radius-md: 16px;
             --radius-sm: 10px;
             --radius-full: 9999px;
+
             --font: 'Inter', -apple-system, system-ui, 'Segoe UI', sans-serif;
             --transition: 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
             --blur: blur(24px);
         }
+
         html,
         body {
             height: 100%;
@@ -58,6 +63,7 @@
             -webkit-tap-highlight-color: transparent;
             overflow: hidden;
         }
+
         ::-webkit-scrollbar {
             width: 4px;
         }
@@ -68,6 +74,10 @@
             background: var(--accent-purple);
             border-radius: 4px;
         }
+
+        /* ============================================================
+           APP SHELL
+           ============================================================ */
         #app {
             display: flex;
             flex-direction: column;
@@ -89,6 +99,10 @@
                 box-shadow: 0 40px 80px rgba(0, 0, 0, 0.7);
             }
         }
+
+        /* ============================================================
+           HEADER — Glossy
+           ============================================================ */
         .app-header {
             display: flex;
             align-items: center;
@@ -111,6 +125,7 @@
             height: 1px;
             background: linear-gradient(90deg, transparent, rgba(139, 92, 246, 0.3), transparent);
         }
+
         .app-header .brand {
             display: flex;
             align-items: center;
@@ -152,6 +167,7 @@
             opacity: 0.5;
             -webkit-text-fill-color: var(--text-secondary);
         }
+
         .header-actions {
             display: flex;
             align-items: center;
@@ -179,6 +195,7 @@
         .header-actions .icon-btn:active {
             transform: scale(0.92);
         }
+
         .status-badge {
             display: flex;
             align-items: center;
@@ -226,12 +243,20 @@
                 transform: scale(0.7);
             }
         }
+
+        /* ============================================================
+           MAIN CONTENT
+           ============================================================ */
         .main-content {
             flex: 1;
             overflow-y: auto;
             padding: 14px 16px 80px;
             scroll-behavior: smooth;
         }
+
+        /* ============================================================
+           TABS — Pill Style
+           ============================================================ */
         .tab-nav {
             display: flex;
             background: rgba(13, 11, 26, 0.85);
@@ -295,6 +320,10 @@
             border-radius: 50%;
             border: 2px solid var(--bg-primary);
         }
+
+        /* ============================================================
+           PANELS
+           ============================================================ */
         .panel {
             display: none;
             animation: fadeUp 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -312,6 +341,10 @@
                 transform: translateY(0) scale(1);
             }
         }
+
+        /* ============================================================
+           CARDS — Glass
+           ============================================================ */
         .card {
             background: var(--glass-bg);
             backdrop-filter: var(--blur);
@@ -327,6 +360,7 @@
             border-color: rgba(139, 92, 246, 0.15);
             box-shadow: var(--glass-shadow), 0 0 40px rgba(139, 92, 246, 0.03);
         }
+
         .card .card-title {
             font-size: 0.6rem;
             text-transform: uppercase;
@@ -338,6 +372,40 @@
             gap: 10px;
             font-weight: 600;
         }
+        .card .card-title .badge-pill {
+            font-size: 0.45rem;
+            padding: 2px 12px;
+            border-radius: var(--radius-full);
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            color: var(--text-secondary);
+            letter-spacing: 0.3px;
+            font-weight: 500;
+        }
+        .card .card-title .badge-pill.active {
+            background: var(--accent-green);
+            color: #000;
+            border-color: var(--accent-green);
+        }
+        .card .card-title .badge-pill.danger {
+            background: var(--accent-red);
+            color: #000;
+            border-color: var(--accent-red);
+        }
+        .card .card-title .badge-pill.warn {
+            background: var(--accent-orange);
+            color: #000;
+            border-color: var(--accent-orange);
+        }
+        .card .card-title .badge-pill.info {
+            background: var(--accent-cyan);
+            color: #000;
+            border-color: var(--accent-cyan);
+        }
+
+        /* ============================================================
+           STATS GRID — Glossy Tiles
+           ============================================================ */
         .stats-grid {
             display: grid;
             grid-template-columns: 1fr 1fr 1fr 1fr;
@@ -415,6 +483,10 @@
                 font-size: 1.15rem;
             }
         }
+
+        /* ============================================================
+           OLED DISPLAY
+           ============================================================ */
         .oled-wrapper {
             position: relative;
             width: 100%;
@@ -448,6 +520,7 @@
             background-size: 4px 4px;
             border-radius: var(--radius-md);
         }
+
         .oled-status-row {
             display: flex;
             justify-content: space-between;
@@ -488,6 +561,10 @@
             box-shadow: 0 0 20px rgba(248, 113, 113, 0.6);
             animation: pulse-dot 0.6s infinite;
         }
+
+        /* ============================================================
+           BUTTON GRID — Premium
+           ============================================================ */
         .btn-grid {
             display: grid;
             grid-template-columns: 1fr 1fr 1fr 1fr;
@@ -543,6 +620,24 @@
             transform: none !important;
             filter: grayscale(0.6);
         }
+        .btn .ripple {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.15);
+            transform: scale(0);
+            animation: rippleAnim 0.6s ease-out;
+            pointer-events: none;
+        }
+        @keyframes rippleAnim {
+            to {
+                transform: scale(4);
+                opacity: 0;
+            }
+        }
+
+        /* ============================================================
+           PIN STATUS — Glass Grid
+           ============================================================ */
         .pin-grid {
             display: grid;
             grid-template-columns: 1fr 1fr 1fr;
@@ -584,6 +679,9 @@
             color: var(--accent-orange);
             animation: pulse-text 0.4s infinite;
         }
+        .pin-item .pin-value.pwm {
+            color: var(--accent-purple);
+        }
         .pin-item.highlight {
             border-color: rgba(139, 92, 246, 0.2);
             box-shadow: 0 0 30px rgba(139, 92, 246, 0.03);
@@ -616,6 +714,9 @@
             background: var(--gradient-4);
             animation: pulse-bar 0.6s infinite;
         }
+        .pin-item .pin-bar .fill.pwm {
+            background: var(--gradient-2);
+        }
         @keyframes pulse-text {
             0%,
             100% {
@@ -634,6 +735,10 @@
                 opacity: 0.2;
             }
         }
+
+        /* ============================================================
+           CHART
+           ============================================================ */
         .chart-container {
             width: 100%;
             height: 70px;
@@ -645,6 +750,10 @@
             border-radius: var(--radius-sm);
             background: rgba(255, 255, 255, 0.02);
         }
+
+        /* ============================================================
+           LOG — Terminal Style
+           ============================================================ */
         .log-container {
             background: rgba(0, 0, 0, 0.4);
             border-radius: var(--radius-md);
@@ -694,6 +803,10 @@
         .log-container .log-entry .msg.info {
             color: var(--accent-cyan);
         }
+
+        /* ============================================================
+           SETTINGS — Clean
+           ============================================================ */
         .setting-row {
             display: flex;
             justify-content: space-between;
@@ -742,6 +855,7 @@
             background: #0d0b1a;
             color: var(--text-primary);
         }
+
         .setting-row .toggle-wrap {
             display: flex;
             align-items: center;
@@ -785,6 +899,10 @@
             min-width: 30px;
             text-align: right;
         }
+
+        /* ============================================================
+           ALARM TOAST
+           ============================================================ */
         .alarm-toast {
             position: fixed;
             top: 0;
@@ -844,6 +962,7 @@
         .alarm-toast .snooze-btn:active {
             transform: scale(0.92);
         }
+
         .alarm-flash {
             position: fixed;
             inset: 0;
@@ -863,6 +982,10 @@
                 background: rgba(239, 68, 68, 0.12);
             }
         }
+
+        /* ============================================================
+           SHORTCUTS OVERLAY
+           ============================================================ */
         .shortcuts-overlay {
             position: fixed;
             inset: 0;
@@ -936,6 +1059,10 @@
         .shortcuts-overlay .shortcuts-box .close-shortcuts:active {
             transform: scale(0.94);
         }
+
+        /* ============================================================
+           UTILITY
+           ============================================================ */
         .flex-between {
             display: flex;
             justify-content: space-between;
@@ -962,6 +1089,7 @@
             color: var(--text-secondary);
             font-size: 0.6rem;
         }
+
         .btn-ghost {
             background: transparent;
             border: 1px solid var(--glass-border);
@@ -987,6 +1115,7 @@
             border-color: var(--accent-red);
             color: var(--accent-red);
         }
+
         .badge-pill {
             font-size: 0.45rem;
             padding: 2px 12px;
@@ -1017,6 +1146,12 @@
             color: #000;
             border-color: var(--accent-cyan);
         }
+        .badge-pill.purple {
+            background: var(--accent-purple);
+            color: #fff;
+            border-color: var(--accent-purple);
+        }
+
         .action-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -1027,6 +1162,10 @@
             font-size: 0.55rem;
             border-radius: var(--radius-sm);
         }
+
+        /* ============================================================
+           RESPONSIVE
+           ============================================================ */
         @media (max-width: 400px) {
             .btn-grid {
                 gap: 6px;
@@ -1065,6 +1204,7 @@
                 grid-template-columns: 1fr 1fr;
             }
         }
+
         @media (min-width: 481px) {
             #app {
                 border-left: 1px solid var(--glass-border);
@@ -1074,6 +1214,10 @@
                 height: calc(100vh - 24px);
             }
         }
+
+        /* ============================================================
+           SCROLLBAR LOG
+           ============================================================ */
         .log-container::-webkit-scrollbar {
             width: 3px;
         }
@@ -1084,6 +1228,10 @@
             background: var(--accent-purple);
             border-radius: 4px;
         }
+
+        /* ============================================================
+           WIFI CONFIG CARD
+           ============================================================ */
         .wifi-status-text {
             font-size: 0.6rem;
             font-weight: 500;
@@ -1101,6 +1249,7 @@
         .wifi-status-text.idle {
             color: var(--text-dim);
         }
+
         .btn-save-wifi {
             background: var(--gradient-3);
             width: 100%;
@@ -1159,7 +1308,6 @@
                 <h1>Wemos <span>Pro</span></h1>
             </div>
             <div class="header-actions">
-                <button class="icon-btn" id="refreshBtn" title="Refresh">🔄</button>
                 <button class="icon-btn" id="themeToggle" title="Toggle Theme">🌓</button>
                 <button class="icon-btn" id="shortcutsToggle" title="Shortcuts">⌨️</button>
                 <div class="status-badge" id="statusBadge">
@@ -1439,7 +1587,7 @@
 
     <script>
         /* ================================================================
-           WEMOS D1 SMARTWATCH PRO — v4.0 — FIXED BACKGROUND ALARM & REFRESH
+           WEMOS D1 SMARTWATCH PRO — v4.0 (Neo-Glass UI) — FIXED BACKGROUND
            ================================================================ */
 
         // ===== DOM REFS =====
@@ -1494,15 +1642,14 @@
         let startTime = Date.now();
         let logCount = 0;
         let logEntries = [];
+        let lastPoll = 0;
+        let pollIntervalId = null;
         let isPolling = true;
         let audioCtx = null;
         let alarmInterval = null;
         let vibrateInterval = null;
         let isScreenOn = true;
         let lastBtnMs = Date.now();
-
-        // --- Alarm notification interval (background) ---
-        let alarmNotifInterval = null;
 
         const M_TIME = 0,
             M_MAIN = 1,
@@ -1536,9 +1683,8 @@
 
         let lastWifiStatus = false;
         let firstPoll = true;
-        let offlineStartTime = 0; // untuk deteksi offline berkepanjangan
 
-        // ===== POLLING INTERVAL =====
+        // ===== POLLING INTERVAL (terpisah dari render loop) =====
         let pollInterval = null;
 
         function startPolling() {
@@ -1546,18 +1692,14 @@
                 clearInterval(pollInterval);
                 pollInterval = null;
             }
-            let interval = POLL_MS;
-            if (cordovaReady && cordova.plugins && cordova.plugins.backgroundMode && cordova.plugins.backgroundMode.isActive()) {
-                interval = Math.max(POLL_MS, 1000);
-            }
-            pollInterval = setInterval(function() {
+            pollInterval = setInterval(() => {
                 if (isPolling) {
                     pollStatus();
                     updateUptime();
                     updateSnoozeUI();
                 }
-            }, interval);
-            log('Polling started: ' + interval + 'ms', 'dim');
+            }, POLL_MS);
+            log('Polling started with interval ' + POLL_MS + 'ms', 'dim');
         }
 
         function stopPolling() {
@@ -1678,6 +1820,7 @@
             document.getElementById('inpTargetIP').value = targetIP;
             document.getElementById('inpPollInt').value = POLL_MS;
             document.getElementById('inpScrTout').value = TOUT_MS;
+            // Update statistik
             document.getElementById('statTriggers').textContent = sensorTriggerCount;
         }
 
@@ -1708,50 +1851,28 @@
 
         // ===== NOTIFICATION =====
         function sendNativeNotification(title, body) {
-            // PERBAIKAN: Ubah judul notifikasi persisten background mode ketika ada alarm agar terlihat langsung
-            if (cordovaReady && cordova.plugins && cordova.plugins.backgroundMode) {
-                cordova.plugins.backgroundMode.configure({
-                    title: '🚨 ' + title,
-                    text: body,
-                    color: 'f87171'
-                });
-            }
-
             if (cordovaReady && cordova.plugins && cordova.plugins.notification && cordova.plugins.notification.local) {
-                // Hapus notifikasi lama agar tidak menumpuk
-                cordova.plugins.notification.local.cancel(1, function() {
-                    cordova.plugins.notification.local.schedule({
-                        id: 1,
-                        title: title,
-                        text: body,
-                        androidChannelId: 'wemos_alarm_channel',
-                        androidChannelEnableVibration: true,
-                        androidOngoing: true,
-                        badgeNumber: 1,
-                        sound: 'default', // suara default sistem
-                        trigger: { in: 1, unit: 'second' }
-                    });
+                cordova.plugins.notification.local.schedule({
+                    id: 1,
+                    title: title,
+                    text: body,
+                    foreground: true,
+                    wakeup: true,
+                    sound: 'default',
+                    vibrate: true,
+                    badge: 1,
+                    data: { alarm: true, timestamp: Date.now() }
                 });
                 return;
             }
             if (alarmNotifGranted && 'Notification' in window) {
-                try {
-                    new Notification(title, { body: body, tag: 'wemos-alarm', requireInteraction: true });
-                } catch (e) {}
+                try { new Notification(title, { body, tag: 'wemos-alarm', requireInteraction: true }); } catch (e) {}
             }
         }
 
         function requestNotif() {
             if (cordovaReady && cordova.plugins && cordova.plugins.notification && cordova.plugins.notification.local) {
-                cordova.plugins.notification.local.hasPermission(function(granted) {
-                    if (!granted) {
-                        cordova.plugins.notification.local.requestPermission(function(g) {
-                            alarmNotifGranted = g;
-                        });
-                    } else {
-                        alarmNotifGranted = true;
-                    }
-                });
+                cordova.plugins.notification.local.requestPermission(g => { alarmNotifGranted = g; });
                 return;
             }
             if (!('Notification' in window)) { alarmNotifGranted = true; return; }
@@ -1764,18 +1885,22 @@
             if (audioCtx.state === 'suspended') audioCtx.resume();
         }
 
-        // ===== ALARM SOUND: NADA TINGGI BERULANG =====
         function startContinuousAlarm() {
             if (!soundEnabled) return;
             ensureAudio();
             stopContinuousAlarm();
 
-            function playBeep() {
+            function playSirenCycle() {
                 if (!audioCtx || !soundEnabled || audioCtx.state === 'closed') return;
                 if (audioCtx.state === 'suspended') {
                     audioCtx.resume().catch(e => {
+                        console.warn("Audio context gagal resume:", e);
                         soundEnabled = false;
-                        updateSoundToggle();
+                        const btn = document.getElementById('btnToggleSound');
+                        if (btn) {
+                            btn.textContent = '🔇';
+                            btn.classList.add('muted');
+                        }
                         return;
                     });
                 }
@@ -1785,17 +1910,18 @@
                 const gain = audioCtx.createGain();
                 osc.connect(gain);
                 gain.connect(audioCtx.destination);
-                osc.type = 'square';
-                osc.frequency.setValueAtTime(2000, now);
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(600, now);
+                osc.frequency.linearRampToValueAtTime(1200, now + 0.5);
+                osc.frequency.linearRampToValueAtTime(600, now + 1.0);
                 gain.gain.setValueAtTime(0, now);
-                gain.gain.linearRampToValueAtTime(0.6, now + 0.02);
-                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.18);
+                gain.gain.linearRampToValueAtTime(0.5, now + 0.1);
+                gain.gain.linearRampToValueAtTime(0, now + 1.0);
                 osc.start(now);
-                osc.stop(now + 0.2);
+                osc.stop(now + 1.0);
             }
 
-            alarmInterval = setInterval(playBeep, 400);
-            playBeep();
+            alarmInterval = setInterval(playSirenCycle, 1200);
         }
 
         function stopContinuousAlarm() {
@@ -1806,17 +1932,17 @@
         function startContinuousVibrate() {
             if (!vibrateEnabled) return;
             stopContinuousVibrate();
-            const pattern = [200, 200, 200, 200, 200, 200];
+            const pattern = [800, 200, 800, 200, 800, 200];
             if (cordovaReady && navigator.vibrate) {
                 navigator.vibrate(pattern);
                 vibrateInterval = setInterval(() => {
                     if (htmlAlarmActive && !htmlAlarmAcked && vibrateEnabled) navigator.vibrate(pattern);
-                }, 1200);
+                }, 2600);
             } else if ('vibrate' in navigator) {
                 navigator.vibrate(pattern);
                 vibrateInterval = setInterval(() => {
                     if (htmlAlarmActive && !htmlAlarmAcked && vibrateEnabled) navigator.vibrate(pattern);
-                }, 1200);
+                }, 2600);
             }
         }
 
@@ -1824,23 +1950,6 @@
             if (vibrateInterval) { clearInterval(vibrateInterval);
                 vibrateInterval = null; }
             if ('vibrate' in navigator) navigator.vibrate(0);
-        }
-
-        // ===== ALARM NOTIFICATION INTERVAL (BACKGROUND) =====
-        function startAlarmNotifInterval() {
-            stopAlarmNotifInterval();
-            alarmNotifInterval = setInterval(function() {
-                if (htmlAlarmActive && !htmlAlarmAcked && !snoozeActive) {
-                    sendNativeNotification('🚨 Wemos Alarm!', 'Sensor atau D4 trigger!');
-                }
-            }, 3000); // setiap 3 detik
-        }
-
-        function stopAlarmNotifInterval() {
-            if (alarmNotifInterval) {
-                clearInterval(alarmNotifInterval);
-                alarmNotifInterval = null;
-            }
         }
 
         // ===== WAKE LOCK =====
@@ -1864,23 +1973,11 @@
             screenOn();
             lastBtnMs = Date.now();
             wakeUpScreen();
-
-            if (cordovaReady && cordova.plugins && cordova.plugins.backgroundMode) {
-                cordova.plugins.backgroundMode.wakeUp();
-                cordova.plugins.backgroundMode.unlock();
-            }
-
             if (soundEnabled) startContinuousAlarm();
             if (vibrateEnabled) startContinuousVibrate();
-
-            // Kirim notifikasi awal
-            sendNativeNotification('🚨 Wemos Alarm!', 'Sensor atau D4 trigger!');
-            // Mulai interval notifikasi
-            startAlarmNotifInterval();
-
             alarmToast.classList.add('show');
             alarmFlash.classList.add('active');
-
+            sendNativeNotification('Wemos Alarm!', 'Sensor atau D4 trigger!');
             saveAppState();
             updateAlarmUI();
             updateSnoozeUI();
@@ -1890,20 +1987,12 @@
             log('Alarm cleared', 'ok');
             stopContinuousAlarm();
             stopContinuousVibrate();
-            stopAlarmNotifInterval();
             releaseWakeLock();
             alarmToast.classList.remove('show');
             alarmFlash.classList.remove('active');
-
-            // PERBAIKAN: Kembalikan teks notifikasi persisten background mode ke mode normal
-            if (cordovaReady && cordova.plugins && cordova.plugins.backgroundMode) {
-                cordova.plugins.backgroundMode.configure({
-                    title: 'Wemos Alarm Aktif',
-                    text: 'Monitoring sensor Wemos...',
-                    color: '0d0b1a'
-                });
+            if (cordovaReady && cordova.plugins && cordova.plugins.notification && cordova.plugins.notification.local) {
+                cordova.plugins.notification.local.cancel(1);
             }
-
             saveAppState();
             updateAlarmUI();
             updateSnoozeUI();
@@ -1920,12 +2009,17 @@
                 }
                 stopContinuousAlarm();
                 stopContinuousVibrate();
-                stopAlarmNotifInterval();
+                const btn = document.getElementById('btnToggleSound');
+                if (btn) {
+                    soundEnabled = true;
+                    btn.textContent = '🔊';
+                    btn.classList.remove('muted');
+                }
                 log('Alarm RESET oleh user', 'ok');
                 try {
                     sendCommand('/resetAlarm');
                     if (d4AlarmActive) sendCommand('/toggle?id=4');
-                } catch (e) {
+                } catch(e) {
                     console.warn("Gagal kirim command reset:", e);
                 }
                 onAlarmCleared();
@@ -1952,25 +2046,15 @@
         }
 
         // ===== HTTP =====
-        async function httpGet(endpoint, fireAndForget, retries) {
+        async function httpGet(endpoint, fireAndForget) {
             fireAndForget = fireAndForget || false;
-            retries = retries || 0;
             const url = targetIP + endpoint;
-            const isBg = cordovaReady && cordova.plugins && cordova.plugins.backgroundMode && cordova.plugins.backgroundMode.isActive();
-            const timeout = fireAndForget ? 3000 : (isBg ? 10000 : 5000);
-
+            const timeout = fireAndForget ? 2000 : 4000;
             try {
                 const ctrl = new AbortController();
-                const to = setTimeout(function() { ctrl.abort(); }, timeout);
-                const r = await fetch(url, {
-                    method: 'GET',
-                    signal: ctrl.signal,
-                    mode: 'cors',
-                    cache: 'no-store',
-                    headers: { 'Accept': 'application/json' }
-                });
+                const to = setTimeout(() => ctrl.abort(), timeout);
+                const r = await fetch(url, { method: 'GET', signal: ctrl.signal, mode: 'cors', cache: 'no-store' });
                 clearTimeout(to);
-
                 if (r.ok) {
                     const text = await r.text();
                     try { return { ok: true, status: r.status, payload: JSON.parse(text) }; } catch (e) { return { ok: true,
@@ -1978,11 +2062,15 @@
                 }
                 return { ok: false, status: r.status, error: 'HTTP ' + r.status };
             } catch (e) {
-                if (!fireAndForget && retries < 1) {
-                    await new Promise(function(r) { setTimeout(r, 800); });
-                    return httpGet(endpoint, false, retries + 1);
+                try {
+                    const ctrl2 = new AbortController();
+                    const to2 = setTimeout(() => ctrl2.abort(), timeout);
+                    await fetch(url, { method: 'GET', signal: ctrl2.signal, mode: 'no-cors', cache: 'no-store' });
+                    clearTimeout(to2);
+                    return { ok: true, status: 0, payload: null, opaque: true };
+                } catch (e2) {
+                    return { ok: false, error: (e2.message || 'Network Error') };
                 }
-                return { ok: false, error: (e.message || 'Network Error') };
             }
         }
 
@@ -1999,50 +2087,14 @@
         }
 
         // ===== POLLING =====
-        let offlineGraceCount = 0;
-        const OFFLINE_GRACE_MAX = 3;
-
         async function pollStatus() {
             if (!isPolling) return;
-
             const res = await httpGet('/status');
-
             if (!res.ok) {
-                offlineGraceCount++;
-                log('Poll fail #' + offlineGraceCount + ': ' + (res.error || 'unknown'), 'err');
-
-                if (offlineGraceCount < OFFLINE_GRACE_MAX) {
-                    const health = await httpGet('/');
-                    if (health.ok) {
-                        offlineGraceCount = 0;
-                        updateWifi(true);
-                        return;
-                    }
-                }
-
-                if (offlineGraceCount >= OFFLINE_GRACE_MAX) {
-                    updateWifi(false);
-                    // Jika offline lebih dari 10 detik, coba reconnect dengan fetch '/'
-                    if (offlineStartTime === 0) offlineStartTime = Date.now();
-                    if (Date.now() - offlineStartTime > 10000) {
-                        log('Offline too long, trying reconnect...', 'dim');
-                        offlineStartTime = 0;
-                        // Coba fetch root untuk memicu koneksi
-                        try {
-                            await fetch(targetIP + '/', { mode: 'cors', cache: 'no-store' });
-                        } catch (e) {}
-                    }
-                } else {
-                    offlineStartTime = 0;
-                }
+                const health = await httpGet('/');
+                if (health.ok) { updateWifi(true); return; }
+                updateWifi(false);
                 return;
-            }
-
-            // Reset grace
-            if (offlineGraceCount > 0) {
-                log('Poll recovered', 'ok');
-                offlineGraceCount = 0;
-                offlineStartTime = 0;
             }
             updateWifi(true);
 
@@ -2157,13 +2209,9 @@
         function updateWifi(connected) {
             if (connected !== lastWifiStatus) {
                 lastWifiStatus = connected;
-                if (!connected) {
-                    log('WiFi Disconnected', 'err');
-                } else {
-                    log('WiFi Connected', 'ok');
-                    screenOn();
-                    lastBtnMs = Date.now();
-                }
+                log(connected ? 'WiFi Connected' : 'WiFi Disconnected', connected ? 'ok' : 'err');
+                screenOn();
+                lastBtnMs = Date.now();
             }
             const dot = document.getElementById('statusDot');
             const txt = document.getElementById('statusText');
@@ -2256,6 +2304,12 @@
                 document.getElementById('oledStatus').textContent = 'ON'; }
         }
 
+        function screenOff() {
+            if (isScreenOn) { canvas.classList.add('off');
+                isScreenOn = false;
+                document.getElementById('oledStatus').textContent = 'OFF'; }
+        }
+
         // ===== RENDER OLED =====
         function drawBell(x, y, sz) {
             ctx.strokeStyle = '#fff';
@@ -2269,12 +2323,6 @@
             ctx.beginPath();
             ctx.arc(x, y + sz * 0.45, sz * 0.15, 0, Math.PI * 2);
             ctx.stroke();
-        }
-
-        function screenOff() {
-            if (isScreenOn) { canvas.classList.add('off');
-                isScreenOn = false;
-                document.getElementById('oledStatus').textContent = 'OFF'; }
         }
 
         function dTxt(x, y, s, sz, align) {
@@ -2590,6 +2638,7 @@
         document.getElementById('inpPollInt').addEventListener('change', function(e) {
             POLL_MS = parseInt(e.target.value) || 500;
             saveAppState();
+            // Restart polling dengan interval baru
             if (pollInterval) {
                 stopPolling();
                 startPolling();
@@ -2615,6 +2664,7 @@
                 POLL_MS = parseInt(document.getElementById('inpPollInt').value) || 500;
                 log('Power saving DISABLED', 'dim');
             }
+            // Restart polling
             if (pollInterval) {
                 stopPolling();
                 startPolling();
@@ -2690,12 +2740,6 @@
         });
         document.getElementById('shortcutsOverlay').addEventListener('click', function(e) {
             if (e.target === this) this.classList.remove('show');
-        });
-
-        // ===== REFRESH BUTTON =====
-        document.getElementById('refreshBtn').addEventListener('click', function() {
-            log('🔄 Refresh manual', 'info');
-            location.reload();
         });
 
         // ===== EXPORT / CLEAR / IMPORT =====
@@ -2784,6 +2828,7 @@
                         updateVibrateToggle(); }
                     if (settings.theme) { applyTheme(settings.theme); }
                     saveAppState();
+                    // Restart polling
                     if (pollInterval) {
                         stopPolling();
                         startPolling();
@@ -2835,6 +2880,7 @@
                 }
             }
 
+            // Screen timeout
             if (isScreenOn && (now - lastBtnMs > TOUT_MS)) {
                 screenOff();
                 mode = M_TIME;
@@ -2912,65 +2958,44 @@
             cordovaReady = true;
             log('Cordova ready - Native features available', 'ok');
 
-            if (window.StatusBar) {
-                StatusBar.overlaysWebView(false);
-                StatusBar.styleBlackTranslucent();
-                StatusBar.backgroundColorByHexString('#0d0b1a');
-            }
-
+            // Background mode
             if (cordova.plugins && cordova.plugins.backgroundMode) {
+                cordovaBgMode = true;
                 cordova.plugins.backgroundMode.enable();
                 cordova.plugins.backgroundMode.overrideBackButton();
-
-                // PERBAIKAN: Jangan gunakan 'silent: true'. Android 14+ secara agresif menghentikan service latar belakang yang disembunyikan.
                 cordova.plugins.backgroundMode.setDefaults({
                     title: 'Wemos Alarm Aktif',
                     text: 'Monitoring sensor Wemos...',
                     icon: 'icon',
-                    color: '0d0b1a',
+                    color: 'F39C12',
                     resume: true,
                     hidden: false,
                     bigText: true,
-                    silent: false // Wajib false agar notifikasi persisten terus berjalan & mendapat prioritas tinggi
+                    silent: false
                 });
-
                 cordova.plugins.backgroundMode.on('activate', function() {
-                    log('Background mode ACTIVE', 'dim');
-                    
-                    // PERBAIKAN: Hentikan optimasi hemat daya WebView Android agar JS (fetch/setInterval) tetap berjalan saat aplikasi diminimalkan
                     cordova.plugins.backgroundMode.disableWebViewOptimizations();
-                    
-                    // PERBAIKAN: Minta pengecualian hemat baterai Android (Doze Mode) agar jaringan WiFi latar belakang stabil
-                    cordova.plugins.backgroundMode.disableBatteryOptimizations();
-                    
-                    if (!pollInterval) startPolling();
+                    // Pastikan polling tetap berjalan
+                    if (!pollInterval) {
+                        startPolling();
+                    }
                 });
-
-                cordova.plugins.backgroundMode.on('deactivate', function() {
-                    log('Background mode DEACTIVATED', 'dim');
-                });
+                log('Background mode enabled', 'ok');
             }
 
-            if (cordova.plugins && cordova.plugins.notification && cordova.plugins.notification.local) {
-                cordova.plugins.notification.local.createChannel({
-                    androidChannelId: 'wemos_alarm_channel',
-                    androidChannelName: 'Wemos Alarm',
-                    androidChannelImportance: 'IMPORTANCE_HIGH',
-                    androidChannelEnableVibration: true
-                });
-            }
-
+            // Request notification permission
             requestNotif();
+
+            // Load state
             loadAppState();
 
-            screenOn();
-            lastBtnMs = Date.now();
-
+            // Jika ada alarm aktif yang belum di-ack, trigger ulang
             if (htmlAlarmActive && !htmlAlarmAcked && !snoozeActive) {
                 onAlarmTriggered();
             }
 
-            if (!pollInterval) startPolling();
+            // Mulai polling dan render loop
+            startPolling();
             if (!loopId) mainLoop();
 
             log('Aplikasi siap dengan background mode! 🚀', 'ok');
@@ -2979,28 +3004,23 @@
         // ===== PAUSE / RESUME =====
         document.addEventListener('pause', function() {
             saveAppState();
-            log('App paused, background polling continues', 'dim');
+            log('App paused, state saved', 'dim');
         }, false);
 
         document.addEventListener('resume', function() {
-            log('App resumed', 'ok');
-            offlineGraceCount = 0;
-            lastWifiStatus = true;
+            loadAppState();
             screenOn();
             lastBtnMs = Date.now();
-
-            if (!pollInterval) {
-                startPolling();
-            }
-
-            setTimeout(function() {
-                pollStatus();
-            }, 500);
-
+            // Jika ada alarm aktif, trigger ulang
             if (htmlAlarmActive && !htmlAlarmAcked && !snoozeActive) {
                 wakeUpScreen();
                 onAlarmTriggered();
             }
+            // Pastikan polling berjalan
+            if (!pollInterval) {
+                startPolling();
+            }
+            log('App resumed, state restored', 'ok');
         }, false);
 
         // ===== BOOT =====
@@ -3008,15 +3028,14 @@
         log('Pin: D0(16), D6(12), D8(15) | Sensor: D5, Trigger: D4', 'dim');
         log('Fitur: Snooze, Theme, Export/Import, Shortcuts, Background Polling', 'info');
 
-        // Web mode fallback
-        if (!window.cordova) {
+        // Load state dan mulai polling jika tidak di Cordova (web)
+        if (!cordovaReady) {
             loadAppState();
-            screenOn();
-            lastBtnMs = Date.now();
+            // Jika ada alarm aktif, trigger
             if (htmlAlarmActive && !htmlAlarmAcked && !snoozeActive) {
                 onAlarmTriggered();
             }
-            if (!pollInterval) startPolling();
+            startPolling();
             if (!loopId) mainLoop();
             log('Running in web mode (no Cordova)', 'dim');
         }
