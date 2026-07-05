@@ -45,7 +45,6 @@
             --font: 'Inter', -apple-system, system-ui, 'Segoe UI', sans-serif;
             --transition: 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
             --blur: blur(24px);
-            /* Safe area fallback */
             --safe-top: env(safe-area-inset-top, 0px);
             --safe-bottom: env(safe-area-inset-bottom, 0px);
         }
@@ -86,7 +85,6 @@
             position: relative;
             overflow: hidden;
             box-shadow: 0 0 120px rgba(124, 58, 237, 0.06);
-            /* Safe area padding */
             padding-top: var(--safe-top);
             padding-bottom: var(--safe-bottom);
         }
@@ -116,7 +114,6 @@
             z-index: 20;
             position: relative;
             min-height: 56px;
-            /* Tambahan padding atas untuk status bar */
             padding-top: calc(8px + var(--safe-top));
         }
         .app-header::after {
@@ -238,7 +235,6 @@
             padding: 12px 14px 8px;
             scroll-behavior: smooth;
             -webkit-overflow-scrolling: touch;
-            /* Ruang untuk tab nav */
             padding-bottom: calc(70px + var(--safe-bottom));
         }
 
@@ -786,7 +782,6 @@
             gap: 10px;
             flex-wrap: wrap;
             box-shadow: 0 8px 40px rgba(239,68,68,0.3);
-            /* Safe area */
             padding-top: calc(14px + var(--safe-top));
         }
         .alarm-toast.show { transform: translateY(0); }
@@ -1334,7 +1329,7 @@
 
     <script>
         /* ================================================================
-           WEMOS D1 SMARTWATCH PRO — v4.1 — FIXED LAYOUT APK
+           WEMOS D1 SMARTWATCH PRO — v4.2 — FIXED POLLING + RECONNECT
            ================================================================ */
 
         // ===== DOM REFS =====
@@ -1416,6 +1411,8 @@
         let lastWifiStatus = false;
         let firstPoll = true;
         let offlineStartTime = 0;
+        let offlineGraceCount = 0;
+        const OFFLINE_GRACE_MAX = 2; // lebih agresif
 
         // ===== POLLING INTERVAL =====
         let pollInterval = null;
@@ -1424,7 +1421,7 @@
             if (pollInterval) { clearInterval(pollInterval); pollInterval = null; }
             let interval = POLL_MS;
             if (cordovaReady && cordova.plugins && cordova.plugins.backgroundMode && cordova.plugins.backgroundMode.isActive()) {
-                interval = Math.max(POLL_MS, 1000);
+                interval = Math.min(Math.max(interval, 1000), 2000);
             }
             pollInterval = setInterval(function() {
                 if (isPolling) {
@@ -1791,11 +1788,11 @@
             retries = retries || 0;
             const url = targetIP + endpoint;
             const isBg = cordovaReady && cordova.plugins && cordova.plugins.backgroundMode && cordova.plugins.backgroundMode.isActive();
-            const timeout = fireAndForget ? 3000 : (isBg ? 10000 : 5000);
+            const timeout = fireAndForget ? 3000 : (isBg ? 15000 : 5000);
 
             try {
                 const ctrl = new AbortController();
-                const to = setTimeout(function() { ctrl.abort(); }, timeout);
+                const to = setTimeout(() => ctrl.abort(), timeout);
                 const r = await fetch(url, {
                     method: 'GET',
                     signal: ctrl.signal,
@@ -1804,19 +1801,18 @@
                     headers: { 'Accept': 'application/json' }
                 });
                 clearTimeout(to);
-
                 if (r.ok) {
                     const text = await r.text();
-                    try { return { ok: true, status: r.status, payload: JSON.parse(text) }; } catch (e) { return { ok: true,
-                            status: r.status, payload: null }; }
+                    try { return { ok: true, status: r.status, payload: JSON.parse(text) }; } 
+                    catch (e) { return { ok: true, status: r.status, payload: null }; }
                 }
                 return { ok: false, status: r.status, error: 'HTTP ' + r.status };
             } catch (e) {
-                if (!fireAndForget && retries < 1) {
-                    await new Promise(function(r) { setTimeout(r, 800); });
+                if (!fireAndForget && retries < 3) {
+                    await new Promise(r => setTimeout(r, 1000 * (retries + 1)));
                     return httpGet(endpoint, false, retries + 1);
                 }
-                return { ok: false, error: (e.message || 'Network Error') };
+                return { ok: false, error: e.message || 'Network Error' };
             }
         }
 
@@ -1833,50 +1829,38 @@
         }
 
         // ===== POLLING =====
-        let offlineGraceCount = 0;
-        const OFFLINE_GRACE_MAX = 3;
-
         async function pollStatus() {
             if (!isPolling) return;
-
             const res = await httpGet('/status');
 
             if (!res.ok) {
                 offlineGraceCount++;
                 log('Poll fail #' + offlineGraceCount + ': ' + (res.error || 'unknown'), 'err');
 
-                if (offlineGraceCount < OFFLINE_GRACE_MAX) {
-                    const health = await httpGet('/');
-                    if (health.ok) {
-                        offlineGraceCount = 0;
-                        updateWifi(true);
-                        return;
-                    }
-                }
-
                 if (offlineGraceCount >= OFFLINE_GRACE_MAX) {
                     updateWifi(false);
                     if (offlineStartTime === 0) offlineStartTime = Date.now();
-                    if (Date.now() - offlineStartTime > 10000) {
-                        log('Offline too long, trying reconnect...', 'dim');
-                        offlineStartTime = 0;
-                        try {
-                            await fetch(targetIP + '/', { mode: 'cors', cache: 'no-store' });
-                        } catch (e) {}
+                    if (Date.now() - offlineStartTime > 3000) {
+                        offlineStartTime = Date.now();
+                        const health = await httpGet('/');
+                        if (health.ok) {
+                            offlineGraceCount = 0;
+                            updateWifi(true);
+                            log('Reconnect successful', 'ok');
+                        } else {
+                            log('Reconnect attempt failed', 'err');
+                        }
                     }
-                } else {
-                    offlineStartTime = 0;
                 }
                 return;
             }
 
-            if (offlineGraceCount > 0) {
-                log('Poll recovered', 'ok');
-                offlineGraceCount = 0;
-                offlineStartTime = 0;
-            }
+            // Berhasil
+            offlineGraceCount = 0;
+            offlineStartTime = 0;
             updateWifi(true);
 
+            // Proses payload
             if (res.payload) {
                 id0State = !!res.payload['0'];
                 id6State = !!res.payload['6'];
@@ -1884,8 +1868,7 @@
                 d5SensorState = !!res.payload['5'];
                 d4AlarmActive = !!res.payload['4'];
                 alarmActive = !!(res.payload['alarm'] === 1 || res.payload['alarm'] === '1' || res.payload['alarm'] === true);
-                sensorEnabled = !!(res.payload['sensorEnabled'] === 1 || res.payload['sensorEnabled'] === '1' || res.payload[
-                    'sensorEnabled'] === true);
+                sensorEnabled = !!(res.payload['sensorEnabled'] === 1 || res.payload['sensorEnabled'] === '1' || res.payload['sensorEnabled'] === true);
                 clientCount = parseInt(res.payload['clients']) || 0;
                 let sensorEvent = parseInt(res.payload['sensorEvent']) || 0;
 
@@ -1906,11 +1889,9 @@
                 document.getElementById('oledLedAlarm').className = 'led ' + (anyAlarm ? 'alarm' : 'off');
 
                 document.getElementById('sensorD5Status').textContent = d5SensorState ? '🔴 TRIGGERED' : '🟢 HIGH';
-                document.getElementById('sensorD5Status').style.color = d5SensorState ? 'var(--accent-red)' :
-                    'var(--accent-green)';
+                document.getElementById('sensorD5Status').style.color = d5SensorState ? 'var(--accent-red)' : 'var(--accent-green)';
                 document.getElementById('sensorD4Status').textContent = d4AlarmActive ? '🔴 TRIGGERED' : '✅ NORMAL';
-                document.getElementById('sensorD4Status').style.color = d4AlarmActive ? 'var(--accent-red)' :
-                    'var(--text-secondary)';
+                document.getElementById('sensorD4Status').style.color = d4AlarmActive ? 'var(--accent-red)' : 'var(--text-secondary)';
 
                 if (firstPoll) {
                     lastSensorEvent = sensorEvent;
@@ -1952,8 +1933,7 @@
                 lastHtmlAlarmState = shouldAlarm;
 
                 if (Math.random() < 0.08) {
-                    log('Status OK | D0:' + (id0State ? 'ON' : 'OFF') + ' D6:' + (id6State ? 'ON' : 'OFF') + ' D8:' + (id8State ?
-                        'ON' : 'OFF') + ' CLI:' + clientCount + ' EVT#' + sensorEvent, 'dim');
+                    log('Status OK | D0:' + (id0State ? 'ON' : 'OFF') + ' D6:' + (id6State ? 'ON' : 'OFF') + ' D8:' + (id8State ? 'ON' : 'OFF') + ' CLI:' + clientCount + ' EVT#' + sensorEvent, 'dim');
                 }
             } else if (res.opaque) {
                 updateWifi(true);
@@ -1985,9 +1965,9 @@
             if (connected !== lastWifiStatus) {
                 lastWifiStatus = connected;
                 if (!connected) {
-                    log('WiFi Disconnected', 'err');
+                    log('WiFi Disconnected (Wemos tidak merespon)', 'err');
                 } else {
-                    log('WiFi Connected', 'ok');
+                    log('WiFi Connected (Wemos merespon)', 'ok');
                     screenOn();
                     lastBtnMs = Date.now();
                 }
@@ -2526,7 +2506,7 @@
                 soundEnabled,
                 vibrateEnabled,
                 theme,
-                version: 'v4.1'
+                version: 'v4.2'
             };
             const blob = new Blob([JSON.stringify(settings, null, 2)], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
@@ -2700,7 +2680,6 @@
                 StatusBar.overlaysWebView(false);
                 StatusBar.styleBlackTranslucent();
                 StatusBar.backgroundColorByHexString('#0d0b1a');
-                // Untuk Android, pastikan status bar tidak menimpa konten
                 if (window.StatusBar._ready) {
                     StatusBar.hide();
                     StatusBar.show();
@@ -2793,8 +2772,21 @@
             }
         }, false);
 
+        // ===== DETEKSI PERUBAHAN JARINGAN (opsional) =====
+        if (navigator.connection) {
+            navigator.connection.addEventListener('change', function(e) {
+                const type = e.target.type;
+                log('Jaringan berubah: ' + type, 'info');
+                if (type === 'wifi' || type === 'ethernet') {
+                    offlineGraceCount = 0;
+                    offlineStartTime = 0;
+                    setTimeout(pollStatus, 1000);
+                }
+            });
+        }
+
         // ===== BOOT =====
-        log('=== Wemos D1 Smartwatch Pro v4.1 (Fixed Layout) ===', 'ok');
+        log('=== Wemos D1 Smartwatch Pro v4.2 (Fixed Polling) ===', 'ok');
         log('Pin: D0(16), D6(12), D8(15) | Sensor: D5, Trigger: D4', 'dim');
         log('Fitur: Snooze, Theme, Export/Import, Shortcuts, Background Polling', 'info');
 
@@ -2819,7 +2811,6 @@
 
         // ===== PERBAIKAN TAMBAHAN: RESIZE =====
         window.addEventListener('resize', function() {
-            // Pastikan tab nav tetap di bawah
             const app = document.getElementById('app');
             const tabNav = document.getElementById('tabNav');
             if (tabNav) {
@@ -2827,7 +2818,6 @@
             }
         });
 
-        // Set max-width tab nav saat init
         setTimeout(function() {
             const app = document.getElementById('app');
             const tabNav = document.getElementById('tabNav');
