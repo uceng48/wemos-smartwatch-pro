@@ -1587,7 +1587,7 @@
 
     <script>
         /* ================================================================
-           WEMOS D1 SMARTWATCH PRO — v4.0 (Neo-Glass UI) — FIXED BACKGROUND
+           WEMOS D1 SMARTWATCH PRO — v4.0 (Neo-Glass UI) — REVISI STABIL
            ================================================================ */
 
         // ===== DOM REFS =====
@@ -1642,8 +1642,7 @@
         let startTime = Date.now();
         let logCount = 0;
         let logEntries = [];
-        let lastPoll = 0;
-        let pollIntervalId = null;
+        let pollInterval = null; // untuk setInterval polling
         let isPolling = true;
         let audioCtx = null;
         let alarmInterval = null;
@@ -1683,10 +1682,10 @@
 
         let lastWifiStatus = false;
         let firstPoll = true;
+        let pollFailCount = 0;
+        const MAX_FAIL = 3;
 
-        // ===== POLLING INTERVAL (terpisah dari render loop) =====
-        let pollInterval = null;
-
+        // ===== POLLING INTERVAL =====
         function startPolling() {
             if (pollInterval) {
                 clearInterval(pollInterval);
@@ -1706,6 +1705,7 @@
             if (pollInterval) {
                 clearInterval(pollInterval);
                 pollInterval = null;
+                log('Polling stopped', 'dim');
             }
         }
 
@@ -1820,7 +1820,6 @@
             document.getElementById('inpTargetIP').value = targetIP;
             document.getElementById('inpPollInt').value = POLL_MS;
             document.getElementById('inpScrTout').value = TOUT_MS;
-            // Update statistik
             document.getElementById('statTriggers').textContent = sensorTriggerCount;
         }
 
@@ -1831,21 +1830,24 @@
 
         // ===== LOGGING =====
         function log(txt, cls) {
-            const entry = { time: new Date().toLocaleTimeString(), text: txt, cls: cls || '' };
+            cls = cls || '';
+            const time = new Date().toLocaleTimeString();
+            const entry = { time, txt, cls };
             logEntries.push(entry);
-            const MAX_LOG_ENTRIES = 100;
-            if (logEntries.length > MAX_LOG_ENTRIES) {
-                logEntries = logEntries.slice(-MAX_LOG_ENTRIES);
-            }
-            const div = document.createElement('div');
-            div.className = 'log-entry ' + (cls || '');
-            div.innerHTML = `<span class="log-time">[${entry.time}]</span> ${txt}`;
-            if (logBox) {
-                logBox.appendChild(div);
-                logBox.scrollTop = logBox.scrollHeight;
-                while (logBox.children.length > MAX_LOG_ENTRIES) {
-                    logBox.removeChild(logBox.firstChild);
-                }
+            if (logEntries.length > 300) logEntries.shift();
+
+            const d = document.createElement('div');
+            d.className = 'log-entry';
+            d.innerHTML = `<span class="time">[${time}]</span><span class="msg ${cls}">${txt}</span>`;
+            logBox.appendChild(d);
+            logBox.scrollTop = logBox.scrollHeight;
+            while (logBox.children.length > 200) logBox.removeChild(logBox.firstChild);
+
+            logCount++;
+            document.getElementById('logCount').textContent = logCount;
+            const badge = document.getElementById('logBadge');
+            if (cls === 'alarm' || cls === 'err') {
+                badge.style.display = 'block';
             }
         }
 
@@ -1896,11 +1898,6 @@
                     audioCtx.resume().catch(e => {
                         console.warn("Audio context gagal resume:", e);
                         soundEnabled = false;
-                        const btn = document.getElementById('btnToggleSound');
-                        if (btn) {
-                            btn.textContent = '🔇';
-                            btn.classList.add('muted');
-                        }
                         return;
                     });
                 }
@@ -2007,19 +2004,11 @@
                     clearInterval(snoozeIntervalId);
                     snoozeIntervalId = null;
                 }
-                stopContinuousAlarm();
-                stopContinuousVibrate();
-                const btn = document.getElementById('btnToggleSound');
-                if (btn) {
-                    soundEnabled = true;
-                    btn.textContent = '🔊';
-                    btn.classList.remove('muted');
-                }
                 log('Alarm RESET oleh user', 'ok');
                 try {
                     sendCommand('/resetAlarm');
                     if (d4AlarmActive) sendCommand('/toggle?id=4');
-                } catch(e) {
+                } catch (e) {
                     console.warn("Gagal kirim command reset:", e);
                 }
                 onAlarmCleared();
@@ -2062,11 +2051,13 @@
                 }
                 return { ok: false, status: r.status, error: 'HTTP ' + r.status };
             } catch (e) {
+                // Fallback no-cors untuk mengatasi CORS
                 try {
                     const ctrl2 = new AbortController();
                     const to2 = setTimeout(() => ctrl2.abort(), timeout);
                     await fetch(url, { method: 'GET', signal: ctrl2.signal, mode: 'no-cors', cache: 'no-store' });
                     clearTimeout(to2);
+                    // no-cors sukses, tapi kita tidak bisa baca response
                     return { ok: true, status: 0, payload: null, opaque: true };
                 } catch (e2) {
                     return { ok: false, error: (e2.message || 'Network Error') };
@@ -2090,22 +2081,47 @@
         async function pollStatus() {
             if (!isPolling) return;
             const res = await httpGet('/status');
+
+            // Jika /status gagal, coba root untuk cek koneksi
             if (!res.ok) {
                 const health = await httpGet('/');
-                if (health.ok) { updateWifi(true); return; }
-                updateWifi(false);
+                if (health.ok) {
+                    updateWifi(true);
+                    pollFailCount = 0;
+                    return;
+                }
+                pollFailCount++;
+                if (pollFailCount >= MAX_FAIL) {
+                    updateWifi(false);
+                    log('Polling gagal ' + pollFailCount + 'x, status OFFLINE', 'err');
+                } else {
+                    log('Polling gagal #' + pollFailCount, 'warn');
+                }
                 return;
             }
-            updateWifi(true);
 
+            // Reset fail counter jika sukses
+            if (pollFailCount > 0) {
+                pollFailCount = 0;
+                log('Polling kembali normal', 'ok');
+            }
+
+            // Cek apakah respons opaque (no-cors)
+            if (res.opaque) {
+                updateWifi(true);
+                log('Respons opaque (CORS) – koneksi OK', 'dim');
+                return;
+            }
+
+            // Jika ada payload, proses
             if (res.payload) {
+                updateWifi(true);
                 id0State = !!res.payload['0'];
                 id6State = !!res.payload['6'];
                 id8State = !!res.payload['8'];
                 d5SensorState = !!res.payload['5'];
                 d4AlarmActive = !!res.payload['4'];
-                alarmActive = !!(res.payload['alarm'] === 1 || res.payload['alarm'] === '1' || res.payload['alarm'] ===
-                true);
+                alarmActive = !!(res.payload['alarm'] === 1 || res.payload['alarm'] === '1' || res.payload['alarm'] === true);
                 sensorEnabled = !!(res.payload['sensorEnabled'] === 1 || res.payload['sensorEnabled'] === '1' || res
                     .payload['sensorEnabled'] === true);
                 clientCount = parseInt(res.payload['clients']) || 0;
@@ -2177,7 +2193,8 @@
                     log('Status OK | D0:' + (id0State ? 'ON' : 'OFF') + ' D6:' + (id6State ? 'ON' : 'OFF') + ' D8:' + (id8State ?
                         'ON' : 'OFF') + ' CLI:' + clientCount + ' EVT#' + sensorEvent, 'dim');
                 }
-            } else if (res.opaque) {
+            } else {
+                // Payload null tapi ok -> anggap connected
                 updateWifi(true);
             }
         }
