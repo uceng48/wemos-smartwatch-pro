@@ -3,50 +3,71 @@
         xmlns="http://www.w3.org/ns/widgets" 
         xmlns:cdv="http://cordova.apache.org/ns/1.0"
         xmlns:android="http://schemas.android.com/apk/res/android">
-<name>Wemos Pro</name>
+    
+    <name>Wemos Pro</name>
     <description>Wemos D1 Smartwatch Pro — Alarm, Sensor, Kontrol Pin, OLED, Snooze, Theme, Export/Import</description>
     <author email="uceng@gmail.com" href="https://uceng48.github.io/wemos">uceng48</author>
     
-    <!-- Konten utama aplikasi -->
     <content src="index.html" />
     
-    <!-- Akses ke semua jaringan (untuk WebSocket) -->
     <access origin="*" />
-    <allow-navigation href="*" />
     <allow-intent href="http://*/*" />
     <allow-intent href="https://*/*" />
-
-    <!-- Preferensi Platform Android -->
+    <allow-navigation href="*" />
+    
+    <preference name="AndroidXEnabled" value="true" />
+    
     <platform name="android">
-        <!-- Versi SDK -->
-        <preference name="android-minSdkVersion" value="26" />
+        <preference name="android-minSdkVersion" value="24" />
         <preference name="android-targetSdkVersion" value="34" />
+        <preference name="AndroidForegroundServiceType" value="dataSync" />
         
-        <!-- Menjaga aplikasi tetap berjalan saat di-background -->
-        <preference name="KeepRunning" value="true" />
+            <!-- Aktifkan cleartext traffic dan arahkan ke network security config -->
+    <edit-config file="app/src/main/AndroidManifest.xml" mode="merge" target="/manifest/application">
+        <application android:usesCleartextTraffic="true"
+                     android:networkSecurityConfig="@xml/network_security_config" />
+    </edit-config>
+        <edit-config file="app/src/main/AndroidManifest.xml" mode="merge" target="/manifest/application">
+            <application android:usesCleartextTraffic="true" />
+        </edit-config>
+        <preference name="AndroidInsecureFileModeEnabled" value="true" />
         
-        <!-- Izin (Permissions) -->
-        <config-file target="AndroidManifest.xml" parent="/manifest">
-            <uses-permission android:name="android.permission.INTERNET" />
-            <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+        <config-file parent="/manifest" target="AndroidManifest.xml">
+            <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+            <uses-permission android:name="android.permission.VIBRATE" />
             <uses-permission android:name="android.permission.WAKE_LOCK" />
             <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
             <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
-            <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
-            <uses-permission android:name="android.permission.VIBRATE" />
-            <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+            <uses-permission android:name="android.permission.INTERNET" />
+            <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+            <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+            <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+            <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
         </config-file>
+        
+      <config-file parent="/manifest/application" target="AndroidManifest.xml">
+    <service 
+        android:name="de.appplant.cordova.plugin.background.BackgroundService" 
+        android:foregroundServiceType="dataSync"
+        android:exported="false" />
+    <meta-data android:name="android.supports_rtl" android:value="true" />
+</config-file>
 
-        <!-- Konfigurasi Service Background Mode -->
-        <config-file target="AndroidManifest.xml" parent="/manifest/application">
-            <!-- Perbaikan nama class service menjadi 'de.appplant.cordova.plugin.background.BackgroundService' -->
-            <service 
-                android:name="de.appplant.cordova.plugin.background.BackgroundService" 
-                android:foregroundServiceType="dataSync"
-                android:exported="false" />
-            
-            <!-- Meta data untuk kompatibilitas -->
-            <meta-data android:name="android.supports_rtl" android:value="true" />
-        </config-file>
+        
+        <allow-intent href="market:*" />
+            <!-- Sertakan file network_security_config.xml -->
+    <resource-file src="res/xml/network_security_config.xml" target="app/src/main/res/xml/network_security_config.xml" />
     </platform>
+    
+    <preference name="Orientation" value="portrait" />
+    <preference name="Fullscreen" value="false" />
+    <preference name="DisallowOverscroll" value="true" />
+    <!-- PERBAIKAN: hapus prefix 0xFF, gunakan #RRGGBB -->
+    <preference name="BackgroundColor" value="#0a1628" />
+    <preference name="KeepRunning" value="true" />
+    <preference name="AndroidLaunchMode" value="singleTop" />
+    <preference name="ShowTitle" value="false" />
+    <preference name="AutoHideSplashScreen" value="true" />
+    <preference name="SplashScreenDelay" value="1000" />
+    
 </widget>
