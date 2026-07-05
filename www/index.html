@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval' data: gap:; connect-src *; style-src 'unsafe-inline'; script-src 'unsafe-inline' 'unsafe-eval';"> 
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -11,7 +11,7 @@
     <script src="cordova.js"></script>
     <title>Wemos D1 · Smartwatch Pro</title>
     <style>
-        /* ===== S T Y L E  (tetap seperti asli) ===== */
+        /* ===== RESET & DASAR ===== */
         * {
             margin: 0;
             padding: 0;
@@ -45,16 +45,23 @@
             --font: 'Inter', -apple-system, system-ui, 'Segoe UI', sans-serif;
             --transition: 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
             --blur: blur(24px);
+            /* Safe area fallback */
+            --safe-top: env(safe-area-inset-top, 0px);
+            --safe-bottom: env(safe-area-inset-bottom, 0px);
         }
-        html,
-        body {
+        html, body {
             height: 100%;
+            width: 100%;
             background: var(--bg-primary);
             color: var(--text-primary);
             font-family: var(--font);
             touch-action: manipulation;
             -webkit-tap-highlight-color: transparent;
             overflow: hidden;
+            position: fixed;
+            inset: 0;
+            margin: 0;
+            padding: 0;
         }
         ::-webkit-scrollbar {
             width: 4px;
@@ -66,16 +73,22 @@
             background: var(--accent-purple);
             border-radius: 4px;
         }
+
+        /* ===== APP CONTAINER ===== */
         #app {
             display: flex;
             flex-direction: column;
-            height: 100vh;
+            height: 100%;
+            width: 100%;
             max-width: 480px;
             margin: 0 auto;
             background: var(--bg-primary);
             position: relative;
             overflow: hidden;
             box-shadow: 0 0 120px rgba(124, 58, 237, 0.06);
+            /* Safe area padding */
+            padding-top: var(--safe-top);
+            padding-bottom: var(--safe-bottom);
         }
         @media (min-width: 481px) {
             #app {
@@ -84,21 +97,27 @@
                 border-radius: 28px;
                 margin-top: 12px;
                 height: calc(100vh - 24px);
+                max-height: calc(100vh - 24px);
                 box-shadow: 0 40px 80px rgba(0, 0, 0, 0.7);
             }
         }
+
+        /* ===== HEADER ===== */
         .app-header {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 14px 20px 10px;
+            padding: 10px 16px 8px;
             background: rgba(13, 11, 26, 0.7);
             backdrop-filter: var(--blur);
             -webkit-backdrop-filter: var(--blur);
             border-bottom: 1px solid var(--glass-border);
             flex-shrink: 0;
-            z-index: 10;
+            z-index: 20;
             position: relative;
+            min-height: 56px;
+            /* Tambahan padding atas untuk status bar */
+            padding-top: calc(8px + var(--safe-top));
         }
         .app-header::after {
             content: '';
@@ -112,38 +131,31 @@
         .app-header .brand {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 10px;
         }
         .app-header .brand .logo {
-            width: 38px;
-            height: 38px;
+            width: 36px;
+            height: 36px;
             background: var(--gradient-2);
             border-radius: var(--radius-sm);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 18px;
+            font-size: 16px;
             font-weight: 800;
             color: #fff;
             box-shadow: 0 8px 24px rgba(124, 58, 237, 0.3);
-            position: relative;
-            overflow: hidden;
-        }
-        .app-header .brand .logo::after {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), transparent);
-            pointer-events: none;
+            flex-shrink: 0;
         }
         .app-header .brand h1 {
-            font-size: 1rem;
+            font-size: 0.9rem;
             font-weight: 700;
             letter-spacing: -0.3px;
             background: var(--gradient-2);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
+            white-space: nowrap;
         }
         .app-header .brand h1 span {
             font-weight: 300;
@@ -153,26 +165,24 @@
         .header-actions {
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 4px;
+            flex-shrink: 0;
         }
         .header-actions .icon-btn {
             background: var(--glass-bg);
             border: 1px solid var(--glass-border);
             color: var(--text-secondary);
-            font-size: 1rem;
+            font-size: 0.85rem;
             cursor: pointer;
-            padding: 6px 10px;
+            padding: 5px 8px;
             border-radius: var(--radius-full);
             transition: var(--transition);
             touch-action: manipulation;
             backdrop-filter: var(--blur);
             -webkit-backdrop-filter: var(--blur);
-        }
-        .header-actions .icon-btn:hover {
-            background: rgba(139, 92, 246, 0.15);
-            border-color: var(--accent-purple);
-            color: var(--text-primary);
-            transform: scale(1.04);
+            min-width: 32px;
+            text-align: center;
+            line-height: 1.2;
         }
         .header-actions .icon-btn:active {
             transform: scale(0.92);
@@ -180,10 +190,10 @@
         .status-badge {
             display: flex;
             align-items: center;
-            gap: 6px;
-            font-size: 0.55rem;
+            gap: 4px;
+            font-size: 0.5rem;
             font-weight: 600;
-            padding: 4px 12px 4px 8px;
+            padding: 3px 10px 3px 6px;
             border-radius: var(--radius-full);
             background: var(--glass-bg);
             border: 1px solid var(--glass-border);
@@ -192,6 +202,7 @@
             -webkit-backdrop-filter: var(--blur);
             text-transform: uppercase;
             letter-spacing: 0.5px;
+            white-space: nowrap;
         }
         .status-badge .dot {
             width: 7px;
@@ -199,6 +210,7 @@
             border-radius: 50%;
             display: inline-block;
             transition: var(--transition);
+            flex-shrink: 0;
         }
         .status-badge .dot.on {
             background: var(--accent-green);
@@ -214,40 +226,46 @@
             animation: pulse-dot 0.7s infinite;
         }
         @keyframes pulse-dot {
-            0%,
-            100% {
-                opacity: 1;
-                transform: scale(1);
-            }
-            50% {
-                opacity: 0.3;
-                transform: scale(0.7);
-            }
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.3; transform: scale(0.7); }
         }
+
+        /* ===== MAIN CONTENT ===== */
         .main-content {
             flex: 1;
             overflow-y: auto;
-            padding: 14px 16px 80px;
+            overflow-x: hidden;
+            padding: 12px 14px 8px;
             scroll-behavior: smooth;
+            -webkit-overflow-scrolling: touch;
+            /* Ruang untuk tab nav */
+            padding-bottom: calc(70px + var(--safe-bottom));
         }
+
+        /* ===== TAB NAV ===== */
         .tab-nav {
             display: flex;
-            background: rgba(13, 11, 26, 0.85);
+            background: rgba(13, 11, 26, 0.92);
             backdrop-filter: var(--blur);
             -webkit-backdrop-filter: var(--blur);
             border-top: 1px solid var(--glass-border);
             flex-shrink: 0;
-            z-index: 10;
-            position: sticky;
+            z-index: 20;
+            position: fixed;
             bottom: 0;
-            padding: 6px 12px 8px;
-            gap: 4px;
+            left: 0;
+            right: 0;
+            max-width: 480px;
+            margin: 0 auto;
+            padding: 4px 8px calc(4px + var(--safe-bottom));
+            gap: 2px;
+            box-shadow: 0 -4px 30px rgba(0, 0, 0, 0.4);
         }
         .tab-nav .tab {
             flex: 1;
             text-align: center;
-            padding: 8px 0 6px;
-            font-size: 0.5rem;
+            padding: 6px 0 4px;
+            font-size: 0.45rem;
             font-weight: 600;
             color: var(--text-dim);
             cursor: pointer;
@@ -261,16 +279,19 @@
             gap: 1px;
             touch-action: manipulation;
             position: relative;
+            min-height: 44px;
+            justify-content: center;
         }
         .tab-nav .tab .icon {
-            font-size: 1.2rem;
+            font-size: 1.1rem;
             line-height: 1;
             transition: var(--transition);
         }
         .tab-nav .tab .label {
-            font-size: 0.5rem;
+            font-size: 0.45rem;
             opacity: 0.7;
             letter-spacing: 0.3px;
+            line-height: 1.2;
         }
         .tab-nav .tab.active {
             color: #fff;
@@ -285,60 +306,55 @@
         }
         .tab-nav .tab .badge-tab {
             position: absolute;
-            top: 4px;
-            right: 18%;
-            width: 8px;
-            height: 8px;
+            top: 3px;
+            right: 15%;
+            width: 7px;
+            height: 7px;
             background: var(--accent-red);
             border-radius: 50%;
             border: 2px solid var(--bg-primary);
         }
+
+        /* ===== PANELS ===== */
         .panel {
             display: none;
-            animation: fadeUp 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+            animation: fadeUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
         .panel.active {
             display: block;
         }
         @keyframes fadeUp {
-            from {
-                opacity: 0;
-                transform: translateY(20px) scale(0.98);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0) scale(1);
-            }
+            from { opacity: 0; transform: translateY(16px) scale(0.98); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
         }
+
+        /* ===== CARDS ===== */
         .card {
             background: var(--glass-bg);
             backdrop-filter: var(--blur);
             -webkit-backdrop-filter: var(--blur);
             border-radius: var(--radius-lg);
-            padding: 18px 20px;
-            margin-bottom: 14px;
+            padding: 16px 18px;
+            margin-bottom: 12px;
             border: 1px solid var(--glass-border);
             box-shadow: var(--glass-shadow);
             transition: var(--transition);
         }
-        .card:hover {
-            border-color: rgba(139, 92, 246, 0.15);
-            box-shadow: var(--glass-shadow), 0 0 40px rgba(139, 92, 246, 0.03);
-        }
         .card .card-title {
-            font-size: 0.6rem;
+            font-size: 0.55rem;
             text-transform: uppercase;
             letter-spacing: 1.5px;
             color: var(--text-secondary);
-            margin-bottom: 14px;
+            margin-bottom: 12px;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
             font-weight: 600;
+            flex-wrap: wrap;
         }
         .card .card-title .badge-pill {
-            font-size: 0.45rem;
-            padding: 2px 12px;
+            font-size: 0.4rem;
+            padding: 2px 10px;
             border-radius: var(--radius-full);
             background: var(--glass-bg);
             border: 1px solid var(--glass-border);
@@ -346,55 +362,28 @@
             letter-spacing: 0.3px;
             font-weight: 500;
         }
-        .card .card-title .badge-pill.active {
-            background: var(--accent-green);
-            color: #000;
-            border-color: var(--accent-green);
-        }
-        .card .card-title .badge-pill.danger {
-            background: var(--accent-red);
-            color: #000;
-            border-color: var(--accent-red);
-        }
-        .card .card-title .badge-pill.warn {
-            background: var(--accent-orange);
-            color: #000;
-            border-color: var(--accent-orange);
-        }
-        .card .card-title .badge-pill.info {
-            background: var(--accent-cyan);
-            color: #000;
-            border-color: var(--accent-cyan);
-        }
+        .card .card-title .badge-pill.active { background: var(--accent-green); color: #000; border-color: var(--accent-green); }
+        .card .card-title .badge-pill.danger { background: var(--accent-red); color: #000; border-color: var(--accent-red); }
+        .card .card-title .badge-pill.warn { background: var(--accent-orange); color: #000; border-color: var(--accent-orange); }
+        .card .card-title .badge-pill.info { background: var(--accent-cyan); color: #000; border-color: var(--accent-cyan); }
+
+        /* ===== STATS ===== */
         .stats-grid {
             display: grid;
             grid-template-columns: 1fr 1fr 1fr 1fr;
-            gap: 10px;
+            gap: 8px;
         }
         .stat-item {
             background: rgba(255, 255, 255, 0.03);
             border-radius: var(--radius-md);
-            padding: 12px 8px;
+            padding: 10px 6px;
             text-align: center;
             border: 1px solid var(--glass-border);
             transition: var(--transition);
-            position: relative;
-            overflow: hidden;
         }
-        .stat-item::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(135deg, rgba(139, 92, 246, 0.05), transparent);
-            pointer-events: none;
-        }
-        .stat-item .stat-icon {
-            font-size: 1.1rem;
-            display: block;
-            margin-bottom: 2px;
-        }
+        .stat-item .stat-icon { font-size: 1rem; display: block; margin-bottom: 1px; }
         .stat-item .stat-value {
-            font-size: 1.4rem;
+            font-size: 1.2rem;
             font-weight: 800;
             line-height: 1.2;
             background: var(--gradient-2);
@@ -403,7 +392,7 @@
             background-clip: text;
         }
         .stat-item .stat-label {
-            font-size: 0.5rem;
+            font-size: 0.45rem;
             color: var(--text-secondary);
             margin-top: 2px;
             text-transform: uppercase;
@@ -435,14 +424,12 @@
             background-clip: text;
         }
         @media (max-width: 420px) {
-            .stats-grid {
-                grid-template-columns: 1fr 1fr;
-                gap: 8px;
-            }
-            .stat-item .stat-value {
-                font-size: 1.15rem;
-            }
+            .stats-grid { grid-template-columns: 1fr 1fr; gap: 6px; }
+            .stat-item .stat-value { font-size: 1rem; }
+            .stat-item { padding: 8px 4px; }
         }
+
+        /* ===== OLED ===== */
         .oled-wrapper {
             position: relative;
             width: 100%;
@@ -451,7 +438,7 @@
             border-radius: var(--radius-md);
             border: 2px solid var(--glass-border);
             overflow: hidden;
-            box-shadow: inset 0 0 80px rgba(0, 0, 0, 0.9), 0 0 40px rgba(139, 92, 246, 0.05);
+            box-shadow: inset 0 0 80px rgba(0,0,0,0.9), 0 0 40px rgba(139,92,246,0.05);
         }
         .oled-wrapper canvas {
             position: absolute;
@@ -462,17 +449,14 @@
             image-rendering: pixelated;
             transition: opacity 0.5s ease;
         }
-        .oled-wrapper canvas.off {
-            opacity: 0.04;
-        }
+        .oled-wrapper canvas.off { opacity: 0.04; }
         .oled-overlay {
             position: absolute;
             inset: 0;
             pointer-events: none;
-            box-shadow: inset 0 0 60px rgba(0, 0, 0, 0.6);
-            background:
-                linear-gradient(rgba(255, 255, 255, 0.012) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(255, 255, 255, 0.012) 1px, transparent 1px);
+            box-shadow: inset 0 0 60px rgba(0,0,0,0.6);
+            background: linear-gradient(rgba(255,255,255,0.012) 1px, transparent 1px),
+                        linear-gradient(90deg, rgba(255,255,255,0.012) 1px, transparent 1px);
             background-size: 4px 4px;
             border-radius: var(--radius-md);
         }
@@ -480,32 +464,36 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-top: 10px;
-            font-size: 0.55rem;
+            margin-top: 8px;
+            font-size: 0.5rem;
             color: var(--text-secondary);
+            flex-wrap: wrap;
+            gap: 4px;
         }
         .oled-status-row .oled-indicators {
             display: flex;
-            gap: 14px;
+            gap: 10px;
             align-items: center;
+            flex-wrap: wrap;
         }
         .oled-status-row .oled-indicators span {
             display: flex;
             align-items: center;
-            gap: 5px;
-            font-size: 0.5rem;
+            gap: 4px;
+            font-size: 0.45rem;
             font-weight: 500;
         }
         .oled-status-row .oled-indicators .led {
-            width: 7px;
-            height: 7px;
+            width: 6px;
+            height: 6px;
             border-radius: 50%;
             display: inline-block;
             transition: var(--transition);
+            flex-shrink: 0;
         }
         .oled-status-row .oled-indicators .led.on {
             background: var(--accent-green);
-            box-shadow: 0 0 14px rgba(52, 211, 153, 0.5);
+            box-shadow: 0 0 14px rgba(52,211,153,0.5);
         }
         .oled-status-row .oled-indicators .led.off {
             background: var(--text-dim);
@@ -513,20 +501,22 @@
         }
         .oled-status-row .oled-indicators .led.alarm {
             background: var(--accent-red);
-            box-shadow: 0 0 20px rgba(248, 113, 113, 0.6);
+            box-shadow: 0 0 20px rgba(248,113,113,0.6);
             animation: pulse-dot 0.6s infinite;
         }
+
+        /* ===== BUTTONS ===== */
         .btn-grid {
             display: grid;
             grid-template-columns: 1fr 1fr 1fr 1fr;
-            gap: 10px;
-            margin-top: 12px;
+            gap: 8px;
+            margin-top: 10px;
         }
         .btn {
-            padding: 14px 4px;
+            padding: 12px 4px;
             border: none;
             border-radius: var(--radius-md);
-            font-size: 0.65rem;
+            font-size: 0.6rem;
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 0.6px;
@@ -538,107 +528,71 @@
             color: #fff;
             position: relative;
             overflow: hidden;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+            min-height: 48px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
         }
-        .btn:active,
-        .btn.pressed {
+        .btn:active, .btn.pressed {
             transform: scale(0.92);
             filter: brightness(0.9);
         }
         .btn .key-hint {
             display: block;
-            font-size: 0.4rem;
+            font-size: 0.35rem;
             opacity: 0.5;
             font-weight: 400;
-            margin-top: 2px;
+            margin-top: 1px;
             letter-spacing: 0.5px;
         }
-        .btn-menu {
-            background: var(--gradient-4);
-        }
-        .btn-up {
-            background: var(--gradient-3);
-        }
-        .btn-down {
-            background: var(--gradient-5);
-        }
-        .btn-sel {
-            background: var(--gradient-1);
-        }
-        .btn:disabled {
-            opacity: 0.3;
-            cursor: not-allowed;
-            transform: none !important;
-            filter: grayscale(0.6);
-        }
-        .btn .ripple {
-            position: absolute;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.15);
-            transform: scale(0);
-            animation: rippleAnim 0.6s ease-out;
-            pointer-events: none;
-        }
-        @keyframes rippleAnim {
-            to {
-                transform: scale(4);
-                opacity: 0;
-            }
-        }
+        .btn-menu { background: var(--gradient-4); }
+        .btn-up { background: var(--gradient-3); }
+        .btn-down { background: var(--gradient-5); }
+        .btn-sel { background: var(--gradient-1); }
+        .btn:disabled { opacity: 0.3; cursor: not-allowed; transform: none !important; filter: grayscale(0.6); }
+
+        /* ===== PIN GRID ===== */
         .pin-grid {
             display: grid;
             grid-template-columns: 1fr 1fr 1fr;
-            gap: 10px;
-            margin-top: 4px;
+            gap: 8px;
+            margin-top: 2px;
         }
         .pin-item {
             background: rgba(255, 255, 255, 0.03);
             border-radius: var(--radius-md);
-            padding: 12px 8px;
+            padding: 10px 6px;
             text-align: center;
             border: 1px solid var(--glass-border);
             transition: var(--transition);
         }
         .pin-item .pin-label {
-            font-size: 0.5rem;
+            font-size: 0.45rem;
             color: var(--text-secondary);
             text-transform: uppercase;
             letter-spacing: 0.6px;
             font-weight: 500;
         }
         .pin-item .pin-value {
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             font-weight: 700;
-            margin-top: 3px;
+            margin-top: 2px;
             transition: var(--transition);
         }
-        .pin-item .pin-value.on {
-            color: var(--accent-green);
-        }
-        .pin-item .pin-value.off {
-            color: var(--text-dim);
-        }
-        .pin-item .pin-value.alarm {
-            color: var(--accent-red);
-            animation: pulse-text 0.6s infinite;
-        }
-        .pin-item .pin-value.trigger {
-            color: var(--accent-orange);
-            animation: pulse-text 0.4s infinite;
-        }
-        .pin-item .pin-value.pwm {
-            color: var(--accent-purple);
-        }
-        .pin-item.highlight {
-            border-color: rgba(139, 92, 246, 0.2);
-            box-shadow: 0 0 30px rgba(139, 92, 246, 0.03);
-        }
+        .pin-item .pin-value.on { color: var(--accent-green); }
+        .pin-item .pin-value.off { color: var(--text-dim); }
+        .pin-item .pin-value.alarm { color: var(--accent-red); animation: pulse-text 0.6s infinite; }
+        .pin-item .pin-value.trigger { color: var(--accent-orange); animation: pulse-text 0.4s infinite; }
+        .pin-item .pin-value.pwm { color: var(--accent-purple); }
+        .pin-item.highlight { border-color: rgba(139,92,246,0.2); box-shadow: 0 0 30px rgba(139,92,246,0.03); }
         .pin-item .pin-bar {
             width: 100%;
             height: 3px;
-            background: rgba(255, 255, 255, 0.06);
+            background: rgba(255,255,255,0.06);
             border-radius: 4px;
-            margin-top: 6px;
+            margin-top: 5px;
             overflow: hidden;
         }
         .pin-item .pin-bar .fill {
@@ -647,158 +601,119 @@
             transition: width 0.4s ease;
             width: 0%;
         }
-        .pin-item .pin-bar .fill.on {
-            background: var(--gradient-5);
+        .pin-item .pin-bar .fill.on { background: var(--gradient-5); }
+        .pin-item .pin-bar .fill.off { background: var(--text-dim); opacity: 0.3; }
+        .pin-item .pin-bar .fill.alarm { background: var(--gradient-4); }
+        .pin-item .pin-bar .fill.trigger { background: var(--gradient-4); animation: pulse-bar 0.6s infinite; }
+        .pin-item .pin-bar .fill.pwm { background: var(--gradient-2); }
+        @media (max-width: 400px) {
+            .pin-grid { grid-template-columns: 1fr 1fr; }
         }
-        .pin-item .pin-bar .fill.off {
-            background: var(--text-dim);
-            opacity: 0.3;
-        }
-        .pin-item .pin-bar .fill.alarm {
-            background: var(--gradient-4);
-        }
-        .pin-item .pin-bar .fill.trigger {
-            background: var(--gradient-4);
-            animation: pulse-bar 0.6s infinite;
-        }
-        .pin-item .pin-bar .fill.pwm {
-            background: var(--gradient-2);
-        }
-        @keyframes pulse-text {
-            0%,
-            100% {
-                opacity: 1;
-            }
-            50% {
-                opacity: 0.2;
-            }
-        }
-        @keyframes pulse-bar {
-            0%,
-            100% {
-                opacity: 1;
-            }
-            50% {
-                opacity: 0.2;
-            }
-        }
+
+        /* ===== CHART ===== */
         .chart-container {
             width: 100%;
-            height: 70px;
-            margin-top: 6px;
+            height: 60px;
+            margin-top: 4px;
         }
         .chart-container canvas {
             width: 100% !important;
             height: 100% !important;
             border-radius: var(--radius-sm);
-            background: rgba(255, 255, 255, 0.02);
+            background: rgba(255,255,255,0.02);
         }
+
+        /* ===== LOG ===== */
         .log-container {
-            background: rgba(0, 0, 0, 0.4);
+            background: rgba(0,0,0,0.4);
             border-radius: var(--radius-md);
-            padding: 12px 14px;
-            height: 190px;
+            padding: 10px 12px;
+            height: 160px;
             overflow-y: auto;
             font-family: 'JetBrains Mono', 'Courier New', monospace;
-            font-size: 0.5rem;
-            line-height: 1.8;
+            font-size: 0.45rem;
+            line-height: 1.7;
             border: 1px solid var(--glass-border);
             color: var(--text-secondary);
         }
         .log-container .log-entry {
             padding: 2px 0;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.02);
+            border-bottom: 1px solid rgba(255,255,255,0.02);
             display: flex;
-            gap: 8px;
+            gap: 6px;
         }
-        .log-container .log-entry .time {
+        .log-container .log-entry .log-time {
             color: var(--text-dim);
-            font-size: 0.45rem;
+            font-size: 0.4rem;
             flex-shrink: 0;
             opacity: 0.6;
         }
-        .log-container .log-entry .msg {
-            color: var(--text-secondary);
-            word-break: break-all;
-        }
-        .log-container .log-entry .msg.err {
-            color: var(--accent-red);
-        }
-        .log-container .log-entry .msg.ok {
-            color: var(--accent-green);
-        }
-        .log-container .log-entry .msg.tx {
-            color: var(--accent-orange);
-        }
-        .log-container .log-entry .msg.alarm {
-            color: var(--accent-red);
-            font-weight: 700;
-            animation: pulse-text 0.6s infinite;
-        }
-        .log-container .log-entry .msg.dim {
-            color: var(--text-dim);
-            opacity: 0.5;
-        }
-        .log-container .log-entry .msg.info {
-            color: var(--accent-cyan);
-        }
+        .log-container .log-entry .msg { color: var(--text-secondary); word-break: break-all; }
+        .log-container .log-entry .msg.err { color: var(--accent-red); }
+        .log-container .log-entry .msg.ok { color: var(--accent-green); }
+        .log-container .log-entry .msg.tx { color: var(--accent-orange); }
+        .log-container .log-entry .msg.alarm { color: var(--accent-red); font-weight: 700; animation: pulse-text 0.6s infinite; }
+        .log-container .log-entry .msg.dim { color: var(--text-dim); opacity: 0.5; }
+        .log-container .log-entry .msg.info { color: var(--accent-cyan); }
+
+        /* ===== SETTINGS ===== */
         .setting-row {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 10px 0;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+            gap: 8px;
+            flex-wrap: wrap;
         }
-        .setting-row:last-child {
-            border-bottom: none;
-        }
+        .setting-row:last-child { border-bottom: none; }
         .setting-row label {
-            font-size: 0.65rem;
+            font-size: 0.6rem;
             color: var(--text-secondary);
             font-weight: 500;
+            flex-shrink: 0;
         }
         .setting-row input[type="text"],
         .setting-row input[type="number"],
         .setting-row select {
-            background: rgba(255, 255, 255, 0.04);
+            background: rgba(255,255,255,0.04);
             border: 1px solid var(--glass-border);
             color: var(--text-primary);
-            padding: 6px 14px;
+            padding: 5px 12px;
             border-radius: var(--radius-sm);
-            width: 140px;
-            font-size: 0.65rem;
+            width: 130px;
+            font-size: 0.6rem;
             transition: var(--transition);
             font-family: var(--font);
+            min-height: 34px;
         }
         .setting-row input:focus,
         .setting-row select:focus {
             border-color: var(--accent-purple);
             outline: none;
-            box-shadow: 0 0 30px rgba(139, 92, 246, 0.05);
-            background: rgba(139, 92, 246, 0.05);
+            box-shadow: 0 0 30px rgba(139,92,246,0.05);
+            background: rgba(139,92,246,0.05);
         }
         .setting-row select {
-            width: 140px;
+            width: 130px;
             cursor: pointer;
             appearance: none;
             background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236a6090' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
             background-repeat: no-repeat;
-            background-position: right 12px center;
-            padding-right: 32px;
+            background-position: right 10px center;
+            padding-right: 28px;
         }
-        .setting-row select option {
-            background: #0d0b1a;
-            color: var(--text-primary);
-        }
+        .setting-row select option { background: #0d0b1a; color: var(--text-primary); }
         .setting-row .toggle-wrap {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
+            flex-shrink: 0;
         }
         .toggle-switch {
-            width: 44px;
-            height: 24px;
-            background: rgba(255, 255, 255, 0.06);
+            width: 40px;
+            height: 22px;
+            background: rgba(255,255,255,0.06);
             border-radius: 12px;
             position: relative;
             cursor: pointer;
@@ -807,32 +722,50 @@
             flex-shrink: 0;
         }
         .toggle-switch .thumb {
-            width: 18px;
-            height: 18px;
+            width: 16px;
+            height: 16px;
             background: var(--text-dim);
             border-radius: 50%;
             position: absolute;
             top: 2px;
             left: 2px;
             transition: var(--transition);
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
         }
         .toggle-switch.active {
-            background: rgba(139, 92, 246, 0.3);
+            background: rgba(139,92,246,0.3);
             border-color: var(--accent-purple);
         }
         .toggle-switch.active .thumb {
-            left: 22px;
+            left: 20px;
             background: var(--gradient-2);
-            box-shadow: 0 2px 16px rgba(139, 92, 246, 0.4);
+            box-shadow: 0 2px 16px rgba(139,92,246,0.4);
         }
         .toggle-label {
-            font-size: 0.6rem;
+            font-size: 0.55rem;
             color: var(--text-secondary);
             font-weight: 600;
-            min-width: 30px;
+            min-width: 28px;
             text-align: right;
         }
+
+        /* ===== ACTION GRID ===== */
+        .action-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 6px;
+        }
+        .action-grid .btn {
+            padding: 8px 4px;
+            font-size: 0.5rem;
+            border-radius: var(--radius-sm);
+            min-height: 40px;
+        }
+        @media (max-width: 400px) {
+            .action-grid { grid-template-columns: 1fr 1fr; }
+        }
+
+        /* ===== ALARM TOAST ===== */
         .alarm-toast {
             position: fixed;
             top: 0;
@@ -841,80 +774,66 @@
             background: var(--gradient-4);
             color: #fff;
             text-align: center;
-            padding: 16px 20px;
+            padding: 14px 16px;
             font-weight: 700;
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             z-index: 9999;
             transform: translateY(-100%);
             transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 14px;
+            gap: 10px;
             flex-wrap: wrap;
-            box-shadow: 0 8px 40px rgba(239, 68, 68, 0.3);
+            box-shadow: 0 8px 40px rgba(239,68,68,0.3);
+            /* Safe area */
+            padding-top: calc(14px + var(--safe-top));
         }
-        .alarm-toast.show {
-            transform: translateY(0);
-        }
+        .alarm-toast.show { transform: translateY(0); }
         .alarm-toast .btn-dismiss {
-            background: rgba(255, 255, 255, 0.2);
+            background: rgba(255,255,255,0.2);
             border: none;
             color: #fff;
-            padding: 4px 20px;
+            padding: 4px 16px;
             border-radius: var(--radius-full);
-            font-size: 0.6rem;
+            font-size: 0.55rem;
             font-weight: 700;
             cursor: pointer;
             transition: var(--transition);
             backdrop-filter: blur(4px);
         }
-        .alarm-toast .btn-dismiss:hover {
-            background: rgba(255, 255, 255, 0.3);
-        }
-        .alarm-toast .btn-dismiss:active {
-            transform: scale(0.92);
-        }
+        .alarm-toast .btn-dismiss:active { transform: scale(0.92); }
         .alarm-toast .snooze-btn {
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
             color: #fff;
-            padding: 4px 16px;
+            padding: 4px 14px;
             border-radius: var(--radius-full);
-            font-size: 0.6rem;
+            font-size: 0.55rem;
             cursor: pointer;
             transition: var(--transition);
             backdrop-filter: blur(4px);
         }
-        .alarm-toast .snooze-btn:hover {
-            background: rgba(255, 255, 255, 0.2);
-        }
-        .alarm-toast .snooze-btn:active {
-            transform: scale(0.92);
-        }
+        .alarm-toast .snooze-btn:active { transform: scale(0.92); }
         .alarm-flash {
             position: fixed;
             inset: 0;
-            background: rgba(239, 68, 68, 0);
+            background: rgba(239,68,68,0);
             pointer-events: none;
             z-index: 9998;
             transition: background 0.06s;
         }
-        .alarm-flash.active {
-            animation: flashRed 0.5s infinite alternate;
-        }
+        .alarm-flash.active { animation: flashRed 0.5s infinite alternate; }
         @keyframes flashRed {
-            0% {
-                background: rgba(239, 68, 68, 0);
-            }
-            100% {
-                background: rgba(239, 68, 68, 0.12);
-            }
+            0% { background: rgba(239,68,68,0); }
+            100% { background: rgba(239,68,68,0.12); }
         }
+
+        /* ===== SHORTCUTS OVERLAY ===== */
         .shortcuts-overlay {
             position: fixed;
             inset: 0;
-            background: rgba(0, 0, 0, 0.7);
+            background: rgba(0,0,0,0.7);
             backdrop-filter: blur(16px);
             -webkit-backdrop-filter: blur(16px);
             z-index: 9997;
@@ -923,49 +842,45 @@
             justify-content: center;
             padding: 24px;
         }
-        .shortcuts-overlay.show {
-            display: flex;
-        }
+        .shortcuts-overlay.show { display: flex; }
         .shortcuts-overlay .shortcuts-box {
             background: var(--glass-bg);
             backdrop-filter: var(--blur);
             -webkit-backdrop-filter: var(--blur);
             border: 1px solid var(--glass-border);
             border-radius: var(--radius-lg);
-            padding: 28px 32px;
+            padding: 24px 28px;
             max-width: 340px;
             width: 100%;
             box-shadow: var(--glass-shadow);
         }
         .shortcuts-overlay .shortcuts-box h3 {
-            font-size: 0.9rem;
-            margin-bottom: 14px;
+            font-size: 0.85rem;
+            margin-bottom: 12px;
             color: var(--text-primary);
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
         }
         .shortcuts-overlay .shortcuts-box .shortcut-row {
             display: flex;
             justify-content: space-between;
-            padding: 7px 0;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
-            font-size: 0.7rem;
+            padding: 6px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+            font-size: 0.65rem;
         }
         .shortcuts-overlay .shortcuts-box .shortcut-row .key {
-            background: rgba(255, 255, 255, 0.06);
-            padding: 0 12px;
+            background: rgba(255,255,255,0.06);
+            padding: 0 10px;
             border-radius: 4px;
             font-weight: 700;
             color: var(--accent-cyan);
-            font-size: 0.6rem;
+            font-size: 0.55rem;
             border: 1px solid var(--glass-border);
         }
-        .shortcuts-overlay .shortcuts-box .shortcut-row .action {
-            color: var(--text-secondary);
-        }
+        .shortcuts-overlay .shortcuts-box .shortcut-row .action { color: var(--text-secondary); }
         .shortcuts-overlay .shortcuts-box .close-shortcuts {
-            margin-top: 16px;
+            margin-top: 14px;
             width: 100%;
             padding: 10px;
             border: none;
@@ -973,71 +888,37 @@
             background: var(--gradient-2);
             color: #fff;
             font-weight: 700;
-            font-size: 0.7rem;
+            font-size: 0.65rem;
             cursor: pointer;
             transition: var(--transition);
         }
-        .shortcuts-overlay .shortcuts-box .close-shortcuts:hover {
-            opacity: 0.85;
-            transform: scale(1.02);
-        }
-        .shortcuts-overlay .shortcuts-box .close-shortcuts:active {
-            transform: scale(0.94);
-        }
-        .flex-between {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .flex-center {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .mt-1 {
-            margin-top: 8px;
-        }
-        .mb-1 {
-            margin-bottom: 8px;
-        }
-        .gap-1 {
-            gap: 8px;
-        }
-        .text-center {
-            text-align: center;
-        }
-        .text-muted {
-            color: var(--text-secondary);
-            font-size: 0.6rem;
-        }
+        .shortcuts-overlay .shortcuts-box .close-shortcuts:active { transform: scale(0.94); }
+
+        /* ===== UTILITY ===== */
+        .flex-between { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
+        .flex-center { display: flex; align-items: center; gap: 6px; }
+        .mt-1 { margin-top: 6px; }
+        .mb-1 { margin-bottom: 6px; }
+        .text-center { text-align: center; }
+        .text-muted { color: var(--text-secondary); font-size: 0.55rem; }
         .btn-ghost {
             background: transparent;
             border: 1px solid var(--glass-border);
             color: var(--text-secondary);
-            padding: 6px 16px;
+            padding: 5px 14px;
             border-radius: var(--radius-full);
-            font-size: 0.55rem;
+            font-size: 0.5rem;
             cursor: pointer;
             transition: var(--transition);
             font-weight: 600;
             backdrop-filter: var(--blur);
             -webkit-backdrop-filter: var(--blur);
         }
-        .btn-ghost:hover {
-            border-color: var(--accent-purple);
-            color: var(--text-primary);
-            background: rgba(139, 92, 246, 0.08);
-        }
-        .btn-ghost:active {
-            transform: scale(0.94);
-        }
-        .btn-ghost.danger:hover {
-            border-color: var(--accent-red);
-            color: var(--accent-red);
-        }
+        .btn-ghost:active { transform: scale(0.94); }
+        .btn-ghost.danger:hover { border-color: var(--accent-red); color: var(--accent-red); }
         .badge-pill {
-            font-size: 0.45rem;
-            padding: 2px 12px;
+            font-size: 0.4rem;
+            padding: 2px 10px;
             border-radius: var(--radius-full);
             background: var(--glass-bg);
             border: 1px solid var(--glass-border);
@@ -1045,137 +926,98 @@
             letter-spacing: 0.3px;
             font-weight: 500;
         }
-        .badge-pill.success {
-            background: var(--accent-green);
-            color: #000;
-            border-color: var(--accent-green);
-        }
-        .badge-pill.danger {
-            background: var(--accent-red);
-            color: #000;
-            border-color: var(--accent-red);
-        }
-        .badge-pill.warn {
-            background: var(--accent-orange);
-            color: #000;
-            border-color: var(--accent-orange);
-        }
-        .badge-pill.info {
-            background: var(--accent-cyan);
-            color: #000;
-            border-color: var(--accent-cyan);
-        }
-        .badge-pill.purple {
-            background: var(--accent-purple);
-            color: #fff;
-            border-color: var(--accent-purple);
-        }
-        .action-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 8px;
-        }
-        .action-grid .btn {
-            padding: 10px 4px;
-            font-size: 0.55rem;
-            border-radius: var(--radius-sm);
-        }
-        @media (max-width: 400px) {
-            .btn-grid {
-                gap: 6px;
-            }
-            .btn {
-                font-size: 0.5rem;
-                padding: 10px 2px;
-            }
-            .app-header .brand h1 {
-                font-size: 0.8rem;
-            }
-            .tab-nav .tab {
-                font-size: 0.45rem;
-                padding: 6px 0 4px;
-            }
-            .tab-nav .tab .icon {
-                font-size: 1rem;
-            }
-            .pin-grid {
-                grid-template-columns: 1fr 1fr;
-            }
-            .card {
-                padding: 14px 16px;
-            }
-            .stats-grid {
-                grid-template-columns: 1fr 1fr;
-            }
-            .setting-row input[type="text"],
-            .setting-row input[type="number"],
-            .setting-row select {
-                width: 110px;
-                font-size: 0.55rem;
-                padding: 4px 10px;
-            }
-            .action-grid {
-                grid-template-columns: 1fr 1fr;
-            }
-        }
-        @media (min-width: 481px) {
-            #app {
-                border-left: 1px solid var(--glass-border);
-                border-right: 1px solid var(--glass-border);
-                border-radius: 28px;
-                margin-top: 12px;
-                height: calc(100vh - 24px);
-            }
-        }
-        .log-container::-webkit-scrollbar {
-            width: 3px;
-        }
-        .log-container::-webkit-scrollbar-track {
-            background: transparent;
-        }
-        .log-container::-webkit-scrollbar-thumb {
-            background: var(--accent-purple);
-            border-radius: 4px;
-        }
-        .wifi-status-text {
-            font-size: 0.6rem;
-            font-weight: 500;
-            transition: var(--transition);
-        }
-        .wifi-status-text.connected {
-            color: var(--accent-green);
-        }
-        .wifi-status-text.connecting {
-            color: var(--accent-orange);
-        }
-        .wifi-status-text.disconnected {
-            color: var(--accent-red);
-        }
-        .wifi-status-text.idle {
-            color: var(--text-dim);
-        }
+        .badge-pill.success { background: var(--accent-green); color: #000; border-color: var(--accent-green); }
+        .badge-pill.danger { background: var(--accent-red); color: #000; border-color: var(--accent-red); }
+        .badge-pill.warn { background: var(--accent-orange); color: #000; border-color: var(--accent-orange); }
+        .badge-pill.info { background: var(--accent-cyan); color: #000; border-color: var(--accent-cyan); }
+        .badge-pill.purple { background: var(--accent-purple); color: #fff; border-color: var(--accent-purple); }
+
         .btn-save-wifi {
             background: var(--gradient-3);
             width: 100%;
-            margin-top: 10px;
-            padding: 12px;
+            margin-top: 8px;
+            padding: 10px;
             border-radius: var(--radius-sm);
             border: none;
             color: #fff;
             font-weight: 700;
-            font-size: 0.7rem;
+            font-size: 0.65rem;
             cursor: pointer;
             transition: var(--transition);
             letter-spacing: 0.5px;
             text-transform: uppercase;
         }
-        .btn-save-wifi:hover {
-            opacity: 0.85;
-            transform: scale(1.01);
+        .btn-save-wifi:active { transform: scale(0.94); }
+        .wifi-status-text {
+            font-size: 0.55rem;
+            font-weight: 500;
+            transition: var(--transition);
         }
-        .btn-save-wifi:active {
-            transform: scale(0.94);
+        .wifi-status-text.connected { color: var(--accent-green); }
+        .wifi-status-text.connecting { color: var(--accent-orange); }
+        .wifi-status-text.disconnected { color: var(--accent-red); }
+        .wifi-status-text.idle { color: var(--text-dim); }
+
+        @keyframes pulse-text { 0%,100% { opacity: 1; } 50% { opacity: 0.2; } }
+        @keyframes pulse-bar { 0%,100% { opacity: 1; } 50% { opacity: 0.2; } }
+
+        /* ===== RESPONSIF KECIL ===== */
+        @media (max-width: 400px) {
+            .btn-grid { gap: 4px; }
+            .btn { font-size: 0.45rem; padding: 8px 2px; min-height: 40px; }
+            .app-header .brand h1 { font-size: 0.7rem; }
+            .tab-nav .tab { font-size: 0.4rem; padding: 4px 0; min-height: 38px; }
+            .tab-nav .tab .icon { font-size: 0.9rem; }
+            .card { padding: 12px 14px; }
+            .stats-grid { grid-template-columns: 1fr 1fr; }
+            .setting-row input[type="text"],
+            .setting-row input[type="number"],
+            .setting-row select { width: 100px; font-size: 0.5rem; padding: 4px 8px; }
+            .action-grid { grid-template-columns: 1fr 1fr; }
+            .action-grid .btn { font-size: 0.45rem; min-height: 34px; }
+            .pin-item .pin-value { font-size: 0.6rem; }
         }
+        @media (max-width: 360px) {
+            .header-actions .icon-btn { font-size: 0.7rem; padding: 3px 6px; min-width: 28px; }
+            .status-badge { font-size: 0.4rem; padding: 2px 6px; }
+            .status-badge .dot { width: 5px; height: 5px; }
+            .tab-nav { padding: 2px 4px calc(2px + var(--safe-bottom)); }
+            .tab-nav .tab .icon { font-size: 0.8rem; }
+            .tab-nav .tab .label { font-size: 0.4rem; }
+        }
+
+        /* ===== SCROLLING ===== */
+        .log-container::-webkit-scrollbar { width: 3px; }
+        .log-container::-webkit-scrollbar-track { background: transparent; }
+        .log-container::-webkit-scrollbar-thumb { background: var(--accent-purple); border-radius: 4px; }
+        .main-content::-webkit-scrollbar { width: 3px; }
+        .main-content::-webkit-scrollbar-track { background: transparent; }
+        .main-content::-webkit-scrollbar-thumb { background: var(--accent-purple); border-radius: 4px; }
+
+        /* ===== THEME LIGHT ===== */
+        [data-theme="light"] {
+            --bg-primary: #f0edf5;
+            --bg-secondary: rgba(255,255,255,0.85);
+            --glass-bg: rgba(255,255,255,0.6);
+            --glass-border: rgba(0,0,0,0.08);
+            --text-primary: #1a1625;
+            --text-secondary: #4a4570;
+            --text-dim: #8a85a8;
+            --glass-shadow: 0 20px 60px rgba(0,0,0,0.08);
+        }
+        [data-theme="light"] .app-header { background: rgba(255,255,255,0.8); }
+        [data-theme="light"] .tab-nav { background: rgba(255,255,255,0.92); }
+        [data-theme="light"] .card { background: rgba(255,255,255,0.5); }
+        [data-theme="light"] .stat-item { background: rgba(255,255,255,0.3); }
+        [data-theme="light"] .pin-item { background: rgba(255,255,255,0.3); }
+        [data-theme="light"] .log-container { background: rgba(0,0,0,0.06); }
+        [data-theme="light"] .setting-row input,
+        [data-theme="light"] .setting-row select { background: rgba(0,0,0,0.04); color: #1a1625; }
+        [data-theme="light"] .setting-row select option { background: #f0edf5; }
+        [data-theme="light"] .oled-wrapper { background: #e8e4ee; }
+        [data-theme="light"] .btn { box-shadow: 0 4px 16px rgba(0,0,0,0.1); }
+        [data-theme="light"] .toggle-switch { background: rgba(0,0,0,0.06); }
+        [data-theme="light"] .shortcuts-overlay .shortcuts-box { background: rgba(255,255,255,0.85); }
     </style>
 </head>
 <body>
@@ -1331,12 +1173,12 @@
                 <div class="card">
                     <div class="card-title">⚡ Aksi Cepat</div>
                     <div class="action-grid">
-                        <button class="btn btn-up" id="quickToggleD8" style="border-radius:var(--radius-sm);padding:10px 4px;font-size:0.55rem;">Toggle D8</button>
-                        <button class="btn btn-down" id="quickToggleD0" style="border-radius:var(--radius-sm);padding:10px 4px;font-size:0.55rem;">Toggle D0</button>
-                        <button class="btn btn-sel" id="quickPulseD6" style="border-radius:var(--radius-sm);padding:10px 4px;font-size:0.55rem;">Pulse D6</button>
-                        <button class="btn btn-menu" id="quickResetAlarm" style="border-radius:var(--radius-sm);padding:10px 4px;font-size:0.55rem;">Reset Alarm</button>
-                        <button class="btn" style="background:var(--gradient-2);border-radius:var(--radius-sm);padding:10px 4px;font-size:0.55rem;" id="quickPulseAll">Pulse All</button>
-                        <button class="btn" style="background:var(--gradient-4);border-radius:var(--radius-sm);padding:10px 4px;font-size:0.55rem;" id="quickToggleAlarm">Test Alarm</button>
+                        <button class="btn btn-up" id="quickToggleD8" style="border-radius:var(--radius-sm);padding:8px 4px;font-size:0.5rem;min-height:38px;">Toggle D8</button>
+                        <button class="btn btn-down" id="quickToggleD0" style="border-radius:var(--radius-sm);padding:8px 4px;font-size:0.5rem;min-height:38px;">Toggle D0</button>
+                        <button class="btn btn-sel" id="quickPulseD6" style="border-radius:var(--radius-sm);padding:8px 4px;font-size:0.5rem;min-height:38px;">Pulse D6</button>
+                        <button class="btn btn-menu" id="quickResetAlarm" style="border-radius:var(--radius-sm);padding:8px 4px;font-size:0.5rem;min-height:38px;">Reset Alarm</button>
+                        <button class="btn" style="background:var(--gradient-2);border-radius:var(--radius-sm);padding:8px 4px;font-size:0.5rem;min-height:38px;" id="quickPulseAll">Pulse All</button>
+                        <button class="btn" style="background:var(--gradient-4);border-radius:var(--radius-sm);padding:8px 4px;font-size:0.5rem;min-height:38px;" id="quickToggleAlarm">Test Alarm</button>
                     </div>
                 </div>
 
@@ -1433,7 +1275,7 @@
 
                 <div class="card">
                     <div class="card-title">📋 Data & Ekspor</div>
-                    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                    <div style="display:flex;gap:6px;flex-wrap:wrap;">
                         <button class="btn-ghost" id="exportLogBtn">📥 Export Log</button>
                         <button class="btn-ghost" id="clearLogBtn">🗑️ Clear Log</button>
                         <button class="btn-ghost" id="resetStatsBtn">🔄 Reset Stats</button>
@@ -1445,7 +1287,7 @@
 
                 <div class="card">
                     <div class="card-title">ℹ️ Tentang</div>
-                    <p class="text-muted" style="font-size:0.6rem;line-height:1.8;opacity:0.7;">
+                    <p class="text-muted" style="font-size:0.55rem;line-height:1.7;opacity:0.7;">
                         Wemos D1 Smartwatch Pro v4.0<br>
                         Pin output: D0(16), D6(12), D8(15) • Input: D4(trigger), D5(sensor)<br>
                         Fitur: Snooze, Theme, Export/Import, Shortcuts, PWM visual<br>
@@ -1492,7 +1334,7 @@
 
     <script>
         /* ================================================================
-           WEMOS D1 SMARTWATCH PRO — v4.0 — FIXED BACKGROUND ALARM & REFRESH
+           WEMOS D1 SMARTWATCH PRO — v4.1 — FIXED LAYOUT APK
            ================================================================ */
 
         // ===== DOM REFS =====
@@ -1521,9 +1363,7 @@
         let baseTime = parseInt(localStorage.getItem('sw_time')) || Math.floor(Date.now() / 1000);
         let baseMillis = Date.now();
 
-        let id0State = false,
-            id6State = false,
-            id8State = false;
+        let id0State = false, id6State = false, id8State = false;
         let d5SensorState = false;
         let d4AlarmActive = false;
         let alarmActive = false;
@@ -1554,33 +1394,19 @@
         let isScreenOn = true;
         let lastBtnMs = Date.now();
 
-        // --- Alarm notification interval (background) ---
         let alarmNotifInterval = null;
 
-        const M_TIME = 0,
-            M_MAIN = 1,
-            M_CMD = 2,
-            M_HOUR = 3,
-            M_MIN = 4,
-            M_RESET = 5;
+        const M_TIME = 0, M_MAIN = 1, M_CMD = 2, M_HOUR = 3, M_MIN = 4, M_RESET = 5;
         let mode = M_TIME;
         let menuIdx = 0;
-        let editH = 0,
-            editM = 0,
-            editT = 0;
-        let colonOn = true,
-            lastColonMs = 0;
+        let editH = 0, editM = 0, editT = 0;
+        let colonOn = true, lastColonMs = 0;
         const COLON_MS = 500;
 
-        let commandBlinkCount = 0,
-            lastCommandBlink = 0;
-        const CMD_BLINK_INT = 200,
-            CMD_BLINK_TOT = 4;
+        let commandBlinkCount = 0, lastCommandBlink = 0;
+        const CMD_BLINK_INT = 200, CMD_BLINK_TOT = 4;
 
-        const BTN_MENU = 5,
-            BTN_UP = 9,
-            BTN_DOWN = 3,
-            BTN_SEL = 4;
+        const BTN_MENU = 5, BTN_UP = 9, BTN_DOWN = 3, BTN_SEL = 4;
         const btnState = {};
         [BTN_MENU, BTN_UP, BTN_DOWN, BTN_SEL].forEach(id => {
             btnState[id] = { down: false, t0: 0, longDone: false, proc: false };
@@ -1589,19 +1415,15 @@
 
         let lastWifiStatus = false;
         let firstPoll = true;
-        let offlineStartTime = 0; // untuk deteksi offline berkepanjangan
+        let offlineStartTime = 0;
 
         // ===== POLLING INTERVAL =====
         let pollInterval = null;
 
         function startPolling() {
-            if (pollInterval) {
-                clearInterval(pollInterval);
-                pollInterval = null;
-            }
+            if (pollInterval) { clearInterval(pollInterval); pollInterval = null; }
             let interval = POLL_MS;
-            if (cordovaReady && cordova.plugins && cordova.plugins.backgroundMode && cordova.plugins.backgroundMode
-                .isActive()) {
+            if (cordovaReady && cordova.plugins && cordova.plugins.backgroundMode && cordova.plugins.backgroundMode.isActive()) {
                 interval = Math.max(POLL_MS, 1000);
             }
             pollInterval = setInterval(function() {
@@ -1615,10 +1437,7 @@
         }
 
         function stopPolling() {
-            if (pollInterval) {
-                clearInterval(pollInterval);
-                pollInterval = null;
-            }
+            if (pollInterval) { clearInterval(pollInterval); pollInterval = null; }
         }
 
         // ===== THEME =====
@@ -1694,7 +1513,7 @@
                 localStorage.setItem('sw_ip', targetIP);
                 localStorage.setItem('sw_poll', POLL_MS);
                 localStorage.setItem('sw_tout', TOUT_MS);
-            } catch (e) { /* ignore */ }
+            } catch (e) {}
         }
 
         function loadAppState() {
@@ -1704,8 +1523,7 @@
                     const s = JSON.parse(raw);
                     if (typeof s.mode === 'number') mode = s.mode;
                     if (typeof s.menuIdx === 'number') menuIdx = s.menuIdx;
-                    if (typeof s.baseTime === 'number') { baseTime = s.baseTime;
-                        baseMillis = Date.now(); }
+                    if (typeof s.baseTime === 'number') { baseTime = s.baseTime; baseMillis = Date.now(); }
                     if (typeof s.sensorEnabled === 'boolean') sensorEnabled = s.sensorEnabled;
                     if (typeof s.soundEnabled === 'boolean') soundEnabled = s.soundEnabled;
                     if (typeof s.vibrateEnabled === 'boolean') vibrateEnabled = s.vibrateEnabled;
@@ -1721,14 +1539,14 @@
                     if (Array.isArray(s.chartData)) chartData = s.chartData;
                     if (s.theme) theme = s.theme;
                 }
-            } catch (e) { /* ignore */ }
+            } catch (e) {}
             applyTheme(theme);
             updateSensorToggle();
             updatePowerSaveUI();
             updateSoundToggle();
             updateVibrateToggle();
             document.getElementById('inpSnoozeDur').value = snoozeDuration;
-            document.getElementById('oledMode').textContent = ['TIME', 'MAIN', 'CMD', 'HOUR', 'MIN', 'RESET'][mode] || 'TIME';
+            document.getElementById('oledMode').textContent = ['TIME','MAIN','CMD','HOUR','MIN','RESET'][mode] || 'TIME';
             document.getElementById('inpTargetIP').value = targetIP;
             document.getElementById('inpPollInt').value = POLL_MS;
             document.getElementById('inpScrTout').value = TOUT_MS;
@@ -1737,7 +1555,6 @@
 
         // ===== TIME =====
         function nowSec() { return baseTime + Math.floor((Date.now() - baseMillis) / 1000); }
-
         function saveTime() { localStorage.setItem('sw_time', baseTime); }
 
         // ===== LOGGING =====
@@ -1750,7 +1567,7 @@
             }
             const div = document.createElement('div');
             div.className = 'log-entry ' + (cls || '');
-            div.innerHTML = `<span class="log-time">[${entry.time}]</span> ${txt}`;
+            div.innerHTML = `<span class="log-time">[${entry.time}]</span> <span class="msg ${cls}">${txt}</span>`;
             if (logBox) {
                 logBox.appendChild(div);
                 logBox.scrollTop = logBox.scrollHeight;
@@ -1758,12 +1575,12 @@
                     logBox.removeChild(logBox.firstChild);
                 }
             }
+            document.getElementById('logCount').textContent = logEntries.length;
         }
 
         // ===== NOTIFICATION =====
         function sendNativeNotification(title, body) {
             if (cordovaReady && cordova.plugins && cordova.plugins.notification && cordova.plugins.notification.local) {
-                // Hapus notifikasi lama agar tidak menumpuk
                 cordova.plugins.notification.local.cancel(1, function() {
                     cordova.plugins.notification.local.schedule({
                         id: 1,
@@ -1773,7 +1590,7 @@
                         androidChannelEnableVibration: true,
                         androidOngoing: true,
                         badgeNumber: 1,
-                        sound: 'default', // suara default sistem
+                        sound: 'default',
                         trigger: { in: 1, unit: 'second' }
                     });
                 });
@@ -1809,7 +1626,6 @@
             if (audioCtx.state === 'suspended') audioCtx.resume();
         }
 
-        // ===== ALARM SOUND: NADA TINGGI BERULANG =====
         function startContinuousAlarm() {
             if (!soundEnabled) return;
             ensureAudio();
@@ -1818,11 +1634,7 @@
             function playBeep() {
                 if (!audioCtx || !soundEnabled || audioCtx.state === 'closed') return;
                 if (audioCtx.state === 'suspended') {
-                    audioCtx.resume().catch(e => {
-                        soundEnabled = false;
-                        updateSoundToggle();
-                        return;
-                    });
+                    audioCtx.resume().catch(e => { soundEnabled = false; updateSoundToggle(); return; });
                 }
                 if (audioCtx.state !== 'running') return;
                 const now = audioCtx.currentTime;
@@ -1844,8 +1656,7 @@
         }
 
         function stopContinuousAlarm() {
-            if (alarmInterval) { clearInterval(alarmInterval);
-                alarmInterval = null; }
+            if (alarmInterval) { clearInterval(alarmInterval); alarmInterval = null; }
         }
 
         function startContinuousVibrate() {
@@ -1866,26 +1677,21 @@
         }
 
         function stopContinuousVibrate() {
-            if (vibrateInterval) { clearInterval(vibrateInterval);
-                vibrateInterval = null; }
+            if (vibrateInterval) { clearInterval(vibrateInterval); vibrateInterval = null; }
             if ('vibrate' in navigator) navigator.vibrate(0);
         }
 
-        // ===== ALARM NOTIFICATION INTERVAL (BACKGROUND) =====
         function startAlarmNotifInterval() {
             stopAlarmNotifInterval();
             alarmNotifInterval = setInterval(function() {
                 if (htmlAlarmActive && !htmlAlarmAcked && !snoozeActive) {
                     sendNativeNotification('🚨 Wemos Alarm!', 'Sensor atau D4 trigger!');
                 }
-            }, 3000); // setiap 3 detik
+            }, 3000);
         }
 
         function stopAlarmNotifInterval() {
-            if (alarmNotifInterval) {
-                clearInterval(alarmNotifInterval);
-                alarmNotifInterval = null;
-            }
+            if (alarmNotifInterval) { clearInterval(alarmNotifInterval); alarmNotifInterval = null; }
         }
 
         // ===== WAKE LOCK =====
@@ -1918,9 +1724,7 @@
             if (soundEnabled) startContinuousAlarm();
             if (vibrateEnabled) startContinuousVibrate();
 
-            // Kirim notifikasi awal
             sendNativeNotification('🚨 Wemos Alarm!', 'Sensor atau D4 trigger!');
-            // Mulai interval notifikasi
             startAlarmNotifInterval();
 
             alarmToast.classList.add('show');
@@ -1949,10 +1753,7 @@
                 htmlAlarmActive = false;
                 htmlAlarmAcked = true;
                 snoozeActive = false;
-                if (snoozeIntervalId) {
-                    clearInterval(snoozeIntervalId);
-                    snoozeIntervalId = null;
-                }
+                if (snoozeIntervalId) { clearInterval(snoozeIntervalId); snoozeIntervalId = null; }
                 stopContinuousAlarm();
                 stopContinuousVibrate();
                 stopAlarmNotifInterval();
@@ -1960,9 +1761,7 @@
                 try {
                     sendCommand('/resetAlarm');
                     if (d4AlarmActive) sendCommand('/toggle?id=4');
-                } catch (e) {
-                    console.warn("Gagal kirim command reset:", e);
-                }
+                } catch (e) {}
                 onAlarmCleared();
                 updateSnoozeUI();
             }
@@ -1991,8 +1790,7 @@
             fireAndForget = fireAndForget || false;
             retries = retries || 0;
             const url = targetIP + endpoint;
-            const isBg = cordovaReady && cordova.plugins && cordova.plugins.backgroundMode && cordova.plugins
-                .backgroundMode.isActive();
+            const isBg = cordovaReady && cordova.plugins && cordova.plugins.backgroundMode && cordova.plugins.backgroundMode.isActive();
             const timeout = fireAndForget ? 3000 : (isBg ? 10000 : 5000);
 
             try {
@@ -2058,12 +1856,10 @@
 
                 if (offlineGraceCount >= OFFLINE_GRACE_MAX) {
                     updateWifi(false);
-                    // Jika offline lebih dari 10 detik, coba reconnect dengan fetch '/'
                     if (offlineStartTime === 0) offlineStartTime = Date.now();
                     if (Date.now() - offlineStartTime > 10000) {
                         log('Offline too long, trying reconnect...', 'dim');
                         offlineStartTime = 0;
-                        // Coba fetch root untuk memicu koneksi
                         try {
                             await fetch(targetIP + '/', { mode: 'cors', cache: 'no-store' });
                         } catch (e) {}
@@ -2074,7 +1870,6 @@
                 return;
             }
 
-            // Reset grace
             if (offlineGraceCount > 0) {
                 log('Poll recovered', 'ok');
                 offlineGraceCount = 0;
@@ -2088,10 +1883,9 @@
                 id8State = !!res.payload['8'];
                 d5SensorState = !!res.payload['5'];
                 d4AlarmActive = !!res.payload['4'];
-                alarmActive = !!(res.payload['alarm'] === 1 || res.payload['alarm'] === '1' || res.payload['alarm'] ===
-                true);
-                sensorEnabled = !!(res.payload['sensorEnabled'] === 1 || res.payload['sensorEnabled'] === '1' || res
-                    .payload['sensorEnabled'] === true);
+                alarmActive = !!(res.payload['alarm'] === 1 || res.payload['alarm'] === '1' || res.payload['alarm'] === true);
+                sensorEnabled = !!(res.payload['sensorEnabled'] === 1 || res.payload['sensorEnabled'] === '1' || res.payload[
+                    'sensorEnabled'] === true);
                 clientCount = parseInt(res.payload['clients']) || 0;
                 let sensorEvent = parseInt(res.payload['sensorEvent']) || 0;
 
@@ -2175,18 +1969,15 @@
             if (type === 'alarm') {
                 el.textContent = value ? '🚨 TRIGGER' : 'NORMAL';
                 el.className = 'pin-value ' + (value ? 'alarm' : 'off');
-                if (bar) { bar.className = 'fill ' + (value ? 'alarm' : 'off');
-                    bar.style.width = value ? '100%' : '0%'; }
+                if (bar) { bar.className = 'fill ' + (value ? 'alarm' : 'off'); bar.style.width = value ? '100%' : '0%'; }
             } else if (type === 'trigger') {
                 el.textContent = value ? '🔴 TRIG' : 'HIGH';
                 el.className = 'pin-value ' + (value ? 'trigger' : 'off');
-                if (bar) { bar.className = 'fill ' + (value ? 'trigger' : 'off');
-                    bar.style.width = value ? '100%' : '0%'; }
+                if (bar) { bar.className = 'fill ' + (value ? 'trigger' : 'off'); bar.style.width = value ? '100%' : '0%'; }
             } else {
                 el.textContent = value ? 'ON' : 'OFF';
                 el.className = 'pin-value ' + (value ? 'on' : 'off');
-                if (bar) { bar.className = 'fill ' + (value ? 'on' : 'off');
-                    bar.style.width = value ? '100%' : '0%'; }
+                if (bar) { bar.className = 'fill ' + (value ? 'on' : 'off'); bar.style.width = value ? '100%' : '0%'; }
             }
         }
 
@@ -2287,14 +2078,12 @@
 
         // ===== SCREEN =====
         function screenOn() {
-            if (!isScreenOn) { canvas.classList.remove('off');
-                isScreenOn = true;
+            if (!isScreenOn) { canvas.classList.remove('off'); isScreenOn = true;
                 document.getElementById('oledStatus').textContent = 'ON'; }
         }
 
         function screenOff() {
-            if (isScreenOn) { canvas.classList.add('off');
-                isScreenOn = false;
+            if (isScreenOn) { canvas.classList.add('off'); isScreenOn = false;
                 document.getElementById('oledStatus').textContent = 'OFF'; }
         }
 
@@ -2319,30 +2108,17 @@
             ctx.font = sz + 'px "Courier New", monospace';
             ctx.fillStyle = '#fff';
             ctx.textBaseline = 'top';
-            if (align === 'center') { ctx.textAlign = 'center';
-                ctx.fillText(s, x, y);
-                ctx.textAlign = 'left'; } else if (align === 'right') { ctx.textAlign = 'right';
-                ctx.fillText(s, x, y);
-                ctx.textAlign = 'left'; } else ctx.fillText(s, x, y);
+            if (align === 'center') { ctx.textAlign = 'center'; ctx.fillText(s, x, y); ctx.textAlign = 'left'; } else if (align ===
+                'right') { ctx.textAlign = 'right'; ctx.fillText(s, x, y); ctx.textAlign = 'left'; } else ctx.fillText(s, x, y);
         }
 
-        function dLine(x1, y1, x2, y2) { ctx.strokeStyle = '#fff';
-            ctx.lineWidth = 1;
-            ctx.beginPath();
-            ctx.moveTo(x1, y1);
-            ctx.lineTo(x2, y2);
-            ctx.stroke(); }
+        function dLine(x1, y1, x2, y2) { ctx.strokeStyle = '#fff'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2); ctx.stroke(); }
 
-        function dDisc(cx, cy, r) { ctx.fillStyle = '#fff';
-            ctx.beginPath();
-            ctx.arc(cx, cy, r, 0, Math.PI * 2);
-            ctx.fill(); }
+        function dDisc(cx, cy, r) { ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fill(); }
 
-        function dCirc(cx, cy, r) { ctx.strokeStyle = '#fff';
-            ctx.lineWidth = 1;
-            ctx.beginPath();
-            ctx.arc(cx, cy, r, 0, Math.PI * 2);
-            ctx.stroke(); }
+        function dCirc(cx, cy, r) { ctx.strokeStyle = '#fff'; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI *
+                2); ctx.stroke(); }
 
         function render() {
             if (!isScreenOn) return;
@@ -2352,16 +2128,14 @@
                 M = t.getMinutes();
             const shouldAlarm = htmlAlarmActive && !htmlAlarmAcked && !snoozeActive;
 
-            if (now - lastColonMs >= COLON_MS) { lastColonMs = now;
-                colonOn = !colonOn; }
+            if (now - lastColonMs >= COLON_MS) { lastColonMs = now; colonOn = !colonOn; }
 
             ctx.fillStyle = '#000';
             ctx.fillRect(0, 0, 128, 64);
 
             dTxt(0, 0, lastWifiStatus ? 'WEMOS' : 'NO AP', 7);
             if (commandBlinkCount > 0) {
-                if (now - lastCommandBlink >= CMD_BLINK_INT) { lastCommandBlink = now;
-                    commandBlinkCount--; }
+                if (now - lastCommandBlink >= CMD_BLINK_INT) { lastCommandBlink = now; commandBlinkCount--; }
                 if (commandBlinkCount % 2 === 0) dTxt(35, 0, 'TX', 7);
             }
             if (shouldAlarm) drawBell(48, 6, 6);
@@ -2372,8 +2146,7 @@
             id6State ? dDisc(82, 3, 2) : dCirc(82, 3, 2);
             dTxt(90, 0, 'D8', 6);
             id8State ? dDisc(102, 3, 2) : dCirc(102, 3, 2);
-            if (d4AlarmActive) { ctx.fillStyle = '#f00';
-                ctx.fillRect(110, 1, 4, 4); }
+            if (d4AlarmActive) { ctx.fillStyle = '#f00'; ctx.fillRect(110, 1, 4, 4); }
             dLine(0, 10, 128, 10);
 
             switch (mode) {
@@ -2434,8 +2207,7 @@
             }
 
             if (shouldAlarm) {
-                if (now - lastAlarmBlink >= ALARM_BLINK_MS) { lastAlarmBlink = now;
-                    alarmBlink = !alarmBlink; }
+                if (now - lastAlarmBlink >= ALARM_BLINK_MS) { lastAlarmBlink = now; alarmBlink = !alarmBlink; }
                 if (alarmBlink) {
                     ctx.strokeStyle = '#f00';
                     ctx.lineWidth = 3;
@@ -2490,8 +2262,7 @@
             if (snoozeActive && btn === BTN_SEL) {
                 htmlAlarmAcked = false;
                 snoozeActive = false;
-                if (snoozeIntervalId) { clearInterval(snoozeIntervalId);
-                    snoozeIntervalId = null; }
+                if (snoozeIntervalId) { clearInterval(snoozeIntervalId); snoozeIntervalId = null; }
                 onAlarmTriggered();
                 updateSnoozeUI();
                 return;
@@ -2499,43 +2270,32 @@
 
             switch (mode) {
                 case M_TIME:
-                    if (btn === BTN_MENU) { mode = M_MAIN;
-                        menuIdx = 0;
-                        saveAppState(); } else if (btn === BTN_SEL) sendCommand('/pulse?id=6');
+                    if (btn === BTN_MENU) { mode = M_MAIN; menuIdx = 0; saveAppState(); } else if (btn === BTN_SEL)
+                        sendCommand('/pulse?id=6');
                     break;
                 case M_MAIN:
-                    if (btn === BTN_UP) { menuIdx = (menuIdx + 2) % 3;
-                        saveAppState(); } else if (btn === BTN_DOWN) { menuIdx = (menuIdx + 1) % 3;
-                        saveAppState(); } else if (btn === BTN_SEL) {
-                        if (menuIdx === 0) { const n = new Date(nowSec() * 1000);
-                            editH = n.getHours();
-                            editM = n.getMinutes();
-                            editT = nowSec();
-                            mode = M_HOUR;
-                            saveAppState(); } else if (menuIdx === 1) { mode = M_CMD;
-                            saveAppState(); } else if (menuIdx === 2) { mode = M_RESET;
+                    if (btn === BTN_UP) { menuIdx = (menuIdx + 2) % 3; saveAppState(); } else if (btn === BTN_DOWN) { menuIdx =
+                            (menuIdx + 1) % 3; saveAppState(); } else if (btn === BTN_SEL) {
+                        if (menuIdx === 0) { const n = new Date(nowSec() * 1000); editH = n.getHours(); editM = n
+                                .getMinutes(); editT = nowSec(); mode = M_HOUR; saveAppState(); } else if (menuIdx ===
+                            1) { mode = M_CMD; saveAppState(); } else if (menuIdx === 2) { mode = M_RESET;
                             saveAppState(); }
-                    } else if (btn === BTN_MENU) { mode = M_TIME;
-                        saveAppState(); }
+                    } else if (btn === BTN_MENU) { mode = M_TIME; saveAppState(); }
                     break;
                 case M_CMD:
                     if (btn === BTN_UP) sendCommand('/toggle?id=8');
                     else if (btn === BTN_DOWN) sendCommand('/toggle?id=0');
                     else if (btn === BTN_SEL) sendCommand('/pulse?id=6');
-                    else if (btn === BTN_MENU) { mode = M_MAIN;
-                        saveAppState(); }
+                    else if (btn === BTN_MENU) { mode = M_MAIN; saveAppState(); }
                     break;
                 case M_HOUR:
-                    if (btn === BTN_UP) { editH = (editH + 1) % 24;
-                        saveAppState(); } else if (btn === BTN_DOWN) { editH = (editH + 23) % 24;
-                        saveAppState(); } else if (btn === BTN_SEL) { mode = M_MIN;
-                        saveAppState(); } else if (btn === BTN_MENU) { mode = M_MAIN;
-                        saveAppState(); }
+                    if (btn === BTN_UP) { editH = (editH + 1) % 24; saveAppState(); } else if (btn === BTN_DOWN) { editH = (
+                            editH + 23) % 24; saveAppState(); } else if (btn === BTN_SEL) { mode = M_MIN;
+                        saveAppState(); } else if (btn === BTN_MENU) { mode = M_MAIN; saveAppState(); }
                     break;
                 case M_MIN:
-                    if (btn === BTN_UP) { editM = (editM + 1) % 60;
-                        saveAppState(); } else if (btn === BTN_DOWN) { editM = (editM + 59) % 60;
-                        saveAppState(); } else if (btn === BTN_SEL) {
+                    if (btn === BTN_UP) { editM = (editM + 1) % 60; saveAppState(); } else if (btn === BTN_DOWN) { editM = (
+                            editM + 59) % 60; saveAppState(); } else if (btn === BTN_SEL) {
                         const d = new Date(editT * 1000);
                         d.setHours(editH);
                         d.setMinutes(editM);
@@ -2545,14 +2305,11 @@
                         saveTime();
                         mode = M_TIME;
                         saveAppState();
-                    } else if (btn === BTN_MENU) { mode = M_HOUR;
-                        saveAppState(); }
+                    } else if (btn === BTN_MENU) { mode = M_HOUR; saveAppState(); }
                     break;
                 case M_RESET:
-                    if (btn === BTN_SEL) { resetHtmlAlarm();
-                        mode = M_TIME;
-                        saveAppState(); } else if (btn === BTN_MENU) { mode = M_MAIN;
-                        saveAppState(); }
+                    if (btn === BTN_SEL) { resetHtmlAlarm(); mode = M_TIME; saveAppState(); } else if (btn === BTN_MENU) {
+                        mode = M_MAIN; saveAppState(); }
                     break;
             }
         }
@@ -2568,10 +2325,8 @@
         // ===== BIND BUTTONS =====
         function bindBtn(el, id) {
             if (!el) return;
-            const start = function(e) { e.preventDefault();
-                btnDown(id); };
-            const end = function(e) { e.preventDefault();
-                btnUp(id); };
+            const start = function(e) { e.preventDefault(); btnDown(id); };
+            const end = function(e) { e.preventDefault(); btnUp(id); };
             el.addEventListener('mousedown', start);
             el.addEventListener('mouseup', end);
             el.addEventListener('mouseleave', end);
@@ -2590,13 +2345,11 @@
             const k = e.key.toLowerCase();
             if (k === 't') { toggleTheme(); return; }
             if (k === 'x') { document.getElementById('sensorToggle').click(); return; }
-            if (KEY_MAP[k]) { e.preventDefault();
-                btnDown(KEY_MAP[k]); }
+            if (KEY_MAP[k]) { e.preventDefault(); btnDown(KEY_MAP[k]); }
         });
         window.addEventListener('keyup', function(e) {
             const k = e.key.toLowerCase();
-            if (KEY_MAP[k]) { e.preventDefault();
-                btnUp(KEY_MAP[k]); }
+            if (KEY_MAP[k]) { e.preventDefault(); btnUp(KEY_MAP[k]); }
         });
 
         // ===== QUICK ACTIONS =====
@@ -2632,8 +2385,7 @@
             }
         });
         document.getElementById('inpScrTout').addEventListener('change', function(e) { TOUT_MS = parseInt(e.target.value) ||
-                5000;
-            saveAppState(); });
+                5000; saveAppState(); });
         document.getElementById('inpSnoozeDur').addEventListener('change', function(e) {
             snoozeDuration = parseInt(e.target.value) || 60;
             saveAppState();
@@ -2660,8 +2412,7 @@
         function updatePowerSaveUI() {
             const el = document.getElementById('powerSaveToggle');
             const label = document.getElementById('powerSaveLabel');
-            if (powerSaving) { el.classList.add('active');
-                label.textContent = 'ON'; } else { el.classList.remove('active');
+            if (powerSaving) { el.classList.add('active'); label.textContent = 'ON'; } else { el.classList.remove('active');
                 label.textContent = 'OFF'; }
         }
 
@@ -2676,8 +2427,7 @@
         function updateSensorToggle() {
             const el = document.getElementById('sensorToggle');
             const label = document.getElementById('sensorToggleLabel');
-            if (sensorEnabled) { el.classList.add('active');
-                label.textContent = 'ON'; } else { el.classList.remove('active');
+            if (sensorEnabled) { el.classList.add('active'); label.textContent = 'ON'; } else { el.classList.remove('active');
                 label.textContent = 'OFF'; }
             document.getElementById('pinSensorVal').textContent = sensorEnabled ? 'ON' : 'OFF';
             document.getElementById('pinSensorVal').className = 'pin-value ' + (sensorEnabled ? 'on' : 'off');
@@ -2696,8 +2446,7 @@
         function updateSoundToggle() {
             const el = document.getElementById('soundToggle');
             const label = document.getElementById('soundToggleLabel');
-            if (soundEnabled) { el.classList.add('active');
-                label.textContent = 'ON'; } else { el.classList.remove('active');
+            if (soundEnabled) { el.classList.add('active'); label.textContent = 'ON'; } else { el.classList.remove('active');
                 label.textContent = 'OFF'; }
         }
 
@@ -2712,8 +2461,7 @@
         function updateVibrateToggle() {
             const el = document.getElementById('vibrateToggle');
             const label = document.getElementById('vibrateToggleLabel');
-            if (vibrateEnabled) { el.classList.add('active');
-                label.textContent = 'ON'; } else { el.classList.remove('active');
+            if (vibrateEnabled) { el.classList.add('active'); label.textContent = 'ON'; } else { el.classList.remove('active');
                 label.textContent = 'OFF'; }
         }
 
@@ -2728,7 +2476,6 @@
             if (e.target === this) this.classList.remove('show');
         });
 
-        // ===== REFRESH BUTTON =====
         document.getElementById('refreshBtn').addEventListener('click', function() {
             log('🔄 Refresh manual', 'info');
             location.reload();
@@ -2737,7 +2484,7 @@
         // ===== EXPORT / CLEAR / IMPORT =====
         document.getElementById('exportLogBtn').addEventListener('click', function() {
             let text = '=== WEMOS LOG ===\n';
-            logEntries.forEach(e => { text += '[' + e.time + '] ' + e.txt + '\n'; });
+            logEntries.forEach(e => { text += '[' + e.time + '] ' + e.text + '\n'; });
             const blob = new Blob([text], { type: 'text/plain' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
@@ -2779,7 +2526,7 @@
                 soundEnabled,
                 vibrateEnabled,
                 theme,
-                version: 'v4.0'
+                version: 'v4.1'
             };
             const blob = new Blob([JSON.stringify(settings, null, 2)], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
@@ -2856,7 +2603,7 @@
                 (h > 0 ? h + 'h ' : '') + (m > 0 ? m + 'm ' : '') + s + 's';
         }
 
-        // ===== MAIN LOOP (RENDER ONLY) =====
+        // ===== MAIN LOOP =====
         let loopId = null;
 
         function mainLoop() {
@@ -2948,12 +2695,19 @@
             cordovaReady = true;
             log('Cordova ready - Native features available', 'ok');
 
+            // ===== PERBAIKAN UTAMA: STATUS BAR =====
             if (window.StatusBar) {
                 StatusBar.overlaysWebView(false);
                 StatusBar.styleBlackTranslucent();
                 StatusBar.backgroundColorByHexString('#0d0b1a');
+                // Untuk Android, pastikan status bar tidak menimpa konten
+                if (window.StatusBar._ready) {
+                    StatusBar.hide();
+                    StatusBar.show();
+                }
             }
 
+            // ===== FULLSCREEN / LAYOUT =====
             if (cordova.plugins && cordova.plugins.backgroundMode) {
                 cordova.plugins.backgroundMode.enable();
                 cordova.plugins.backgroundMode.overrideBackButton();
@@ -2980,6 +2734,7 @@
                 });
             }
 
+            // ===== NOTIF CHANNEL =====
             if (cordova.plugins && cordova.plugins.notification && cordova.plugins.notification.local) {
                 cordova.plugins.notification.local.createChannel({
                     androidChannelId: 'wemos_alarm_channel',
@@ -2989,16 +2744,22 @@
                 });
             }
 
+            // ===== REQUEST NOTIF =====
             requestNotif();
+
+            // ===== LOAD STATE =====
             loadAppState();
 
+            // ===== SCREEN ON =====
             screenOn();
             lastBtnMs = Date.now();
 
+            // ===== ALARM AKTIF? =====
             if (htmlAlarmActive && !htmlAlarmAcked && !snoozeActive) {
                 onAlarmTriggered();
             }
 
+            // ===== POLLING & LOOP =====
             if (!pollInterval) startPolling();
             if (!loopId) mainLoop();
 
@@ -3033,7 +2794,7 @@
         }, false);
 
         // ===== BOOT =====
-        log('=== Wemos D1 Smartwatch Pro v4.0 (Neo-Glass) ===', 'ok');
+        log('=== Wemos D1 Smartwatch Pro v4.1 (Fixed Layout) ===', 'ok');
         log('Pin: D0(16), D6(12), D8(15) | Sensor: D5, Trigger: D4', 'dim');
         log('Fitur: Snooze, Theme, Export/Import, Shortcuts, Background Polling', 'info');
 
@@ -3055,6 +2816,25 @@
         if ('Notification' in window && Notification.permission === 'granted') alarmNotifGranted = true;
 
         log('Aplikasi siap! 🚀', 'ok');
+
+        // ===== PERBAIKAN TAMBAHAN: RESIZE =====
+        window.addEventListener('resize', function() {
+            // Pastikan tab nav tetap di bawah
+            const app = document.getElementById('app');
+            const tabNav = document.getElementById('tabNav');
+            if (tabNav) {
+                tabNav.style.maxWidth = app.offsetWidth + 'px';
+            }
+        });
+
+        // Set max-width tab nav saat init
+        setTimeout(function() {
+            const app = document.getElementById('app');
+            const tabNav = document.getElementById('tabNav');
+            if (tabNav && app) {
+                tabNav.style.maxWidth = app.offsetWidth + 'px';
+            }
+        }, 200);
     </script>
 </body>
 </html>
