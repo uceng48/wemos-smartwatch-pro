@@ -2250,11 +2250,9 @@
 
             switch (mode) {
                 case M_TIME:
-                    if (btn === BTN_MENU) { mode = M_MAIN; menuIdx = 0; saveAppState(); }  // 🔽 TAMBAHKAN dua baris di bawah ini
-            else if (btn === BTN_UP) sendCommand('/toggle?id=8');
-            else if (btn === BTN_DOWN) sendCommand('/toggle?id=0');
-            else if (btn === BTN_SEL) sendCommand('/pulse?id=6');
-            break;
+                    if (btn === BTN_MENU) { mode = M_MAIN; menuIdx = 0; saveAppState(); } else if (btn === BTN_SEL)
+                        sendCommand('/pulse?id=6');
+                    break;
                 case M_MAIN:
                     if (btn === BTN_UP) { menuIdx = (menuIdx + 2) % 3; saveAppState(); } else if (btn === BTN_DOWN) { menuIdx =
                             (menuIdx + 1) % 3; saveAppState(); } else if (btn === BTN_SEL) {
@@ -2296,7 +2294,13 @@
             }
         }
 
-  
+        function handleLong(btn) {
+            if (mode === M_TIME) {
+                if (btn === BTN_UP) sendCommand('/toggle?id=8');
+                else if (btn === BTN_DOWN) sendCommand('/toggle?id=0');
+                else if (btn === BTN_SEL) sendCommand('/pulse?id=6');
+            }
+        }
 
         // ===== BIND BUTTONS =====
         function bindBtn(el, id) {
