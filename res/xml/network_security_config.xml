@@ -1,18 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <network-security-config>
-    <!-- Allow cleartext traffic for local network devices -->
+    <!-- Blok khusus untuk perangkat lokal yang tidak pakai HTTPS -->
     <domain-config cleartextTrafficPermitted="true">
-        <!-- Local network IP ranges for Wemos devices -->
-        <domain includeSubdomains="true">192.168.4.1</domain>
-    
-        <domain includeSubdomains="true">192.168.100.101</domain>
-        <domain includeSubdomains="false">192.168.0.0</domain>
-        <domain includeSubdomains="false">10.0.0.0</domain>
-        <domain includeSubdomains="false">172.16.0.0</domain>
-        <!-- mDNS local domains -->
+        
+        <!-- TARGET UTAMA: Wemos D1 (cocok persis dengan IP statisnya) -->
+        <domain includeSubdomains="false">192.168.4.1</domain>
+        
+        <!-- Opsional: perangkat lokal lain di jaringan yang sama -->
+        <domain includeSubdomains="false">192.168.100.101</domain>
+        
+        <!-- Untuk akses via mDNS (contoh: http://wemos.local) -->
         <domain includeSubdomains="true">local</domain>
         <domain includeSubdomains="true">localhost</domain>
+        
     </domain-config>
-    <!-- Default policy: HTTPS only for internet traffic -->
+    
+    <!-- Aturan global: semua akses internet publik WAJIB HTTPS -->
     <base-config cleartextTrafficPermitted="false" />
 </network-security-config>
