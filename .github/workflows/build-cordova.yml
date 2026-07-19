@@ -51,6 +51,7 @@ jobs:
 
       - name: Copy build-extras.gradle ke platform
         run: |
+          mkdir -p platforms/android/app
           cp build-extras.gradle platforms/android/app/build-extras.gradle
           echo "build-extras.gradle copied to platform."
 
