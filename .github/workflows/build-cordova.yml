@@ -60,6 +60,12 @@ jobs:
           rm -rf ~/.gradle/caches
           rm -rf ~/.gradle/wrapper
           echo "Platform lama & cache Gradle dihapus."
+          
+           - name: Add plugin
+        run: cordova plugin add ./plugins/wemos-alarm-plugin
+
+         - name: Add Android
+        run: cordova platform rm android
 
       - name: Add Android platform
         run: cordova platform add android@13.0.0
@@ -73,6 +79,8 @@ jobs:
         run: |
           echo -e "\nallprojects {\n    configurations.all {\n        exclude group: 'org.jetbrains.kotlin', module: 'kotlin-stdlib-jdk7'\n        exclude group: 'org.jetbrains.kotlin', module: 'kotlin-stdlib-jdk8'\n    }\n}" >> platforms/android/build.gradle
           echo "Kotlin exclude rules injected."
+          
+         
 
       - name: Build debug APK
         run: cordova build android --debug
