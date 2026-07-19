@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<plugin id="cordova-plugin-wemos-alarm" version="1.0.0"
+        xmlns="[apache.org](http://apache.org/cordova/ns/plugins/1.0)"
+        xmlns:android="[schemas.android.com](http://schemas.android.com/apk/res/android)">
+
+    <name>WemosAlarmPlugin</name>
+
+    <js-module src="www/wemosAlarm.js" name="WemosAlarm">
+        <clobbers target="window.WemosAlarm" />
+    </js-module>
+
+    <platform name="android">
+        <config-file target="AndroidManifest.xml" parent="/manifest">
+            <uses-permission android:name="android.permission.INTERNET" />
+            <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+            <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+            <uses-permission android:name="android.permission.WAKE_LOCK" />
+            <uses-permission android:name="android.permission.VIBRATE" />
+            <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+            <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+            <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+            <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
+            <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
+        </config-file>
+
+        <config-file target="AndroidManifest.xml" parent="/manifest/application">
+            <service
+                android:name="com.uceng48.wemosalarm.WemosAlarmService"
+                android:enabled="true"
+                android:exported="false"
+                android:foregroundServiceType="dataSync" />
+        </config-file>
+
+        <source-file src="src/android/WemosAlarmPlugin.java"
+                     target-dir="src/com/uceng48/wemosalarm" />
+
+        <source-file src="src/android/WemosAlarmService.java"
+                     target-dir="src/com/uceng48/wemosalarm" />
+    </platform>
+</plugin>
