@@ -55,8 +55,12 @@
         <config-file parent="/manifest/application" target="AndroidManifest.xml">
             <service 
                 android:name="com.katason.backgroundmode.BackgroundService" 
-                android:foregroundServiceType="dataSync"
-                android:exported="false" />
+                android:foregroundServiceType="specialUse"
+                android:exported="false">
+                <property 
+                    android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                    android:value="Wemos IoT alarm monitoring while device is locked or asleep" />
+            </service>
             <service 
                 android:name="de.appplant.cordova.plugin.localnotification.TriggerReceiver" 
                 android:exported="false" />
