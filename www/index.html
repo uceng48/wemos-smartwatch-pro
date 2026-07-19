@@ -1,0 +1,1992 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval' data: gap:; connect-src *; style-src 'unsafe-inline'; script-src 'unsafe-inline' 'unsafe-eval';"> 
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#0d0b1a">
+  <script src="cordova.js"></script>
+  <title>Wemos D1 · Kontrol</title>
+  <style>
+    /* ===== RESET & DASAR ===== */
+    * { margin:0; padding:0; box-sizing:border-box; }
+    :root {
+      --bg-primary: #0d0b1a;
+      --bg-secondary: rgba(20,18,40,0.85);
+      --glass-bg: rgba(255,255,255,0.05);
+      --glass-border: rgba(255,255,255,0.08);
+      --glass-shadow: 0 20px 60px rgba(0,0,0,0.6);
+      --text-primary: #f0edff;
+      --text-secondary: #b8b0d6;
+      --text-dim: #6a6090;
+      --gradient-1: linear-gradient(135deg, #7c3aed, #4f46e5);
+      --gradient-2: linear-gradient(135deg, #ec4899, #8b5cf6);
+      --gradient-3: linear-gradient(135deg, #06b6d4, #3b82f6);
+      --gradient-4: linear-gradient(135deg, #f59e0b, #ef4444);
+      --gradient-5: linear-gradient(135deg, #10b981, #34d399);
+      --accent-purple: #8b5cf6;
+      --accent-pink: #ec4899;
+      --accent-cyan: #06b6d4;
+      --accent-blue: #4f46e5;
+      --accent-green: #34d399;
+      --accent-red: #f87171;
+      --accent-orange: #fbbf24;
+      --radius-lg: 24px;
+      --radius-md: 16px;
+      --radius-sm: 10px;
+      --radius-full: 9999px;
+      --font: 'Inter', -apple-system, system-ui, 'Segoe UI', sans-serif;
+      --transition: 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+      --blur: blur(24px);
+      --safe-top: env(safe-area-inset-top, 0px);
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+    }
+    html, body {
+      height:100%; width:100%; background:var(--bg-primary); color:var(--text-primary);
+      font-family:var(--font); touch-action:manipulation; -webkit-tap-highlight-color:transparent;
+      overflow:hidden; position:fixed; inset:0; margin:0; padding:0;
+    }
+    ::-webkit-scrollbar { width:4px; }
+    ::-webkit-scrollbar-track { background:transparent; }
+    ::-webkit-scrollbar-thumb { background:var(--accent-purple); border-radius:4px; }
+
+    #app {
+      display:flex; flex-direction:column; height:100%; width:100%; max-width:480px;
+      margin:0 auto; background:var(--bg-primary); position:relative; overflow:hidden;
+      box-shadow:0 0 120px rgba(124,58,237,0.06);
+      padding-top:var(--safe-top); padding-bottom:var(--safe-bottom);
+    }
+    @media (min-width:481px) {
+      #app { border-left:1px solid var(--glass-border); border-right:1px solid var(--glass-border);
+        border-radius:28px; margin-top:12px; height:calc(100vh - 24px); max-height:calc(100vh - 24px);
+        box-shadow:0 40px 80px rgba(0,0,0,0.7); }
+    }
+
+    /* ===== HEADER ===== */
+    .app-header { display:flex; align-items:center; justify-content:space-between; padding:10px 16px 8px;
+      background:rgba(13,11,26,0.7); backdrop-filter:var(--blur); -webkit-backdrop-filter:var(--blur);
+      border-bottom:1px solid var(--glass-border); flex-shrink:0; z-index:20; position:relative;
+      min-height:56px; padding-top:calc(8px + var(--safe-top)); }
+    .app-header::after { content:''; position:absolute; bottom:-1px; left:20%; right:20%; height:1px;
+      background:linear-gradient(90deg, transparent, rgba(139,92,246,0.3), transparent); }
+    .app-header .brand { display:flex; align-items:center; gap:10px; }
+    .app-header .brand .logo { width:36px; height:36px; background:var(--gradient-2); border-radius:var(--radius-sm);
+      display:flex; align-items:center; justify-content:center; font-size:16px; font-weight:800; color:#fff;
+      box-shadow:0 8px 24px rgba(124,58,237,0.3); flex-shrink:0; }
+    .app-header .brand h1 { font-size:0.9rem; font-weight:700; letter-spacing:-0.3px;
+      background:var(--gradient-2); -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+      background-clip:text; white-space:nowrap; }
+    .app-header .brand h1 span { font-weight:300; opacity:0.5; -webkit-text-fill-color:var(--text-secondary); }
+    .header-actions { display:flex; align-items:center; gap:4px; flex-shrink:0; }
+    .header-actions .icon-btn { background:var(--glass-bg); border:1px solid var(--glass-border);
+      color:var(--text-secondary); font-size:0.85rem; cursor:pointer; padding:5px 8px;
+      border-radius:var(--radius-full); transition:var(--transition); touch-action:manipulation;
+      backdrop-filter:var(--blur); -webkit-backdrop-filter:var(--blur); min-width:32px; text-align:center;
+      line-height:1.2; }
+    .header-actions .icon-btn:active { transform:scale(0.92); }
+    .status-badge { display:flex; align-items:center; gap:4px; font-size:0.5rem; font-weight:600;
+      padding:3px 10px 3px 6px; border-radius:var(--radius-full); background:var(--glass-bg);
+      border:1px solid var(--glass-border); color:var(--text-secondary); backdrop-filter:var(--blur);
+      -webkit-backdrop-filter:var(--blur); text-transform:uppercase; letter-spacing:0.5px; white-space:nowrap; }
+    .status-badge .dot { width:7px; height:7px; border-radius:50%; display:inline-block; transition:var(--transition);
+      flex-shrink:0; }
+    .status-badge .dot.on { background:var(--accent-green); box-shadow:0 0 20px rgba(52,211,153,0.4);
+      animation:pulse-dot 1.8s infinite; }
+    .status-badge .dot.off { background:var(--accent-red); box-shadow:0 0 20px rgba(248,113,113,0.2); }
+    .status-badge .dot.warn { background:var(--accent-orange); animation:pulse-dot 0.7s infinite; }
+    @keyframes pulse-dot { 0%,100%{opacity:1;transform:scale(1);} 50%{opacity:0.3;transform:scale(0.7);} }
+
+    /* ===== MAIN CONTENT ===== */
+    .main-content { flex:1; overflow-y:auto; overflow-x:hidden; padding:12px 14px 8px; scroll-behavior:smooth;
+      -webkit-overflow-scrolling:touch; padding-bottom:calc(70px + var(--safe-bottom)); }
+
+    /* ===== TAB NAV ===== */
+    .tab-nav { display:flex; background:rgba(13,11,26,0.92); backdrop-filter:var(--blur);
+      -webkit-backdrop-filter:var(--blur); border-top:1px solid var(--glass-border); flex-shrink:0;
+      z-index:20; position:fixed; bottom:0; left:0; right:0; max-width:480px; margin:0 auto;
+      padding:4px 8px calc(4px + var(--safe-bottom)); gap:2px; box-shadow:0 -4px 30px rgba(0,0,0,0.4); }
+    .tab-nav .tab { flex:1; text-align:center; padding:6px 0 4px; font-size:0.45rem; font-weight:600;
+      color:var(--text-dim); cursor:pointer; transition:var(--transition); border:none; background:transparent;
+      border-radius:var(--radius-full); display:flex; flex-direction:column; align-items:center; gap:1px;
+      touch-action:manipulation; position:relative; min-height:44px; justify-content:center; }
+    .tab-nav .tab .icon { font-size:1.1rem; line-height:1; transition:var(--transition); }
+    .tab-nav .tab .label { font-size:0.45rem; opacity:0.7; letter-spacing:0.3px; line-height:1.2; }
+    .tab-nav .tab.active { color:#fff; background:rgba(139,92,246,0.2); box-shadow:inset 0 0 0 1px rgba(139,92,246,0.2); }
+    .tab-nav .tab.active .icon { transform:scale(1.05); }
+    .tab-nav .tab:active { transform:scale(0.92); }
+    .tab-nav .tab .badge-tab { position:absolute; top:3px; right:15%; width:7px; height:7px;
+      background:var(--accent-red); border-radius:50%; border:2px solid var(--bg-primary); }
+
+    /* ===== PANELS ===== */
+    .panel { display:none; animation:fadeUp 0.4s cubic-bezier(0.34,1.56,0.64,1); }
+    .panel.active { display:block; }
+    @keyframes fadeUp { from{opacity:0;transform:translateY(16px) scale(0.98);} to{opacity:1;transform:translateY(0) scale(1);} }
+
+    /* ===== CARDS ===== */
+    .card { background:var(--glass-bg); backdrop-filter:var(--blur); -webkit-backdrop-filter:var(--blur);
+      border-radius:var(--radius-lg); padding:16px 18px; margin-bottom:12px; border:1px solid var(--glass-border);
+      box-shadow:var(--glass-shadow); transition:var(--transition); }
+    .card .card-title { font-size:0.55rem; text-transform:uppercase; letter-spacing:1.5px; color:var(--text-secondary);
+      margin-bottom:12px; display:flex; align-items:center; gap:8px; font-weight:600; flex-wrap:wrap; }
+    .card .card-title .badge-pill { font-size:0.4rem; padding:2px 10px; border-radius:var(--radius-full);
+      background:var(--glass-bg); border:1px solid var(--glass-border); color:var(--text-secondary);
+      letter-spacing:0.3px; font-weight:500; }
+    .card .card-title .badge-pill.active { background:var(--accent-green); color:#000; border-color:var(--accent-green); }
+    .card .card-title .badge-pill.danger { background:var(--accent-red); color:#000; border-color:var(--accent-red); }
+    .card .card-title .badge-pill.warn { background:var(--accent-orange); color:#000; border-color:var(--accent-orange); }
+    .card .card-title .badge-pill.info { background:var(--accent-cyan); color:#000; border-color:var(--accent-cyan); }
+
+    /* ===== STATS ===== */
+    .stats-grid { display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:8px; }
+    .stat-item { background:rgba(255,255,255,0.03); border-radius:var(--radius-md); padding:10px 6px; text-align:center;
+      border:1px solid var(--glass-border); transition:var(--transition); }
+    .stat-item .stat-icon { font-size:1rem; display:block; margin-bottom:1px; }
+    .stat-item .stat-value { font-size:1.2rem; font-weight:800; line-height:1.2;
+      background:var(--gradient-2); -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+      background-clip:text; }
+    .stat-item .stat-label { font-size:0.45rem; color:var(--text-secondary); margin-top:2px;
+      text-transform:uppercase; letter-spacing:0.6px; font-weight:500; }
+    .stat-item .stat-value.danger { background:var(--gradient-4); -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent; background-clip:text; }
+    .stat-item .stat-value.green { background:var(--gradient-5); -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent; background-clip:text; }
+    .stat-item .stat-value.purple { background:var(--gradient-2); -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent; background-clip:text; }
+    .stat-item .stat-value.cyan { background:var(--gradient-3); -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent; background-clip:text; }
+    @media (max-width:420px) { .stats-grid { grid-template-columns:1fr 1fr; gap:6px; }
+      .stat-item .stat-value { font-size:1rem; } .stat-item { padding:8px 4px; } }
+
+    /* ===== INDICATOR BULATAN (LED) ===== */
+    .indicator-grid { display:grid; grid-template-columns:1fr 1fr 1fr 1fr 1fr; gap:10px; margin-top:6px; }
+    .indicator-item { display:flex; flex-direction:column; align-items:center; gap:4px; background:rgba(255,255,255,0.02);
+      border-radius:var(--radius-sm); padding:8px 4px; border:1px solid var(--glass-border); }
+    .indicator-item .led-bulb { width:28px; height:28px; border-radius:50%; transition:var(--transition);
+      box-shadow:0 0 8px rgba(0,0,0,0.3); display:flex; align-items:center; justify-content:center;
+      font-size:0.5rem; font-weight:700; color:#fff; text-shadow:0 1px 2px rgba(0,0,0,0.5); }
+    .indicator-item .led-bulb.on { background:var(--accent-green); box-shadow:0 0 20px rgba(52,211,153,0.6); }
+    .indicator-item .led-bulb.off { background:#444; box-shadow:none; }
+    .indicator-item .led-bulb.alarm { background:var(--accent-red); box-shadow:0 0 30px rgba(248,113,113,0.8);
+      animation:pulse-dot 0.6s infinite; }
+    .indicator-item .led-bulb.trigger { background:var(--accent-orange); box-shadow:0 0 30px rgba(251,191,36,0.6);
+      animation:pulse-dot 0.4s infinite; }
+    .indicator-item .led-label { font-size:0.5rem; color:var(--text-secondary); text-transform:uppercase;
+      letter-spacing:0.5px; font-weight:600; }
+    .indicator-item .led-status { font-size:0.45rem; font-weight:700; }
+    .indicator-item .led-status.on { color:var(--accent-green); }
+    .indicator-item .led-status.off { color:#666; }
+    .indicator-item .led-status.alarm { color:var(--accent-red); }
+    .indicator-item .led-status.trigger { color:var(--accent-orange); }
+    @media (max-width:400px) { .indicator-grid { grid-template-columns:1fr 1fr 1fr; gap:6px; }
+      .indicator-item .led-bulb { width:24px; height:24px; } }
+
+    /* ===== BUTTONS ===== */
+    .btn-grid { display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:8px; margin-top:10px; }
+    .btn { padding:12px 4px; border:none; border-radius:var(--radius-md); font-size:0.6rem; font-weight:700;
+      text-transform:uppercase; letter-spacing:0.6px; cursor:pointer; transition:transform 0.08s, box-shadow 0.3s, filter 0.2s;
+      user-select:none; -webkit-user-select:none; touch-action:none; color:#fff; position:relative; overflow:hidden;
+      box-shadow:0 8px 24px rgba(0,0,0,0.3); min-height:48px; display:flex; flex-direction:column; align-items:center;
+      justify-content:center; }
+    .btn:active, .btn.pressed { transform:scale(0.92); filter:brightness(0.9); }
+    .btn .key-hint { display:block; font-size:0.35rem; opacity:0.5; font-weight:400; margin-top:1px;
+      letter-spacing:0.5px; }
+    .btn-menu { background:var(--gradient-4); }
+    .btn-up { background:var(--gradient-3); }
+    .btn-down { background:var(--gradient-5); }
+    .btn-sel { background:var(--gradient-1); }
+    .btn:disabled { opacity:0.3; cursor:not-allowed; transform:none !important; filter:grayscale(0.6); }
+
+    /* ===== PIN GRID ===== */
+    .pin-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-top:2px; }
+    .pin-item { background:rgba(255,255,255,0.03); border-radius:var(--radius-md); padding:10px 6px; text-align:center;
+      border:1px solid var(--glass-border); transition:var(--transition); }
+    .pin-item .pin-label { font-size:0.45rem; color:var(--text-secondary); text-transform:uppercase;
+      letter-spacing:0.6px; font-weight:500; }
+    .pin-item .pin-value { font-size:0.7rem; font-weight:700; margin-top:2px; transition:var(--transition); }
+    .pin-item .pin-value.on { color:var(--accent-green); }
+    .pin-item .pin-value.off { color:var(--text-dim); }
+    .pin-item .pin-value.alarm { color:var(--accent-red); animation:pulse-text 0.6s infinite; }
+    .pin-item .pin-value.trigger { color:var(--accent-orange); animation:pulse-text 0.4s infinite; }
+    .pin-item .pin-value.pwm { color:var(--accent-purple); }
+    .pin-item.highlight { border-color:rgba(139,92,246,0.2); box-shadow:0 0 30px rgba(139,92,246,0.03); }
+    .pin-item .pin-bar { width:100%; height:3px; background:rgba(255,255,255,0.06); border-radius:4px; margin-top:5px;
+      overflow:hidden; }
+    .pin-item .pin-bar .fill { height:100%; border-radius:4px; transition:width 0.4s ease; width:0%; }
+    .pin-item .pin-bar .fill.on { background:var(--gradient-5); }
+    .pin-item .pin-bar .fill.off { background:var(--text-dim); opacity:0.3; }
+    .pin-item .pin-bar .fill.alarm { background:var(--gradient-4); }
+    .pin-item .pin-bar .fill.trigger { background:var(--gradient-4); animation:pulse-bar 0.6s infinite; }
+    .pin-item .pin-bar .fill.pwm { background:var(--gradient-2); }
+    @media (max-width:400px) { .pin-grid { grid-template-columns:1fr 1fr; } }
+
+    /* ===== CHART ===== */
+    .chart-container { width:100%; height:60px; margin-top:4px; }
+    .chart-container canvas { width:100% !important; height:100% !important; border-radius:var(--radius-sm);
+      background:rgba(255,255,255,0.02); }
+
+    /* ===== LOG ===== */
+    .log-container { background:rgba(0,0,0,0.4); border-radius:var(--radius-md); padding:10px 12px; height:160px;
+      overflow-y:auto; font-family:'JetBrains Mono','Courier New',monospace; font-size:0.45rem; line-height:1.7;
+      border:1px solid var(--glass-border); color:var(--text-secondary); }
+    .log-container .log-entry { padding:2px 0; border-bottom:1px solid rgba(255,255,255,0.02);
+      display:flex; gap:6px; }
+    .log-container .log-entry .log-time { color:var(--text-dim); font-size:0.4rem; flex-shrink:0; opacity:0.6; }
+    .log-container .log-entry .msg { color:var(--text-secondary); word-break:break-all; }
+    .log-container .log-entry .msg.err { color:var(--accent-red); }
+    .log-container .log-entry .msg.ok { color:var(--accent-green); }
+    .log-container .log-entry .msg.tx { color:var(--accent-orange); }
+    .log-container .log-entry .msg.alarm { color:var(--accent-red); font-weight:700; animation:pulse-text 0.6s infinite; }
+    .log-container .log-entry .msg.dim { color:var(--text-dim); opacity:0.5; }
+    .log-container .log-entry .msg.info { color:var(--accent-cyan); }
+
+    /* ===== SETTINGS ===== */
+    .setting-row { display:flex; justify-content:space-between; align-items:center; padding:8px 0;
+      border-bottom:1px solid rgba(255,255,255,0.04); gap:8px; flex-wrap:wrap; }
+    .setting-row:last-child { border-bottom:none; }
+    .setting-row label { font-size:0.6rem; color:var(--text-secondary); font-weight:500; flex-shrink:0; }
+    .setting-row input[type="text"], .setting-row input[type="number"], .setting-row select {
+      background:rgba(255,255,255,0.04); border:1px solid var(--glass-border); color:var(--text-primary);
+      padding:5px 12px; border-radius:var(--radius-sm); width:130px; font-size:0.6rem; transition:var(--transition);
+      font-family:var(--font); min-height:34px; }
+    .setting-row input:focus, .setting-row select:focus { border-color:var(--accent-purple); outline:none;
+      box-shadow:0 0 30px rgba(139,92,246,0.05); background:rgba(139,92,246,0.05); }
+    .setting-row select { width:130px; cursor:pointer; appearance:none;
+      background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236a6090' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+      background-repeat:no-repeat; background-position:right 10px center; padding-right:28px; }
+    .setting-row select option { background:#0d0b1a; color:var(--text-primary); }
+    .setting-row .toggle-wrap { display:flex; align-items:center; gap:8px; flex-shrink:0; }
+    .toggle-switch { width:40px; height:22px; background:rgba(255,255,255,0.06); border-radius:12px; position:relative;
+      cursor:pointer; transition:var(--transition); border:1px solid var(--glass-border); flex-shrink:0; }
+    .toggle-switch .thumb { width:16px; height:16px; background:var(--text-dim); border-radius:50%; position:absolute;
+      top:2px; left:2px; transition:var(--transition); box-shadow:0 2px 8px rgba(0,0,0,0.3); }
+    .toggle-switch.active { background:rgba(139,92,246,0.3); border-color:var(--accent-purple); }
+    .toggle-switch.active .thumb { left:20px; background:var(--gradient-2); box-shadow:0 2px 16px rgba(139,92,246,0.4); }
+    .toggle-label { font-size:0.55rem; color:var(--text-secondary); font-weight:600; min-width:28px; text-align:right; }
+
+    /* ===== ACTION GRID ===== */
+    .action-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px; }
+    .action-grid .btn { padding:8px 4px; font-size:0.5rem; border-radius:var(--radius-sm); min-height:40px; }
+    @media (max-width:400px) { .action-grid { grid-template-columns:1fr 1fr; } }
+
+    /* ===== ALARM TOAST & FLASH ===== */
+    .alarm-toast { position:fixed; top:0; left:0; right:0; background:var(--gradient-4); color:#fff; text-align:center;
+      padding:14px 16px; font-weight:700; font-size:0.8rem; z-index:9999; transform:translateY(-100%);
+      transition:transform 0.5s cubic-bezier(0.34,1.56,0.64,1); display:flex; align-items:center; justify-content:center;
+      gap:10px; flex-wrap:wrap; box-shadow:0 8px 40px rgba(239,68,68,0.3);
+      padding-top:calc(14px + var(--safe-top)); }
+    .alarm-toast.show { transform:translateY(0); }
+    .alarm-toast .btn-dismiss { background:rgba(255,255,255,0.2); border:none; color:#fff; padding:4px 16px;
+      border-radius:var(--radius-full); font-size:0.55rem; font-weight:700; cursor:pointer; transition:var(--transition);
+      backdrop-filter:blur(4px); }
+    .alarm-toast .btn-dismiss:active { transform:scale(0.92); }
+    .alarm-toast .snooze-btn { background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); color:#fff;
+      padding:4px 14px; border-radius:var(--radius-full); font-size:0.55rem; cursor:pointer; transition:var(--transition);
+      backdrop-filter:blur(4px); }
+    .alarm-toast .snooze-btn:active { transform:scale(0.92); }
+    .alarm-flash { position:fixed; inset:0; background:rgba(239,68,68,0); pointer-events:none; z-index:9998;
+      transition:background 0.06s; }
+    .alarm-flash.active { animation:flashRed 0.5s infinite alternate; }
+    @keyframes flashRed { 0%{background:rgba(239,68,68,0);} 100%{background:rgba(239,68,68,0.12);} }
+
+    /* ===== SHORTCUTS OVERLAY ===== */
+    .shortcuts-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.7); backdrop-filter:blur(16px);
+      -webkit-backdrop-filter:blur(16px); z-index:9997; display:none; align-items:center; justify-content:center;
+      padding:24px; }
+    .shortcuts-overlay.show { display:flex; }
+    .shortcuts-overlay .shortcuts-box { background:var(--glass-bg); backdrop-filter:var(--blur);
+      -webkit-backdrop-filter:var(--blur); border:1px solid var(--glass-border); border-radius:var(--radius-lg);
+      padding:24px 28px; max-width:340px; width:100%; box-shadow:var(--glass-shadow); }
+    .shortcuts-overlay .shortcuts-box h3 { font-size:0.85rem; margin-bottom:12px; color:var(--text-primary);
+      display:flex; align-items:center; gap:8px; }
+    .shortcuts-overlay .shortcuts-box .shortcut-row { display:flex; justify-content:space-between; padding:6px 0;
+      border-bottom:1px solid rgba(255,255,255,0.04); font-size:0.65rem; }
+    .shortcuts-overlay .shortcuts-box .shortcut-row .key { background:rgba(255,255,255,0.06); padding:0 10px;
+      border-radius:4px; font-weight:700; color:var(--accent-cyan); font-size:0.55rem; border:1px solid var(--glass-border); }
+    .shortcuts-overlay .shortcuts-box .shortcut-row .action { color:var(--text-secondary); }
+    .shortcuts-overlay .shortcuts-box .close-shortcuts { margin-top:14px; width:100%; padding:10px; border:none;
+      border-radius:var(--radius-sm); background:var(--gradient-2); color:#fff; font-weight:700; font-size:0.65rem;
+      cursor:pointer; transition:var(--transition); }
+    .shortcuts-overlay .shortcuts-box .close-shortcuts:active { transform:scale(0.94); }
+
+    .flex-between { display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap; }
+    .flex-center { display:flex; align-items:center; gap:6px; }
+    .mt-1 { margin-top:6px; }
+    .mb-1 { margin-bottom:6px; }
+    .text-center { text-align:center; }
+    .text-muted { color:var(--text-secondary); font-size:0.55rem; }
+    .btn-ghost { background:transparent; border:1px solid var(--glass-border); color:var(--text-secondary);
+      padding:5px 14px; border-radius:var(--radius-full); font-size:0.5rem; cursor:pointer; transition:var(--transition);
+      font-weight:600; backdrop-filter:var(--blur); -webkit-backdrop-filter:var(--blur); }
+    .btn-ghost:active { transform:scale(0.94); }
+    .btn-ghost.danger:hover { border-color:var(--accent-red); color:var(--accent-red); }
+    .badge-pill { font-size:0.4rem; padding:2px 10px; border-radius:var(--radius-full); background:var(--glass-bg);
+      border:1px solid var(--glass-border); color:var(--text-secondary); letter-spacing:0.3px; font-weight:500; }
+    .badge-pill.success { background:var(--accent-green); color:#000; border-color:var(--accent-green); }
+    .badge-pill.danger { background:var(--accent-red); color:#000; border-color:var(--accent-red); }
+    .badge-pill.warn { background:var(--accent-orange); color:#000; border-color:var(--accent-orange); }
+    .badge-pill.info { background:var(--accent-cyan); color:#000; border-color:var(--accent-cyan); }
+    .badge-pill.purple { background:var(--accent-purple); color:#fff; border-color:var(--accent-purple); }
+
+    .btn-save-wifi { background:var(--gradient-3); width:100%; margin-top:8px; padding:10px; border-radius:var(--radius-sm);
+      border:none; color:#fff; font-weight:700; font-size:0.65rem; cursor:pointer; transition:var(--transition);
+      letter-spacing:0.5px; text-transform:uppercase; }
+    .btn-save-wifi:active { transform:scale(0.94); }
+    .wifi-status-text { font-size:0.55rem; font-weight:500; transition:var(--transition); }
+    .wifi-status-text.connected { color:var(--accent-green); }
+    .wifi-status-text.connecting { color:var(--accent-orange); }
+    .wifi-status-text.disconnected { color:var(--accent-red); }
+    .wifi-status-text.idle { color:var(--text-dim); }
+
+    @keyframes pulse-text { 0%,100%{opacity:1;} 50%{opacity:0.2;} }
+    @keyframes pulse-bar { 0%,100%{opacity:1;} 50%{opacity:0.2;} }
+
+    @media (max-width:400px) {
+      .btn-grid { gap:4px; }
+      .btn { font-size:0.45rem; padding:8px 2px; min-height:40px; }
+      .app-header .brand h1 { font-size:0.7rem; }
+      .tab-nav .tab { font-size:0.4rem; padding:4px 0; min-height:38px; }
+      .tab-nav .tab .icon { font-size:0.9rem; }
+      .card { padding:12px 14px; }
+      .stats-grid { grid-template-columns:1fr 1fr; }
+      .setting-row input[type="text"], .setting-row input[type="number"], .setting-row select { width:100px; font-size:0.5rem; padding:4px 8px; }
+      .action-grid { grid-template-columns:1fr 1fr; }
+      .action-grid .btn { font-size:0.45rem; min-height:34px; }
+      .pin-item .pin-value { font-size:0.6rem; }
+    }
+    @media (max-width:360px) {
+      .header-actions .icon-btn { font-size:0.7rem; padding:3px 6px; min-width:28px; }
+      .status-badge { font-size:0.4rem; padding:2px 6px; }
+      .status-badge .dot { width:5px; height:5px; }
+      .tab-nav { padding:2px 4px calc(2px + var(--safe-bottom)); }
+      .tab-nav .tab .icon { font-size:0.8rem; }
+      .tab-nav .tab .label { font-size:0.4rem; }
+    }
+    .log-container::-webkit-scrollbar { width:3px; }
+    .log-container::-webkit-scrollbar-track { background:transparent; }
+    .log-container::-webkit-scrollbar-thumb { background:var(--accent-purple); border-radius:4px; }
+    .main-content::-webkit-scrollbar { width:3px; }
+    .main-content::-webkit-scrollbar-track { background:transparent; }
+    .main-content::-webkit-scrollbar-thumb { background:var(--accent-purple); border-radius:4px; }
+
+    [data-theme="light"] {
+      --bg-primary: #f0edf5;
+      --bg-secondary: rgba(255,255,255,0.85);
+      --glass-bg: rgba(255,255,255,0.6);
+      --glass-border: rgba(0,0,0,0.08);
+      --text-primary: #1a1625;
+      --text-secondary: #4a4570;
+      --text-dim: #8a85a8;
+      --glass-shadow: 0 20px 60px rgba(0,0,0,0.08);
+    }
+    [data-theme="light"] .app-header { background:rgba(255,255,255,0.8); }
+    [data-theme="light"] .tab-nav { background:rgba(255,255,255,0.92); }
+    [data-theme="light"] .card { background:rgba(255,255,255,0.5); }
+    [data-theme="light"] .stat-item { background:rgba(255,255,255,0.3); }
+    [data-theme="light"] .indicator-item { background:rgba(255,255,255,0.3); }
+    [data-theme="light"] .pin-item { background:rgba(255,255,255,0.3); }
+    [data-theme="light"] .log-container { background:rgba(0,0,0,0.06); }
+    [data-theme="light"] .setting-row input, [data-theme="light"] .setting-row select { background:rgba(0,0,0,0.04); color:#1a1625; }
+    [data-theme="light"] .setting-row select option { background:#f0edf5; }
+    [data-theme="light"] .btn { box-shadow:0 4px 16px rgba(0,0,0,0.1); }
+    [data-theme="light"] .toggle-switch { background:rgba(0,0,0,0.06); }
+    [data-theme="light"] .shortcuts-overlay .shortcuts-box { background:rgba(255,255,255,0.85); }
+  </style>
+</head>
+<body>
+
+  <!-- ===== ALARM OVERLAY ===== -->
+  <div class="alarm-flash" id="alarmFlash"></div>
+  <div class="alarm-toast" id="alarmToast">
+    <span>🚨 ALARM WEMOS AKTIF!</span>
+    <button class="snooze-btn" id="btnSnoozeAlarm">⏰ SNOOZE</button>
+    <button class="btn-dismiss" id="btnDismissAlarm">✕ RESET</button>
+  </div>
+
+  <!-- ===== SHORTCUTS OVERLAY ===== -->
+  <div class="shortcuts-overlay" id="shortcutsOverlay">
+    <div class="shortcuts-box">
+      <h3>⌨️ Keyboard Shortcuts</h3>
+      <div class="shortcut-row"><span class="action">Reset Alarm</span><span class="key">Q</span></div>
+      <div class="shortcut-row"><span class="action">Toggle D8</span><span class="key">W</span></div>
+      <div class="shortcut-row"><span class="action">Toggle D0</span><span class="key">S</span></div>
+      <div class="shortcut-row"><span class="action">Pulse D6</span><span class="key">E</span></div>
+      <div class="shortcut-row"><span class="action">Toggle Tema</span><span class="key">T</span></div>
+      <div class="shortcut-row"><span class="action">Toggle Sensor</span><span class="key">X</span></div>
+      <button class="close-shortcuts" id="closeShortcuts">Tutup</button>
+    </div>
+  </div>
+
+  <!-- ===== APP ===== -->
+  <div id="app">
+    <!-- HEADER -->
+    <header class="app-header">
+      <div class="brand">
+        <div class="logo">⌚</div>
+        <h1>Wemos <span>Kontrol</span></h1>
+      </div>
+      <div class="header-actions">
+        <button class="icon-btn" id="refreshBtn" title="Refresh">🔄</button>
+        <button class="icon-btn" id="themeToggle" title="Toggle Theme">🌓</button>
+        <button class="icon-btn" id="shortcutsToggle" title="Shortcuts">⌨️</button>
+        <div class="status-badge" id="statusBadge">
+          <span class="dot off" id="statusDot"></span>
+          <span id="statusText">OFFLINE</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- MAIN CONTENT -->
+    <div class="main-content" id="mainContent">
+
+      <!-- ===== PANEL DASHBOARD ===== -->
+      <div class="panel active" id="panelDashboard">
+        <div class="card">
+          <div class="card-title">📊 Dashboard</div>
+          <div class="stats-grid">
+            <div class="stat-item">
+              <span class="stat-icon">⚡</span>
+              <div class="stat-value" id="statTriggers">0</div>
+              <div class="stat-label">Trigger</div>
+            </div>
+            <div class="stat-item">
+              <span class="stat-icon">🔔</span>
+              <div class="stat-value danger" id="statAlarms">0</div>
+              <div class="stat-label">Alarm</div>
+            </div>
+            <div class="stat-item">
+              <span class="stat-icon">📡</span>
+              <div class="stat-value green" id="statClients">0</div>
+              <div class="stat-label">Client</div>
+            </div>
+            <div class="stat-item">
+              <span class="stat-icon">⏱️</span>
+              <div class="stat-value purple" id="statUptime">0s</div>
+              <div class="stat-label">Uptime</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== INDICATOR BULATAN (LED) ===== -->
+        <div class="card">
+          <div class="card-title">🔴 Indikator Pin</div>
+          <div class="indicator-grid">
+            <div class="indicator-item">
+              <div class="led-bulb off" id="indD0">D0</div>
+              <div class="led-label">D0</div>
+              <div class="led-status off" id="indD0Status">OFF</div>
+            </div>
+            <div class="indicator-item">
+              <div class="led-bulb off" id="indD6">D6</div>
+              <div class="led-label">D6</div>
+              <div class="led-status off" id="indD6Status">OFF</div>
+            </div>
+            <div class="indicator-item">
+              <div class="led-bulb off" id="indD8">D8</div>
+              <div class="led-label">D8</div>
+              <div class="led-status off" id="indD8Status">OFF</div>
+            </div>
+            <div class="indicator-item">
+              <div class="led-bulb off" id="indD4">D4</div>
+              <div class="led-label">Trigger</div>
+              <div class="led-status off" id="indD4Status">NORMAL</div>
+            </div>
+            <div class="indicator-item">
+              <div class="led-bulb off" id="indD5">D5</div>
+              <div class="led-label">Sensor</div>
+              <div class="led-status off" id="indD5Status">HIGH</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== TOMBOL (MENU, UP, DOWN, SEL) ===== -->
+        <div class="card">
+          <div class="card-title">🎮 Kontrol Tombol</div>
+          <div class="btn-grid">
+            <button class="btn btn-menu" id="btnMenu">MENU <span class="key-hint">Q</span></button>
+            <button class="btn btn-up" id="btnUp">UP <span class="key-hint">W</span></button>
+            <button class="btn btn-down" id="btnDown">DOWN <span class="key-hint">S</span></button>
+            <button class="btn btn-sel" id="btnSelect">SEL <span class="key-hint">E</span></button>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:0.45rem;color:var(--text-secondary);margin-top:8px;gap:4px;flex-wrap:wrap;">
+            <span>MENU: Reset Alarm</span>
+            <span>UP: Toggle D8</span>
+            <span>DOWN: Toggle D0</span>
+            <span>SEL: Pulse D6</span>
+          </div>
+        </div>
+
+        <!-- Sensor Chart -->
+        <div class="card">
+          <div class="card-title">📈 Aktivitas Sensor <span class="badge-pill" id="chartCount">0 events</span></div>
+          <div class="chart-container">
+            <canvas id="sensorChart" width="200" height="64"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== PANEL KONTROL ===== -->
+      <div class="panel" id="panelKontrol">
+        <div class="card">
+          <div class="card-title">🎛️ Status Pin</div>
+          <div class="pin-grid">
+            <div class="pin-item" id="pinD0">
+              <div class="pin-label">D0 (GPIO16)</div>
+              <div class="pin-value off" id="pinD0Val">OFF</div>
+              <div class="pin-bar"><div class="fill off" id="pinD0Bar" style="width:0%"></div></div>
+            </div>
+            <div class="pin-item" id="pinD6">
+              <div class="pin-label">D6 (GPIO12)</div>
+              <div class="pin-value off" id="pinD6Val">OFF</div>
+              <div class="pin-bar"><div class="fill off" id="pinD6Bar" style="width:0%"></div></div>
+            </div>
+            <div class="pin-item" id="pinD8">
+              <div class="pin-label">D8 (GPIO15)</div>
+              <div class="pin-value off" id="pinD8Val">OFF</div>
+              <div class="pin-bar"><div class="fill off" id="pinD8Bar" style="width:0%"></div></div>
+            </div>
+            <div class="pin-item highlight" id="pinD4">
+              <div class="pin-label">D4 (Trigger)</div>
+              <div class="pin-value off" id="pinD4Val">NORMAL</div>
+              <div class="pin-bar"><div class="fill off" id="pinD4Bar" style="width:0%"></div></div>
+            </div>
+            <div class="pin-item highlight" id="pinD5">
+              <div class="pin-label">D5 (Sensor)</div>
+              <div class="pin-value off" id="pinD5Val">HIGH</div>
+              <div class="pin-bar"><div class="fill off" id="pinD5Bar" style="width:0%"></div></div>
+            </div>
+            <div class="pin-item" id="pinSensor">
+              <div class="pin-label">Sensor Enabled</div>
+              <div class="pin-value on" id="pinSensorVal">ON</div>
+              <div class="pin-bar"><div class="fill on" id="pinSensorBar" style="width:100%"></div></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">⚡ Aksi Cepat</div>
+          <div class="action-grid">
+            <button class="btn btn-up" id="quickToggleD8" style="border-radius:var(--radius-sm);padding:8px 4px;font-size:0.5rem;min-height:38px;">Toggle D8</button>
+            <button class="btn btn-down" id="quickToggleD0" style="border-radius:var(--radius-sm);padding:8px 4px;font-size:0.5rem;min-height:38px;">Toggle D0</button>
+            <button class="btn btn-sel" id="quickPulseD6" style="border-radius:var(--radius-sm);padding:8px 4px;font-size:0.5rem;min-height:38px;">Pulse D6</button>
+            <button class="btn btn-menu" id="quickResetAlarm" style="border-radius:var(--radius-sm);padding:8px 4px;font-size:0.5rem;min-height:38px;">Reset Alarm</button>
+            <button class="btn" style="background:var(--gradient-2);border-radius:var(--radius-sm);padding:8px 4px;font-size:0.5rem;min-height:38px;" id="quickPulseAll">Pulse All</button>
+            <button class="btn" style="background:var(--gradient-4);border-radius:var(--radius-sm);padding:8px 4px;font-size:0.5rem;min-height:38px;" id="quickToggleAlarm">Test Alarm</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">🔔 Alarm Status</div>
+          <div class="flex-between"><span class="text-muted">Status:</span><span id="alarmStatusBadge" class="badge-pill success">INACTIVE</span></div>
+          <div class="flex-between mt-1"><span class="text-muted">Sensor D5:</span><span id="sensorD5Status" style="font-weight:700;color:var(--accent-green);">HIGH</span></div>
+          <div class="flex-between mt-1"><span class="text-muted">Trigger D4:</span><span id="sensorD4Status" style="font-weight:700;color:var(--text-dim);">NORMAL</span></div>
+          <div class="flex-between mt-1"><span class="text-muted">Snooze tersisa:</span><span id="snoozeCountdown" style="font-weight:700;color:var(--text-secondary);">—</span></div>
+        </div>
+      </div>
+
+      <!-- ===== PANEL PENGATURAN ===== -->
+      <div class="panel" id="panelPengaturan">
+        <div class="card">
+          <div class="card-title">⚙️ Pengaturan</div>
+
+          <div class="setting-row">
+            <label>IP Wemos</label>
+            <input type="text" id="inpTargetIP" value="http://192.168.4.1">
+          </div>
+          <div class="setting-row">
+            <label>Poll Interval (ms)</label>
+            <input type="number" id="inpPollInt" value="500" min="100" max="5000">
+          </div>
+          <div class="setting-row">
+            <label>Screen Timeout (ms)</label>
+            <input type="number" id="inpScrTout" value="5000" min="1000" max="30000">
+          </div>
+          <div class="setting-row">
+            <label>Snooze Duration (s)</label>
+            <input type="number" id="inpSnoozeDur" value="60" min="10" max="600">
+          </div>
+          <div class="setting-row">
+            <label>Power Saving</label>
+            <div class="toggle-wrap">
+              <span class="toggle-label" id="powerSaveLabel">OFF</span>
+              <div class="toggle-switch" id="powerSaveToggle"><div class="thumb"></div></div>
+            </div>
+          </div>
+          <div class="setting-row">
+            <label>Sensor Enabled</label>
+            <div class="toggle-wrap">
+              <span class="toggle-label" id="sensorToggleLabel">ON</span>
+              <div class="toggle-switch active" id="sensorToggle"><div class="thumb"></div></div>
+            </div>
+          </div>
+          <div class="setting-row">
+            <label>Suara Alarm</label>
+            <div class="toggle-wrap">
+              <span class="toggle-label" id="soundToggleLabel">ON</span>
+              <div class="toggle-switch active" id="soundToggle"><div class="thumb"></div></div>
+            </div>
+          </div>
+          <div class="setting-row">
+            <label>Getar Alarm</label>
+            <div class="toggle-wrap">
+              <span class="toggle-label" id="vibrateToggleLabel">ON</span>
+              <div class="toggle-switch active" id="vibrateToggle"><div class="thumb"></div></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">📶 Konfigurasi WiFi</div>
+          <div class="setting-row">
+            <label>Mode WiFi</label>
+            <select id="wifiMode">
+              <option value="0">AP Only</option>
+              <option value="1">STA Only</option>
+              <option value="2">AP + STA</option>
+            </select>
+          </div>
+          <div class="setting-row">
+            <label>SSID (STA)</label>
+            <input type="text" id="wifiSSID" placeholder="Nama WiFi">
+          </div>
+          <div class="setting-row">
+            <label>Password (STA)</label>
+            <input type="password" id="wifiPassword" placeholder="Password">
+          </div>
+          <div class="setting-row">
+            <label>Status STA</label>
+            <span class="wifi-status-text idle" id="staStatus">⏳ Mengecek...</span>
+          </div>
+          <button class="btn-save-wifi" id="saveWifiBtn">💾 Simpan & Restart</button>
+        </div>
+
+        <div class="card">
+          <div class="card-title">📋 Data & Ekspor</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;">
+            <button class="btn-ghost" id="exportLogBtn">📥 Export Log</button>
+            <button class="btn-ghost" id="clearLogBtn">🗑️ Clear Log</button>
+            <button class="btn-ghost" id="resetStatsBtn">🔄 Reset Stats</button>
+            <button class="btn-ghost" id="exportSettingsBtn">⚙️ Export</button>
+            <button class="btn-ghost" id="importSettingsBtn">📂 Import</button>
+          </div>
+          <input type="file" id="importSettingsInput" accept=".json" style="display:none;">
+        </div>
+
+        <div class="card">
+          <div class="card-title">ℹ️ Tentang</div>
+          <p class="text-muted" style="font-size:0.55rem;line-height:1.7;opacity:0.7;">
+            Wemos D1 Kontrol v4.3 (Android Native)<br>
+            Pin output: D0(16), D6(12), D8(15) • Input: D4(trigger), D5(sensor)<br>
+            Fitur: Snooze, Theme, Export/Import, Shortcuts, Indikator LED, Notifikasi Sleep<br>
+            Dibangun dengan ❤️ untuk IoT
+          </p>
+        </div>
+      </div>
+
+      <!-- ===== PANEL LOG ===== -->
+      <div class="panel" id="panelLog">
+        <div class="card">
+          <div class="card-title">
+            📜 Riwayat Event
+            <span class="badge-pill" id="logCount">0</span>
+          </div>
+          <div class="log-container" id="logBox"></div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ===== TAB NAV ===== -->
+    <nav class="tab-nav" id="tabNav">
+      <button class="tab active" data-tab="panelDashboard">
+        <span class="icon">📊</span>
+        <span class="label">Dashboard</span>
+      </button>
+      <button class="tab" data-tab="panelKontrol">
+        <span class="icon">🎛️</span>
+        <span class="label">Kontrol</span>
+      </button>
+      <button class="tab" data-tab="panelPengaturan">
+        <span class="icon">⚙️</span>
+        <span class="label">Settings</span>
+      </button>
+      <button class="tab" data-tab="panelLog">
+        <span class="icon">📜</span>
+        <span class="label">Log</span>
+        <span class="badge-tab" id="logBadge" style="display:none;"></span>
+      </button>
+    </nav>
+
+  </div>
+
+  <script>
+    /* ================================================================
+       WEMOS D1 KONTROL — v4.3 (Android Native, Background Notification Fix)
+       Fokus: Background mode aktif, notifikasi HIGH priority, wake lock
+       ================================================================ */
+
+    (function() {
+      'use strict';
+
+      // ===== DOM REFS =====
+      const logBox = document.getElementById('logBox');
+      const alarmToast = document.getElementById('alarmToast');
+      const alarmFlash = document.getElementById('alarmFlash');
+      const sensorChartCanvas = document.getElementById('sensorChart');
+      const sensorChartCtx = sensorChartCanvas.getContext('2d');
+
+      // ===== STATE =====
+      let cordovaReady = false;
+      let targetIP = localStorage.getItem('sw_ip') || 'http://192.168.4.1';
+      let POLL_MS = parseInt(localStorage.getItem('sw_poll')) || 500;
+      let powerSaving = localStorage.getItem('sw_powerSave') === 'true';
+      let sensorEnabled = localStorage.getItem('sw_sensorEnabled') !== 'false';
+      let soundEnabled = localStorage.getItem('sw_soundEnabled') !== 'false';
+      let vibrateEnabled = localStorage.getItem('sw_vibrateEnabled') !== 'false';
+      let snoozeDuration = parseInt(localStorage.getItem('sw_snoozeDur')) || 60;
+      let theme = localStorage.getItem('sw_theme') || 'dark';
+
+      let baseTime = parseInt(localStorage.getItem('sw_time')) || Math.floor(Date.now() / 1000);
+      let baseMillis = Date.now();
+
+      let id0State = false, id6State = false, id8State = false;
+      let d5SensorState = false;
+      let d4AlarmActive = false;
+      let alarmActive = false;
+      let clientCount = 0;
+      let sensorTriggerCount = parseInt(localStorage.getItem('sw_triggerCount')) || 0;
+      let lastSensorEvent = parseInt(localStorage.getItem('sw_lastEvent')) || 0;
+
+      let htmlAlarmActive = false;
+      let htmlAlarmAcked = true;
+      let lastHtmlAlarmState = false;
+      let alarmNotifGranted = false;
+      let snoozeActive = false;
+      let snoozeEndTime = 0;
+      let snoozeIntervalId = null;
+
+      let chartData = [];
+      const CHART_MAX = 60;
+      let startTime = Date.now();
+      let logEntries = [];
+      let isPolling = true;
+      let audioCtx = null;
+      let alarmInterval = null;
+      let vibrateInterval = null;
+      let alarmNotifInterval = null;
+
+      let lastWifiStatus = false;
+      let firstPoll = true;
+      let offlineStartTime = 0;
+      let offlineGraceCount = 0;
+      const OFFLINE_GRACE_MAX = 2;
+
+      let pollInterval = null;
+      let backgroundModeActive = false;
+
+      // ===== PLUGIN REFS =====
+      const plugins = {
+        backgroundMode: window.cordova && cordova.plugins && cordova.plugins.backgroundMode,
+        localNotification: window.cordova && cordova.plugins && cordova.plugins.notification && cordova.plugins.notification.local,
+        vibration: window.cordova && navigator.vibrate ? navigator : (window.navigator || {}),
+        insomnia: window.cordova && window.plugins && window.plugins.insomnia,
+        permissions: window.cordova && cordova.plugins && cordova.plugins.permissions,
+      };
+
+      // ===== HELPER =====
+      function nowSec() { return baseTime + Math.floor((Date.now() - baseMillis) / 1000); }
+      function saveTime() { localStorage.setItem('sw_time', baseTime); }
+
+      // ===== LOGGING =====
+      function log(txt, cls) {
+        const entry = { time: new Date().toLocaleTimeString(), text: txt, cls: cls || '' };
+        logEntries.push(entry);
+        if (logEntries.length > 100) logEntries = logEntries.slice(-100);
+        const div = document.createElement('div');
+        div.className = 'log-entry ' + (cls || '');
+        div.innerHTML = `<span class="log-time">[${entry.time}]</span> <span class="msg ${cls}">${txt}</span>`;
+        if (logBox) {
+          logBox.appendChild(div);
+          logBox.scrollTop = logBox.scrollHeight;
+          while (logBox.children.length > 100) logBox.removeChild(logBox.firstChild);
+        }
+        document.getElementById('logCount').textContent = logEntries.length;
+      }
+
+      // ===== NOTIFICATION (dengan prioritas tinggi) =====
+      function sendNativeNotification(title, body) {
+        if (!cordovaReady) {
+          if ('Notification' in window && Notification.permission === 'granted') {
+            new Notification(title, { body, tag: 'wemos-alarm', requireInteraction: true });
+          }
+          return;
+        }
+
+        if (plugins.localNotification) {
+          plugins.localNotification.cancel(1, function() {
+            plugins.localNotification.schedule({
+              id: 1,
+              title: title,
+              text: body,
+              androidChannelId: 'wemos_alarm_channel',
+              androidChannelEnableVibration: true,
+              androidOngoing: true,
+              badgeNumber: 1,
+              sound: 'default',
+              trigger: { in: 1, unit: 'second' },
+              priority: 'HIGH',        // Penting: muncul di layar kunci & sleep
+              priority: 2,             // alternatif untuk beberapa versi
+              sticky: true,
+              autoClear: false,
+              smallIcon: 'icon',
+              icon: 'icon',
+            });
+          });
+          return;
+        }
+
+        if ('Notification' in window && alarmNotifGranted) {
+          new Notification(title, { body, tag: 'wemos-alarm', requireInteraction: true });
+        }
+      }
+
+      function requestNotif() {
+        if (!cordovaReady) {
+          if ('Notification' in window) {
+            Notification.requestPermission().then(p => { alarmNotifGranted = (p === 'granted'); });
+          }
+          return;
+        }
+
+        // Buat channel notifikasi untuk Android 8+
+        if (plugins.localNotification) {
+          plugins.localNotification.createChannel({
+            androidChannelId: 'wemos_alarm_channel',
+            androidChannelName: 'Wemos Alarm',
+            androidChannelDescription: 'Notifikasi alarm dari Wemos D1',
+            androidChannelImportance: 'IMPORTANCE_HIGH',
+            androidChannelEnableVibration: true,
+            androidChannelSound: 'default',
+          }, function() {
+            log('Notification channel created', 'ok');
+          }, function(err) {
+            log('Channel creation error: ' + err, 'err');
+          });
+
+          plugins.localNotification.hasPermission(function(granted) {
+            if (!granted) {
+              plugins.localNotification.requestPermission(function(g) {
+                alarmNotifGranted = g;
+                log('Notification permission: ' + (g ? 'GRANTED' : 'DENIED'), g ? 'ok' : 'err');
+              });
+            } else {
+              alarmNotifGranted = true;
+              log('Notification permission already granted', 'ok');
+            }
+          });
+          return;
+        }
+
+        if ('Notification' in window) {
+          Notification.requestPermission().then(p => { alarmNotifGranted = (p === 'granted'); });
+        }
+      }
+
+      // ===== BACKGROUND MODE =====
+      function setupBackgroundMode() {
+        if (!cordovaReady || !plugins.backgroundMode) {
+          log('Background mode not available', 'err');
+          return;
+        }
+
+        try {
+          // Aktifkan background mode
+          plugins.backgroundMode.enable();
+          plugins.backgroundMode.overrideBackButton();
+
+          // Set default notifikasi foreground service
+          plugins.backgroundMode.setDefaults({
+            title: 'Wemos Monitoring',
+            text: 'Aktif memonitor sensor Wemos...',
+            icon: 'icon',
+            color: 'F39C12',
+            resume: true,
+            hidden: false,
+            bigText: true,
+            silent: false,  // biarkan notifikasi muncul
+          });
+
+          // Event saat background aktif
+          plugins.backgroundMode.on('activate', function() {
+            backgroundModeActive = true;
+            log('Background mode ACTIVATED', 'ok');
+            plugins.backgroundMode.disableWebViewOptimizations();
+            // Pastikan polling tetap jalan
+            if (!pollInterval) startPolling();
+            // Tampilkan notifikasi foreground
+            plugins.backgroundMode.notify({
+              title: 'Wemos Monitoring',
+              text: 'Aplikasi aktif di latar belakang',
+              icon: 'icon'
+            });
+          });
+
+          plugins.backgroundMode.on('deactivate', function() {
+            backgroundModeActive = false;
+            log('Background mode DEACTIVATED', 'dim');
+          });
+
+          // Cek apakah sudah aktif
+          if (plugins.backgroundMode.isActive()) {
+            backgroundModeActive = true;
+            log('Background mode already active', 'ok');
+          } else {
+            // Coba aktifkan secara eksplisit
+            plugins.backgroundMode.enable();
+            log('Background mode enabled', 'ok');
+          }
+
+        } catch (e) {
+          log('Error setting background mode: ' + e.message, 'err');
+        }
+      }
+
+      // ===== IGNORE BATTERY OPTIMIZATION (Doze) =====
+      function requestIgnoreBatteryOptimization() {
+        if (!cordovaReady) return;
+        if (plugins.permissions) {
+          // Cek apakah sudah memiliki izin
+          plugins.permissions.checkPermission(
+            'android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS',
+            function(status) {
+              if (!status.hasPermission) {
+                plugins.permissions.requestPermission(
+                  'android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS',
+                  function() {
+                    log('Battery optimization permission granted', 'ok');
+                  },
+                  function() {
+                    log('Battery optimization permission denied', 'err');
+                  }
+                );
+              } else {
+                log('Battery optimization already granted', 'ok');
+              }
+            },
+            function() {
+              log('Cannot check battery optimization permission', 'err');
+            }
+          );
+        }
+      }
+
+      // ===== WAKE LOCK =====
+      function wakeUpScreen() {
+        if (!cordovaReady) return;
+        if (plugins.insomnia) {
+          plugins.insomnia.keepAwake(function() {
+            log('Wake lock acquired', 'ok');
+          }, function(err) {
+            log('Insomnia error: ' + err, 'err');
+          });
+        }
+        if (plugins.backgroundMode) {
+          plugins.backgroundMode.wakeUp();
+          plugins.backgroundMode.unlock();
+        }
+      }
+
+      function releaseWakeLock() {
+        if (!cordovaReady) return;
+        if (plugins.insomnia) {
+          plugins.insomnia.allowSleepAgain(function() {
+            log('Wake lock released', 'ok');
+          });
+        }
+      }
+
+      // ===== ALARM =====
+      function onAlarmTriggered() {
+        log('🚨 ALARM TRIGGERED! (Suara+Getar+Notif+Wake)', 'alarm');
+        wakeUpScreen();
+
+        if (soundEnabled) startContinuousAlarm();
+        if (vibrateEnabled) startContinuousVibrate();
+
+        // Kirim notifikasi dengan prioritas tinggi
+        sendNativeNotification('🚨 Wemos Alarm!', 'Sensor atau D4 trigger!');
+        startAlarmNotifInterval();
+
+        alarmToast.classList.add('show');
+        alarmFlash.classList.add('active');
+
+        saveAppState();
+        updateAlarmUI();
+        updateSnoozeUI();
+      }
+
+      function onAlarmCleared() {
+        log('Alarm cleared', 'ok');
+        stopContinuousAlarm();
+        stopContinuousVibrate();
+        stopAlarmNotifInterval();
+        releaseWakeLock();
+        alarmToast.classList.remove('show');
+        alarmFlash.classList.remove('active');
+        saveAppState();
+        updateAlarmUI();
+        updateSnoozeUI();
+      }
+
+      function resetHtmlAlarm() {
+        if (htmlAlarmActive) {
+          htmlAlarmActive = false;
+          htmlAlarmAcked = true;
+          snoozeActive = false;
+          if (snoozeIntervalId) { clearInterval(snoozeIntervalId); snoozeIntervalId = null; }
+          stopContinuousAlarm();
+          stopContinuousVibrate();
+          stopAlarmNotifInterval();
+          log('Alarm RESET oleh user', 'ok');
+          try {
+            sendCommand('/resetAlarm');
+            if (d4AlarmActive) sendCommand('/toggle?id=4');
+          } catch (e) {}
+          onAlarmCleared();
+          updateSnoozeUI();
+        }
+      }
+
+      function updateAlarmUI() {
+        const el = document.getElementById('alarmStatusBadge');
+        const anyAlarm = htmlAlarmActive && !htmlAlarmAcked && !snoozeActive;
+        if (anyAlarm) {
+          el.textContent = '🚨 ACTIVE!';
+          el.className = 'badge-pill danger';
+        } else if (snoozeActive) {
+          el.textContent = '⏰ SNOOZE';
+          el.className = 'badge-pill warn';
+        } else if (alarmActive || d4AlarmActive) {
+          el.textContent = '⚠️ WEMOS ALARM';
+          el.className = 'badge-pill warn';
+        } else {
+          el.textContent = '✅ INACTIVE';
+          el.className = 'badge-pill success';
+        }
+      }
+
+      // ===== SNOOZE =====
+      function startSnooze() {
+        if (!htmlAlarmActive || htmlAlarmAcked) return;
+        const dur = snoozeDuration;
+        snoozeActive = true;
+        snoozeEndTime = Date.now() + dur * 1000;
+        htmlAlarmAcked = true;
+        onAlarmCleared();
+        log('⏰ Alarm snoozed for ' + dur + 's', 'info');
+        updateSnoozeUI();
+        if (snoozeIntervalId) clearInterval(snoozeIntervalId);
+        snoozeIntervalId = setInterval(() => {
+          const remain = Math.ceil((snoozeEndTime - Date.now()) / 1000);
+          if (remain <= 0) {
+            clearInterval(snoozeIntervalId);
+            snoozeIntervalId = null;
+            snoozeActive = false;
+            if (htmlAlarmActive) {
+              htmlAlarmAcked = false;
+              onAlarmTriggered();
+              log('⏰ Snooze ended, alarm re-triggered!', 'alarm');
+            }
+            updateSnoozeUI();
+          } else {
+            document.getElementById('snoozeCountdown').textContent = remain + 's';
+          }
+        }, 500);
+      }
+      function updateSnoozeUI() {
+        const el = document.getElementById('snoozeCountdown');
+        if (snoozeActive) {
+          const remain = Math.ceil((snoozeEndTime - Date.now()) / 1000);
+          el.textContent = (remain > 0) ? remain + 's' : '—';
+          el.style.color = 'var(--accent-orange)';
+        } else {
+          el.textContent = '—';
+          el.style.color = 'var(--text-secondary)';
+        }
+      }
+
+      // ===== SAVE / LOAD STATE =====
+      const STATE_KEY = 'sw_appstate_v4';
+
+      function saveAppState() {
+        const state = { sensorEnabled, soundEnabled, vibrateEnabled, htmlAlarmActive,
+          htmlAlarmAcked, targetIP, POLL_MS, snoozeDuration, sensorTriggerCount, lastSensorEvent,
+          powerSaving, chartData, theme };
+        try {
+          localStorage.setItem(STATE_KEY, JSON.stringify(state));
+          localStorage.setItem('sw_triggerCount', sensorTriggerCount);
+          localStorage.setItem('sw_lastEvent', lastSensorEvent);
+          localStorage.setItem('sw_powerSave', powerSaving);
+          localStorage.setItem('sw_sensorEnabled', sensorEnabled);
+          localStorage.setItem('sw_soundEnabled', soundEnabled);
+          localStorage.setItem('sw_vibrateEnabled', vibrateEnabled);
+          localStorage.setItem('sw_snoozeDur', snoozeDuration);
+          localStorage.setItem('sw_theme', theme);
+          localStorage.setItem('sw_ip', targetIP);
+          localStorage.setItem('sw_poll', POLL_MS);
+        } catch (e) {}
+      }
+
+      function loadAppState() {
+        try {
+          const raw = localStorage.getItem(STATE_KEY);
+          if (raw) {
+            const s = JSON.parse(raw);
+            if (typeof s.sensorEnabled === 'boolean') sensorEnabled = s.sensorEnabled;
+            if (typeof s.soundEnabled === 'boolean') soundEnabled = s.soundEnabled;
+            if (typeof s.vibrateEnabled === 'boolean') vibrateEnabled = s.vibrateEnabled;
+            if (typeof s.htmlAlarmActive === 'boolean') htmlAlarmActive = s.htmlAlarmActive;
+            if (typeof s.htmlAlarmAcked === 'boolean') htmlAlarmAcked = s.htmlAlarmAcked;
+            if (typeof s.sensorTriggerCount === 'number') sensorTriggerCount = s.sensorTriggerCount;
+            if (typeof s.lastSensorEvent === 'number') lastSensorEvent = s.lastSensorEvent;
+            if (typeof s.powerSaving === 'boolean') powerSaving = s.powerSaving;
+            if (typeof s.snoozeDuration === 'number') snoozeDuration = s.snoozeDuration;
+            if (s.targetIP) targetIP = s.targetIP;
+            if (s.POLL_MS) POLL_MS = s.POLL_MS;
+            if (Array.isArray(s.chartData)) chartData = s.chartData;
+            if (s.theme) theme = s.theme;
+          }
+        } catch (e) {}
+        applyTheme(theme);
+        updateSensorToggle();
+        updatePowerSaveUI();
+        updateSoundToggle();
+        updateVibrateToggle();
+        document.getElementById('inpSnoozeDur').value = snoozeDuration;
+        document.getElementById('inpTargetIP').value = targetIP;
+        document.getElementById('inpPollInt').value = POLL_MS;
+        document.getElementById('statTriggers').textContent = sensorTriggerCount;
+      }
+
+      // ===== THEME =====
+      function applyTheme(t) {
+        theme = t;
+        document.documentElement.setAttribute('data-theme', t);
+        localStorage.setItem('sw_theme', t);
+        document.getElementById('themeToggle').textContent = t === 'dark' ? '🌓' : '☀️';
+      }
+      function toggleTheme() { applyTheme(theme === 'dark' ? 'light' : 'dark'); }
+
+      // ===== TOGGLE UI =====
+      function updateSensorToggle() {
+        const el = document.getElementById('sensorToggle');
+        const label = document.getElementById('sensorToggleLabel');
+        if (sensorEnabled) { el.classList.add('active'); label.textContent = 'ON'; } else { el.classList.remove('active'); label.textContent = 'OFF'; }
+        document.getElementById('pinSensorVal').textContent = sensorEnabled ? 'ON' : 'OFF';
+        document.getElementById('pinSensorVal').className = 'pin-value ' + (sensorEnabled ? 'on' : 'off');
+        document.getElementById('pinSensorBar').className = 'fill ' + (sensorEnabled ? 'on' : 'off');
+        document.getElementById('pinSensorBar').style.width = sensorEnabled ? '100%' : '0%';
+      }
+      function updatePowerSaveUI() {
+        const el = document.getElementById('powerSaveToggle');
+        const label = document.getElementById('powerSaveLabel');
+        if (powerSaving) { el.classList.add('active'); label.textContent = 'ON'; } else { el.classList.remove('active'); label.textContent = 'OFF'; }
+      }
+      function updateSoundToggle() {
+        const el = document.getElementById('soundToggle');
+        const label = document.getElementById('soundToggleLabel');
+        if (soundEnabled) { el.classList.add('active'); label.textContent = 'ON'; } else { el.classList.remove('active'); label.textContent = 'OFF'; }
+      }
+      function updateVibrateToggle() {
+        const el = document.getElementById('vibrateToggle');
+        const label = document.getElementById('vibrateToggleLabel');
+        if (vibrateEnabled) { el.classList.add('active'); label.textContent = 'ON'; } else { el.classList.remove('active'); label.textContent = 'OFF'; }
+      }
+
+      // ===== HTTP =====
+      async function httpGet(endpoint, fireAndForget, retries) {
+        fireAndForget = fireAndForget || false;
+        retries = retries || 0;
+        const url = targetIP + endpoint;
+        const isBg = backgroundModeActive;
+        const timeout = fireAndForget ? 3000 : (isBg ? 15000 : 5000);
+
+        try {
+          const ctrl = new AbortController();
+          const to = setTimeout(() => ctrl.abort(), timeout);
+          const r = await fetch(url, {
+            method: 'GET',
+            signal: ctrl.signal,
+            mode: 'cors',
+            cache: 'no-store',
+            headers: { 'Accept': 'application/json' }
+          });
+          clearTimeout(to);
+          if (r.ok) {
+            const text = await r.text();
+            try { return { ok: true, status: r.status, payload: JSON.parse(text) }; }
+            catch (e) { return { ok: true, status: r.status, payload: null }; }
+          }
+          return { ok: false, status: r.status, error: 'HTTP ' + r.status };
+        } catch (e) {
+          if (!fireAndForget && retries < 3) {
+            await new Promise(r => setTimeout(r, 1000 * (retries + 1)));
+            return httpGet(endpoint, false, retries + 1);
+          }
+          return { ok: false, error: e.message || 'Network Error' };
+        }
+      }
+
+      async function sendCommand(endpoint) {
+        log('TX → ' + endpoint, 'tx');
+        const res = await httpGet(endpoint, true);
+        if (res.ok) {
+          log('OK ← ' + endpoint, 'ok');
+        } else {
+          log('ERR ← ' + endpoint + ': ' + (res.error || 'unknown'), 'err');
+        }
+      }
+
+      // ===== POLLING =====
+      async function pollStatus() {
+        if (!isPolling) return;
+        const res = await httpGet('/status');
+
+        if (!res.ok) {
+          offlineGraceCount++;
+          log('Poll fail #' + offlineGraceCount + ': ' + (res.error || 'unknown'), 'err');
+
+          if (offlineGraceCount >= OFFLINE_GRACE_MAX) {
+            updateWifi(false);
+            if (offlineStartTime === 0) offlineStartTime = Date.now();
+            if (Date.now() - offlineStartTime > 3000) {
+              offlineStartTime = Date.now();
+              const health = await httpGet('/');
+              if (health.ok) {
+                offlineGraceCount = 0;
+                updateWifi(true);
+                log('Reconnect successful', 'ok');
+              } else {
+                log('Reconnect attempt failed', 'err');
+              }
+            }
+          }
+          return;
+        }
+
+        offlineGraceCount = 0;
+        offlineStartTime = 0;
+        updateWifi(true);
+
+        if (res.payload) {
+          id0State = !!res.payload['0'];
+          id6State = !!res.payload['6'];
+          id8State = !!res.payload['8'];
+          d5SensorState = !!res.payload['5'];
+          d4AlarmActive = !!res.payload['4'];
+          alarmActive = !!(res.payload['alarm'] === 1 || res.payload['alarm'] === '1' || res.payload['alarm'] === true);
+          sensorEnabled = !!(res.payload['sensorEnabled'] === 1 || res.payload['sensorEnabled'] === '1' || res.payload['sensorEnabled'] === true);
+          clientCount = parseInt(res.payload['clients']) || 0;
+          let sensorEvent = parseInt(res.payload['sensorEvent']) || 0;
+
+          updateIndicator('D0', id0State);
+          updateIndicator('D6', id6State);
+          updateIndicator('D8', id8State);
+          updateIndicator('D4', d4AlarmActive, 'alarm');
+          updateIndicator('D5', d5SensorState, 'trigger');
+
+          updatePinUI('D0', id0State);
+          updatePinUI('D6', id6State);
+          updatePinUI('D8', id8State);
+          updatePinUI('D4', d4AlarmActive, 'alarm');
+          updatePinUI('D5', d5SensorState, 'trigger');
+
+          document.getElementById('pinSensorVal').textContent = sensorEnabled ? 'ON' : 'OFF';
+          document.getElementById('pinSensorVal').className = 'pin-value ' + (sensorEnabled ? 'on' : 'off');
+          document.getElementById('pinSensorBar').className = 'fill ' + (sensorEnabled ? 'on' : 'off');
+          document.getElementById('pinSensorBar').style.width = sensorEnabled ? '100%' : '0%';
+
+          document.getElementById('sensorD5Status').textContent = d5SensorState ? '🔴 TRIGGERED' : '🟢 HIGH';
+          document.getElementById('sensorD5Status').style.color = d5SensorState ? 'var(--accent-red)' : 'var(--accent-green)';
+          document.getElementById('sensorD4Status').textContent = d4AlarmActive ? '🔴 TRIGGERED' : '✅ NORMAL';
+          document.getElementById('sensorD4Status').style.color = d4AlarmActive ? 'var(--accent-red)' : 'var(--text-secondary)';
+
+          if (firstPoll) {
+            lastSensorEvent = sensorEvent;
+            firstPoll = false;
+          } else if (sensorEvent > lastSensorEvent) {
+            lastSensorEvent = sensorEvent;
+            sensorTriggerCount = sensorEvent;
+            if (!snoozeActive) {
+              htmlAlarmActive = true;
+              htmlAlarmAcked = false;
+            }
+            addChartPoint(1);
+            saveAppState();
+            log('⚡ SENSOR TRIGGERED! Event #' + sensorEvent + ' (Clients: ' + clientCount + ')', 'alarm');
+          } else {
+            addChartPoint(0);
+          }
+
+          if (d4AlarmActive && !htmlAlarmActive && htmlAlarmAcked && !snoozeActive) {
+            htmlAlarmActive = true;
+            htmlAlarmAcked = false;
+            addChartPoint(1);
+            saveAppState();
+            log('D4 TRIGGERED!', 'alarm');
+          }
+
+          document.getElementById('statTriggers').textContent = sensorTriggerCount;
+          document.getElementById('statClients').textContent = clientCount;
+          const anyAlarmState = htmlAlarmActive && !htmlAlarmAcked && !snoozeActive;
+          document.getElementById('statAlarms').textContent = anyAlarmState ? '1' : '0';
+          document.getElementById('statAlarms').className = 'stat-value ' + (anyAlarmState ? 'danger' : '');
+
+          updateAlarmUI();
+          updateSnoozeUI();
+
+          const shouldAlarm = htmlAlarmActive && !htmlAlarmAcked && !snoozeActive;
+          if (shouldAlarm && !lastHtmlAlarmState) { onAlarmTriggered(); }
+          if (!shouldAlarm && lastHtmlAlarmState) { onAlarmCleared(); }
+          lastHtmlAlarmState = shouldAlarm;
+
+          if (Math.random() < 0.08) {
+            log('Status OK | D0:' + (id0State ? 'ON' : 'OFF') + ' D6:' + (id6State ? 'ON' : 'OFF') + ' D8:' + (id8State ? 'ON' : 'OFF') + ' CLI:' + clientCount + ' EVT#' + sensorEvent, 'dim');
+          }
+        }
+      }
+
+      // ===== UPDATE INDICATOR =====
+      function updateIndicator(pin, value, type) {
+        const map = {
+          'D0': { bulb: 'indD0', status: 'indD0Status' },
+          'D6': { bulb: 'indD6', status: 'indD6Status' },
+          'D8': { bulb: 'indD8', status: 'indD8Status' },
+          'D4': { bulb: 'indD4', status: 'indD4Status' },
+          'D5': { bulb: 'indD5', status: 'indD5Status' }
+        };
+        const bulb = document.getElementById(map[pin].bulb);
+        const status = document.getElementById(map[pin].status);
+        if (!bulb) return;
+        if (type === 'alarm') {
+          bulb.className = 'led-bulb ' + (value ? 'alarm' : 'off');
+          status.textContent = value ? 'TRIGGER' : 'NORMAL';
+          status.className = 'led-status ' + (value ? 'alarm' : 'off');
+        } else if (type === 'trigger') {
+          bulb.className = 'led-bulb ' + (value ? 'trigger' : 'off');
+          status.textContent = value ? 'TRIG' : 'HIGH';
+          status.className = 'led-status ' + (value ? 'trigger' : 'off');
+        } else {
+          bulb.className = 'led-bulb ' + (value ? 'on' : 'off');
+          bulb.textContent = pin;
+          status.textContent = value ? 'ON' : 'OFF';
+          status.className = 'led-status ' + (value ? 'on' : 'off');
+        }
+      }
+
+      function updatePinUI(pin, value, type) {
+        const map = { 'D0': 'pinD0Val', 'D6': 'pinD6Val', 'D8': 'pinD8Val', 'D4': 'pinD4Val', 'D5': 'pinD5Val' };
+        const barMap = { 'D0': 'pinD0Bar', 'D6': 'pinD6Bar', 'D8': 'pinD8Bar', 'D4': 'pinD4Bar', 'D5': 'pinD5Bar' };
+        const el = document.getElementById(map[pin]);
+        const bar = document.getElementById(barMap[pin]);
+        if (!el) return;
+        if (type === 'alarm') {
+          el.textContent = value ? '🚨 TRIGGER' : 'NORMAL';
+          el.className = 'pin-value ' + (value ? 'alarm' : 'off');
+          if (bar) { bar.className = 'fill ' + (value ? 'alarm' : 'off'); bar.style.width = value ? '100%' : '0%'; }
+        } else if (type === 'trigger') {
+          el.textContent = value ? '🔴 TRIG' : 'HIGH';
+          el.className = 'pin-value ' + (value ? 'trigger' : 'off');
+          if (bar) { bar.className = 'fill ' + (value ? 'trigger' : 'off'); bar.style.width = value ? '100%' : '0%'; }
+        } else {
+          el.textContent = value ? 'ON' : 'OFF';
+          el.className = 'pin-value ' + (value ? 'on' : 'off');
+          if (bar) { bar.className = 'fill ' + (value ? 'on' : 'off'); bar.style.width = value ? '100%' : '0%'; }
+        }
+      }
+
+      function updateWifi(connected) {
+        if (connected !== lastWifiStatus) {
+          lastWifiStatus = connected;
+          if (!connected) log('WiFi Disconnected (Wemos tidak merespon)', 'err');
+          else log('WiFi Connected (Wemos merespon)', 'ok');
+        }
+        const dot = document.getElementById('statusDot');
+        const txt = document.getElementById('statusText');
+        if (connected) {
+          dot.className = 'dot on';
+          txt.textContent = 'ONLINE';
+        } else {
+          dot.className = 'dot off';
+          txt.textContent = 'OFFLINE';
+        }
+      }
+
+      // ===== CHART =====
+      function addChartPoint(val) {
+        chartData.push(val);
+        if (chartData.length > CHART_MAX) chartData.shift();
+        drawChart();
+        document.getElementById('chartCount').textContent = chartData.filter(v => v > 0).length + ' events';
+        saveAppState();
+      }
+
+      function drawChart() {
+        const w = sensorChartCanvas.width;
+        const h = sensorChartCanvas.height;
+        const c = sensorChartCtx;
+        c.clearRect(0, 0, w, h);
+
+        c.fillStyle = 'rgba(255,255,255,0.02)';
+        c.fillRect(0, 0, w, h);
+
+        if (chartData.length < 2) {
+          c.fillStyle = 'var(--text-dim)';
+          c.font = '9px sans-serif';
+          c.textAlign = 'center';
+          c.fillText('Menunggu data sensor...', w / 2, h / 2 + 3);
+          return;
+        }
+
+        const pad = 3;
+        const graphW = w - pad * 2;
+        const graphH = h - pad * 2;
+        const step = graphW / (CHART_MAX - 1);
+        const maxVal = Math.max(1, ...chartData);
+
+        c.strokeStyle = '#8b5cf6';
+        c.lineWidth = 2;
+        c.shadowColor = 'rgba(139,92,246,0.3)';
+        c.shadowBlur = 8;
+        c.beginPath();
+        for (let i = 0; i < chartData.length; i++) {
+          const x = pad + i * step;
+          const y = pad + graphH - (chartData[i] / maxVal) * graphH;
+          if (i === 0) c.moveTo(x, y);
+          else c.lineTo(x, y);
+        }
+        c.stroke();
+        c.shadowBlur = 0;
+
+        const lastX = pad + (chartData.length - 1) * step;
+        c.lineTo(lastX, pad + graphH);
+        c.lineTo(pad, pad + graphH);
+        c.closePath();
+        c.fillStyle = 'rgba(139,92,246,0.06)';
+        c.fill();
+
+        for (let i = 0; i < chartData.length; i++) {
+          if (chartData[i] > 0) {
+            const x = pad + i * step;
+            const y = pad + graphH - (chartData[i] / maxVal) * graphH;
+            c.fillStyle = '#ec4899';
+            c.shadowColor = 'rgba(236,72,153,0.5)';
+            c.shadowBlur = 12;
+            c.beginPath();
+            c.arc(x, y, 4, 0, Math.PI * 2);
+            c.fill();
+            c.shadowBlur = 0;
+          }
+        }
+      }
+
+      // ===== UPTIME =====
+      function updateUptime() {
+        const diff = Math.floor((Date.now() - startTime) / 1000);
+        let s = diff % 60;
+        let m = Math.floor(diff / 60) % 60;
+        let h = Math.floor(diff / 3600);
+        document.getElementById('statUptime').textContent =
+          (h > 0 ? h + 'h ' : '') + (m > 0 ? m + 'm ' : '') + s + 's';
+      }
+
+      // ===== POLLING CONTROL =====
+      function startPolling() {
+        if (pollInterval) { clearInterval(pollInterval); pollInterval = null; }
+        let interval = POLL_MS;
+        if (backgroundModeActive) {
+          interval = Math.min(Math.max(interval, 1000), 2000);
+        }
+        pollInterval = setInterval(function() {
+          if (isPolling) {
+            pollStatus();
+            updateUptime();
+            updateSnoozeUI();
+          }
+        }, interval);
+        log('Polling started: ' + interval + 'ms', 'dim');
+      }
+
+      function stopPolling() {
+        if (pollInterval) { clearInterval(pollInterval); pollInterval = null; }
+      }
+
+      // ===== AUDIO =====
+      function ensureAudio() {
+        if (!audioCtx) audioCtx = new(window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+      }
+
+      function startContinuousAlarm() {
+        if (!soundEnabled) return;
+        ensureAudio();
+        stopContinuousAlarm();
+
+        function playBeep() {
+          if (!audioCtx || !soundEnabled || audioCtx.state === 'closed') return;
+          if (audioCtx.state === 'suspended') {
+            audioCtx.resume().catch(e => { soundEnabled = false; updateSoundToggle(); return; });
+          }
+          if (audioCtx.state !== 'running') return;
+          const now = audioCtx.currentTime;
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.type = 'square';
+          osc.frequency.setValueAtTime(2000, now);
+          gain.gain.setValueAtTime(0, now);
+          gain.gain.linearRampToValueAtTime(0.6, now + 0.02);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.18);
+          osc.start(now);
+          osc.stop(now + 0.2);
+        }
+
+        alarmInterval = setInterval(playBeep, 400);
+        playBeep();
+      }
+
+      function stopContinuousAlarm() {
+        if (alarmInterval) { clearInterval(alarmInterval); alarmInterval = null; }
+      }
+
+      function startContinuousVibrate() {
+        if (!vibrateEnabled) return;
+        stopContinuousVibrate();
+        const pattern = [200, 200, 200, 200, 200, 200];
+        if (plugins.vibration && plugins.vibration.vibrate) {
+          plugins.vibration.vibrate(pattern);
+          vibrateInterval = setInterval(() => {
+            if (htmlAlarmActive && !htmlAlarmAcked && vibrateEnabled) plugins.vibration.vibrate(pattern);
+          }, 1200);
+        } else if ('vibrate' in navigator) {
+          navigator.vibrate(pattern);
+          vibrateInterval = setInterval(() => {
+            if (htmlAlarmActive && !htmlAlarmAcked && vibrateEnabled) navigator.vibrate(pattern);
+          }, 1200);
+        }
+      }
+
+      function stopContinuousVibrate() {
+        if (vibrateInterval) { clearInterval(vibrateInterval); vibrateInterval = null; }
+        if (plugins.vibration && plugins.vibration.vibrate) plugins.vibration.vibrate(0);
+        else if ('vibrate' in navigator) navigator.vibrate(0);
+      }
+
+      function startAlarmNotifInterval() {
+        stopAlarmNotifInterval();
+        alarmNotifInterval = setInterval(function() {
+          if (htmlAlarmActive && !htmlAlarmAcked && !snoozeActive) {
+            sendNativeNotification('🚨 Wemos Alarm!', 'Sensor atau D4 trigger!');
+          }
+        }, 3000);
+      }
+
+      function stopAlarmNotifInterval() {
+        if (alarmNotifInterval) { clearInterval(alarmNotifInterval); alarmNotifInterval = null; }
+      }
+
+      // ===== WIFI CONFIG =====
+      async function loadWifiStatus() {
+        const statusEl = document.getElementById('staStatus');
+        try {
+          const res = await fetch(targetIP + '/status');
+          if (!res.ok) throw new Error('Network error');
+          const data = await res.json();
+          const mode = data.wifiMode || 0;
+          const ssid = data.staSSID || '';
+          const ip = data.staIP || '';
+          const connected = data.staConnected || false;
+
+          document.getElementById('wifiMode').value = mode;
+          document.getElementById('wifiSSID').value = ssid;
+
+          if (connected && ip.length > 0) {
+            statusEl.textContent = '✅ Terhubung ke "' + ssid + '" (IP: ' + ip + ')';
+            statusEl.className = 'wifi-status-text connected';
+          } else if (mode === 1 || mode === 2) {
+            statusEl.textContent = '⏳ Mencoba konek ke "' + ssid + '"...';
+            statusEl.className = 'wifi-status-text connecting';
+          } else {
+            statusEl.textContent = '⚪ Mode AP Only (STA tidak aktif)';
+            statusEl.className = 'wifi-status-text idle';
+          }
+        } catch (e) {
+          statusEl.textContent = '❌ Gagal ambil status';
+          statusEl.className = 'wifi-status-text disconnected';
+        }
+      }
+
+      async function saveWifiConfig() {
+        const mode = parseInt(document.getElementById('wifiMode').value);
+        const ssid = document.getElementById('wifiSSID').value.trim();
+        const password = document.getElementById('wifiPassword').value.trim();
+
+        if ((mode === 1 || mode === 2) && ssid.length === 0) {
+          alert('SSID harus diisi untuk mode STA atau AP+STA!');
+          return;
+        }
+
+        const payload = { mode, ssid, password };
+        try {
+          const res = await fetch(targetIP + '/config', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+          if (res.ok) {
+            alert('✅ Konfigurasi tersimpan. Wemos akan restart...');
+            log('WiFi config saved, restarting...', 'ok');
+            setTimeout(() => loadWifiStatus(), 5000);
+          } else {
+            alert('❌ Gagal menyimpan konfigurasi');
+          }
+        } catch (e) {
+          alert('❌ Error: ' + e.message);
+        }
+      }
+
+      // ===== BIND UI EVENTS =====
+      function bindUI() {
+        document.getElementById('btnMenu').addEventListener('click', function() {
+          sendCommand('/resetAlarm');
+          resetHtmlAlarm();
+        });
+        document.getElementById('btnUp').addEventListener('click', function() {
+          sendCommand('/toggle?id=8');
+        });
+        document.getElementById('btnDown').addEventListener('click', function() {
+          sendCommand('/toggle?id=0');
+        });
+        document.getElementById('btnSelect').addEventListener('click', function() {
+          sendCommand('/pulse?id=6');
+        });
+
+        document.getElementById('quickToggleD8').addEventListener('click', () => sendCommand('/toggle?id=8'));
+        document.getElementById('quickToggleD0').addEventListener('click', () => sendCommand('/toggle?id=0'));
+        document.getElementById('quickPulseD6').addEventListener('click', () => sendCommand('/pulse?id=6'));
+        document.getElementById('quickResetAlarm').addEventListener('click', resetHtmlAlarm);
+        document.getElementById('btnDismissAlarm').addEventListener('click', resetHtmlAlarm);
+        document.getElementById('btnSnoozeAlarm').addEventListener('click', startSnooze);
+        document.getElementById('quickPulseAll').addEventListener('click', () => {
+          sendCommand('/pulse?id=0');
+          setTimeout(() => sendCommand('/pulse?id=6'), 200);
+          setTimeout(() => sendCommand('/pulse?id=8'), 400);
+          log('Pulse all pins', 'tx');
+        });
+        document.getElementById('quickToggleAlarm').addEventListener('click', () => {
+          htmlAlarmActive = true;
+          htmlAlarmAcked = false;
+          saveAppState();
+          onAlarmTriggered();
+          log('🔔 Test alarm triggered', 'alarm');
+        });
+
+        document.getElementById('inpTargetIP').addEventListener('change', function(e) { targetIP = e.target.value; saveAppState(); });
+        document.getElementById('inpPollInt').addEventListener('change', function(e) {
+          POLL_MS = parseInt(e.target.value) || 500;
+          saveAppState();
+          if (pollInterval) { stopPolling(); startPolling(); }
+        });
+        document.getElementById('inpSnoozeDur').addEventListener('change', function(e) {
+          snoozeDuration = parseInt(e.target.value) || 60;
+          saveAppState();
+        });
+
+        document.getElementById('powerSaveToggle').addEventListener('click', function() {
+          powerSaving = !powerSaving;
+          updatePowerSaveUI();
+          saveAppState();
+          if (powerSaving) {
+            POLL_MS = Math.max(POLL_MS, 2000);
+            document.getElementById('inpPollInt').value = POLL_MS;
+            log('Power saving ENABLED', 'dim');
+          } else {
+            POLL_MS = parseInt(document.getElementById('inpPollInt').value) || 500;
+            log('Power saving DISABLED', 'dim');
+          }
+          if (pollInterval) { stopPolling(); startPolling(); }
+        });
+
+        document.getElementById('sensorToggle').addEventListener('click', function() {
+          sensorEnabled = !sensorEnabled;
+          updateSensorToggle();
+          saveAppState();
+          sendCommand('/sensor?enable=' + (sensorEnabled ? '1' : '0'));
+          log('Sensor ' + (sensorEnabled ? 'ENABLED' : 'DISABLED'), 'ok');
+        });
+
+        document.getElementById('soundToggle').addEventListener('click', function() {
+          soundEnabled = !soundEnabled;
+          updateSoundToggle();
+          saveAppState();
+          if (!soundEnabled) stopContinuousAlarm();
+          log('Sound ' + (soundEnabled ? 'ENABLED' : 'DISABLED'), 'ok');
+        });
+
+        document.getElementById('vibrateToggle').addEventListener('click', function() {
+          vibrateEnabled = !vibrateEnabled;
+          updateVibrateToggle();
+          saveAppState();
+          if (!vibrateEnabled) stopContinuousVibrate();
+          log('Vibrate ' + (vibrateEnabled ? 'ENABLED' : 'DISABLED'), 'ok');
+        });
+
+        document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+        document.getElementById('shortcutsToggle').addEventListener('click', function() {
+          document.getElementById('shortcutsOverlay').classList.toggle('show');
+        });
+        document.getElementById('closeShortcuts').addEventListener('click', function() {
+          document.getElementById('shortcutsOverlay').classList.remove('show');
+        });
+        document.getElementById('shortcutsOverlay').addEventListener('click', function(e) {
+          if (e.target === this) this.classList.remove('show');
+        });
+
+        document.getElementById('refreshBtn').addEventListener('click', function() {
+          log('🔄 Refresh manual', 'info');
+          location.reload();
+        });
+
+        document.getElementById('exportLogBtn').addEventListener('click', function() {
+          let text = '=== WEMOS LOG ===\n';
+          logEntries.forEach(e => { text += '[' + e.time + '] ' + e.text + '\n'; });
+          const blob = new Blob([text], { type: 'text/plain' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = 'wemos_log_' + new Date().toISOString().slice(0, 10) + '.txt';
+          a.click();
+          URL.revokeObjectURL(url);
+          log('Log exported', 'ok');
+        });
+        document.getElementById('clearLogBtn').addEventListener('click', function() {
+          logBox.innerHTML = '';
+          logEntries = [];
+          document.getElementById('logCount').textContent = '0';
+          document.getElementById('logBadge').style.display = 'none';
+          log('Log cleared', 'dim');
+        });
+        document.getElementById('resetStatsBtn').addEventListener('click', function() {
+          sensorTriggerCount = 0;
+          lastSensorEvent = 0;
+          chartData = [];
+          document.getElementById('statTriggers').textContent = '0';
+          saveAppState();
+          drawChart();
+          document.getElementById('chartCount').textContent = '0 events';
+          log('Stats reset', 'ok');
+        });
+        document.getElementById('exportSettingsBtn').addEventListener('click', function() {
+          const settings = {
+            targetIP, POLL_MS, snoozeDuration, powerSaving, sensorEnabled, soundEnabled, vibrateEnabled, theme,
+            version: 'v4.3-android'
+          };
+          const blob = new Blob([JSON.stringify(settings, null, 2)], { type: 'application/json' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = 'wemos_settings.json';
+          a.click();
+          URL.revokeObjectURL(url);
+          log('Settings exported', 'ok');
+        });
+        document.getElementById('importSettingsBtn').addEventListener('click', function() {
+          document.getElementById('importSettingsInput').click();
+        });
+        document.getElementById('importSettingsInput').addEventListener('change', function(e) {
+          const file = e.target.files[0];
+          if (!file) return;
+          const reader = new FileReader();
+          reader.onload = function(ev) {
+            try {
+              const settings = JSON.parse(ev.target.result);
+              if (settings.targetIP) { targetIP = settings.targetIP; document.getElementById('inpTargetIP').value = targetIP; }
+              if (settings.POLL_MS) { POLL_MS = settings.POLL_MS; document.getElementById('inpPollInt').value = POLL_MS; }
+              if (settings.snoozeDuration) { snoozeDuration = settings.snoozeDuration; document.getElementById('inpSnoozeDur').value = snoozeDuration; }
+              if (typeof settings.powerSaving === 'boolean') { powerSaving = settings.powerSaving; updatePowerSaveUI(); }
+              if (typeof settings.sensorEnabled === 'boolean') { sensorEnabled = settings.sensorEnabled; updateSensorToggle(); }
+              if (typeof settings.soundEnabled === 'boolean') { soundEnabled = settings.soundEnabled; updateSoundToggle(); }
+              if (typeof settings.vibrateEnabled === 'boolean') { vibrateEnabled = settings.vibrateEnabled; updateVibrateToggle(); }
+              if (settings.theme) { applyTheme(settings.theme); }
+              saveAppState();
+              if (pollInterval) { stopPolling(); startPolling(); }
+              log('Settings imported successfully', 'ok');
+            } catch (err) {
+              log('Import failed: ' + err.message, 'err');
+            }
+          };
+          reader.readAsText(file);
+          e.target.value = '';
+        });
+
+        document.querySelectorAll('.tab').forEach(tab => {
+          tab.addEventListener('click', function() {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            this.classList.add('active');
+            document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+            document.getElementById(this.dataset.tab).classList.add('active');
+            if (this.dataset.tab === 'panelLog') {
+              document.getElementById('logBadge').style.display = 'none';
+            }
+          });
+        });
+
+        document.getElementById('saveWifiBtn').addEventListener('click', saveWifiConfig);
+      }
+
+      // ===== KEYBOARD SHORTCUTS =====
+      function bindKeyboard() {
+        const KEY_MAP = { 'q': 'menu', 'w': 'up', 's': 'down', 'e': 'sel' };
+        window.addEventListener('keydown', function(e) {
+          if (e.repeat) return;
+          const k = e.key.toLowerCase();
+          if (k === 't') { toggleTheme(); return; }
+          if (k === 'x') { document.getElementById('sensorToggle').click(); return; }
+          if (KEY_MAP[k]) {
+            e.preventDefault();
+            const action = KEY_MAP[k];
+            if (action === 'menu') { document.getElementById('btnMenu').click(); }
+            else if (action === 'up') { document.getElementById('btnUp').click(); }
+            else if (action === 'down') { document.getElementById('btnDown').click(); }
+            else if (action === 'sel') { document.getElementById('btnSelect').click(); }
+          }
+        });
+      }
+
+      // ===== CORDOVA EVENTS =====
+      function onDeviceReady() {
+        cordovaReady = true;
+        log('Cordova ready - Native features available', 'ok');
+
+        // Status Bar
+        if (window.StatusBar) {
+          StatusBar.overlaysWebView(false);
+          StatusBar.styleBlackTranslucent();
+          StatusBar.backgroundColorByHexString('#0d0b1a');
+          if (StatusBar._ready) {
+            StatusBar.hide();
+            StatusBar.show();
+          }
+        }
+
+        // 1. Setup Background Mode (PALING PENTING)
+        setupBackgroundMode();
+
+        // 2. Request notification permission & create channel
+        requestNotif();
+
+        // 3. Request ignore battery optimization (Doze)
+        requestIgnoreBatteryOptimization();
+
+        // 4. Load state
+        loadAppState();
+
+        // 5. Restore alarm state
+        if (htmlAlarmActive && !htmlAlarmAcked && !snoozeActive) {
+          onAlarmTriggered();
+        }
+
+        // 6. Start polling
+        if (!pollInterval) startPolling();
+
+        log('Aplikasi siap dengan background mode & notifikasi prioritas tinggi! 🚀', 'ok');
+      }
+
+      // ===== INIT =====
+      function init() {
+        log('=== Wemos D1 Kontrol v4.3 (Android Native, Background Fix) ===', 'ok');
+        log('Pin: D0(16), D6(12), D8(15) | Sensor: D5, Trigger: D4', 'dim');
+        log('Fitur: Snooze, Theme, Export/Import, Shortcuts, Notifikasi Sleep', 'info');
+
+        bindUI();
+        bindKeyboard();
+
+        if (!window.cordova) {
+          loadAppState();
+          if (htmlAlarmActive && !htmlAlarmAcked && !snoozeActive) {
+            onAlarmTriggered();
+          }
+          if (!pollInterval) startPolling();
+          log('Running in web mode (no Cordova)', 'dim');
+        }
+
+        loadWifiStatus();
+
+        if ('Notification' in window && Notification.permission === 'granted') alarmNotifGranted = true;
+
+        window.addEventListener('resize', function() {
+          const app = document.getElementById('app');
+          const tabNav = document.getElementById('tabNav');
+          if (tabNav && app) {
+            tabNav.style.maxWidth = app.offsetWidth + 'px';
+          }
+        });
+
+        setTimeout(function() {
+          const app = document.getElementById('app');
+          const tabNav = document.getElementById('tabNav');
+          if (tabNav && app) {
+            tabNav.style.maxWidth = app.offsetWidth + 'px';
+          }
+        }, 200);
+
+        document.addEventListener('deviceready', onDeviceReady, false);
+
+        document.addEventListener('pause', function() {
+          saveAppState();
+          log('App paused, background polling continues', 'dim');
+        }, false);
+
+        document.addEventListener('resume', function() {
+          log('App resumed', 'ok');
+          offlineGraceCount = 0;
+          lastWifiStatus = true;
+          if (!pollInterval) startPolling();
+          setTimeout(pollStatus, 500);
+          if (htmlAlarmActive && !htmlAlarmAcked && !snoozeActive) {
+            wakeUpScreen();
+            onAlarmTriggered();
+          }
+        }, false);
+
+        if (navigator.connection) {
+          navigator.connection.addEventListener('change', function(e) {
+            const type = e.target.type;
+            log('Jaringan berubah: ' + type, 'info');
+            if (type === 'wifi' || type === 'ethernet') {
+              offlineGraceCount = 0;
+              offlineStartTime = 0;
+              setTimeout(pollStatus, 1000);
+            }
+          });
+        }
+
+        function loop() {
+          requestAnimationFrame(loop);
+        }
+        loop();
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+      } else {
+        init();
+      }
+
+    })();
+  </script>
+</body>
+</html>
